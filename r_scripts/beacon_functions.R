@@ -31,7 +31,7 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',tz){
       meta_data$qa_date = as.Date(Sys.Date())
       meta_data$datetime_start <- beacon_logger_data$datetime[1]
       meta_data$flag_total <- NA
-      return(meta_data=as.data.table(meta_data))
+      return(meta_data=as.data.frame(meta_data))
    }else{
       
       keep <-names(tail(sort(table(beacon_logger_data$MAC)),2)) 
@@ -107,6 +107,8 @@ beacon_import_fun <- function(file,tz,preplacement,beacon_time_corrections){
    beacon_logger_data = fread(file,col.names = c('datetime',"MAC","RSSI"),skip = 1)
    beacon_logger_data[,MAC := toupper(MAC)] 
    beacon_logger_data[,datetime := ymd_hms(datetime,tz=tz)]
+   beacon_logger_data[,datetime := round_date(datetime, unit = "minutes")]
+   
    filename <- parse_filename_fun(file)
    
    #Fix time stamps if they are bad.
@@ -123,8 +125,9 @@ beacon_import_fun <- function(file,tz,preplacement,beacon_time_corrections){
       beacon_logger_data$loggerID <- filename$loggerID
       beacon_logger_data$HHID <- filename$HHID
       beacon_logger_data$sampletype <- filename$sampletype
+      beacon_logger_data<-beacon_logger_data[complete.cases(beacon_logger_data), ]
       
-      return(as.data.table(beacon_logger_data))
+      return(as.data.frame(beacon_logger_data))
    }
 }
 
@@ -137,8 +140,8 @@ beacon_import_fun <- function(file,tz,preplacement,beacon_time_corrections){
 #Correct time stamps if there are issues with them
 #Save timeseries of locations with meta_data.
 beacon_deployment_fun = function(preplacement,equipment_IDs,tz,local_tz,beacon_data_timeseries,lascar_calibrated_timeseries,pats_data_timeseries){
-   base::message(preplacement$HHID)
    # preplacement<-mobenzilist[[11]]
+   base::message(preplacement$HHID)
    #Prep instrument IDs... take this part out to functionalize more generally later
    Beacons_mobenzi = data.frame(loggerID=c(id_slicer_add(preplacement$BeaconID1,5), id_slicer_add(preplacement$BeaconID2,5)))
    Beacons = merge(Beacons_mobenzi,equipment_IDs,by="loggerID")
@@ -148,29 +151,31 @@ beacon_deployment_fun = function(preplacement,equipment_IDs,tz,local_tz,beacon_d
                          HHID = c(preplacement$HHIDnumeric,preplacement$HHIDnumeric))
    Loggers = merge(Loggers,equipment_IDs,by='loggerID')
    start_time <- as.POSIXct(strftime(paste(as.Date(preplacement$Start,format = "%d-%m-%Y"),preplacement$DevicesONTime),tz=local_tz),tz=local_tz)
-   
+   # sampletypes = c("1","2","K","C","L","A")
    
    #Get beacon data from loggers and beacons of interest
-   beacon_logger_data <- beacon_data_timeseries[grepl(paste(unique(Loggers$loggerID),collapse="|"),loggerID),]
-   beacon_logger_data <- beacon_logger_data[grepl(paste(toupper(unique(Beacons$MAC)),collapse="|"),MAC),]
-   beacon_logger_data <- beacon_logger_data[datetime>start_time & datetime<start_time+86400,]
-   beacon_logger_data[,datetime := round_date(datetime, unit = "minutes")]
-   beacon_logger_data[,RSSI_minute_max := round(max(RSSI)), by = c("loggerID","datetime")] 
+   beacon_logger_data <- beacon_data_timeseries[grepl(paste(unique(Loggers$loggerID),collapse="|"),beacon_data_timeseries$loggerID),]
+   beacon_logger_data <- beacon_logger_data[grepl(paste(toupper(unique(Beacons$MAC)),collapse="|"),beacon_data_timeseries$MAC),]
+   beacon_logger_data <- beacon_logger_data[beacon_data_timeseries$datetime>start_time & beacon_data_timeseries$datetime<start_time+86400,]
+   beacon_logger_data[,RSSI_minute_max := round(max(beacon_data_timeseries$RSSI)), by = c("loggerID","datetime")] 
    beacon_logger_data <- unique(beacon_logger_data, by = c('datetime', 'loggerID'))
-   beacon_logger_data <- dplyr::left_join(beacon_logger_data,Loggers,by="loggerID") %>%
+   beacon_logger_data <- dplyr::left_join(beacon_logger_data,Loggers,by=c("HHID","loggerID")) %>%
       dplyr::group_by(datetime) %>%
       dplyr::mutate(RSSI_localization = max(RSSI_minute_max)) %>%
       dplyr::mutate(n=n()) %>%
       dplyr::mutate(location = as.character(location))%>%
       dplyr::mutate(location = ifelse((RSSI_minute_max[1]==mean(RSSI_minute_max)) & (n == 2),"Average",location)) %>%
+      dplyr::mutate(location = ifelse(is.na(RSSI_minute_max),"Ambient",location)) %>%
+      dplyr::mutate(sampletype = ifelse((RSSI_minute_max[1]==mean(RSSI_minute_max)) & (n == 2),"M",sampletype)) %>%
+      dplyr::mutate(sampletype = ifelse(is.na(RSSI_minute_max),"A",sampletype)) %>%
       dplyr::arrange(datetime) %>%
-      dplyr::select(-instrument,-sampletype,-RSSI) %>%
-      dplyr::filter(RSSI_minute_max==max(RSSI_minute_max)) %>%
+      dplyr::select(-instrument,-RSSI) %>%
+      dplyr::filter((RSSI_minute_max==max(RSSI_minute_max) | is.na(RSSI_minute_max))) %>%
       dplyr::distinct(datetime,.keep_all=TRUE)
    
    
    if(nrow(beacon_logger_data)==0){
-      base::message('Various possible issue!  May check the Mobenzi start date/time or Beacon file timestamps.  Also possible that no Beacon emitter found, please check Beacon inventory and Beacon logger file, Check ID_missing_beacons for more information')
+      base::message('No Beacon data found, various possible issue!  May check the Mobenzi start date/time or Beacon file timestamps or IDs.  Also possible that no Beacon emitter found, please check Beacon inventory and Beacon logger file, Check ID_missing_beacons for more information')
       base::message(paste('Beacon IDs found: ', paste(Beacons_mobenzi$loggerID,collapse = ' ')))
       base::message(paste('Mobenzi Start Date: ', preplacement$Start))
       
@@ -179,7 +184,14 @@ beacon_deployment_fun = function(preplacement,equipment_IDs,tz,local_tz,beacon_d
       #merge with realtime data for indirect measures (there will be some duplicate values)
       # Merge beacon data with Lascar, by HHID and location, but also save both environments' measurements in the time series.
       # beacon_logger_data = merge(beacon_logger_data, pats_data_timeseries[,c("datetime","deviceID","filter_id","ECM_location","ECM_PM")], by.x = c("datetime3","monitor_env"),by.y = c("datetime2","ECM_location"), all.x = T, all.y = F)
-      # beacon_logger_data = merge(beacon_logger_data, lascar_calibrated_timeseries[,c("datetime","ECM_serialNumber","filter_id","ECM_location","ECM_PM")], by.x = c("datetime3","monitor_env"),by.y = c("datetime2","ECM_location"), all.x = T, all.y = F)
+
+      
+      # lascar_calibrated_subset <- lascar_calibrated_timeseries[lascar_calibrated_timeseries$HHID==preplacement$HHIDnumeric[1] |
+                                                                  # lascar_calibrated_timeseries$HHID==777,]
+      lascar_calibrated_subset <- lascar_calibrated_timeseries[lascar_calibrated_timeseries$datetime>start_time & lascar_calibrated_timeseries$datetime<start_time+86400,]
+      
+      beacon_
+      logger_data = merge(beacon_logger_data, lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
       
    }
    

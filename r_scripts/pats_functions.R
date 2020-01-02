@@ -40,6 +40,8 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dummy
     }else{
       
       raw_data[, datetime:=ymd_hms(as.character(dateTime), tz=tz)]
+      raw_data[,datetime := round_date(datetime, unit = "minutes")]
+      
       #Sample rate. Time difference of samples, in minutes.
       sample_timediff = as.numeric(median(diff(raw_data$datetime)))/60
       
@@ -176,3 +178,4 @@ pats_import_fun <- function(file,output='raw_data',tz){
     }
   }
 }
+

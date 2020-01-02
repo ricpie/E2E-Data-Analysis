@@ -169,7 +169,7 @@ lascar_qa_fun <- function(file, setShiny=TRUE,output= 'meta_data',tz){
       flags_str <- suppressWarnings(paste(melt(meta_data[,c(colnames(meta_data)[colnames(meta_data) %like% "flag"]), with=F])[value>0 & variable!="flag_total", gsub("_flag", "" , variable)] , collapse=", "))
       
       meta_data[, flags:=flags_str]
-      as.data.frame(calibrated_data)
+      as.data.table(calibrated_data)
       
       #Plot the CO data and save it
       tryCatch({ 
@@ -212,8 +212,14 @@ lascar_cali_fun <- function(file,output='calibrated_data',tz){
       calibrated_data$loggerID <- meta_data$loggerID
       calibrated_data$HHID <- meta_data$HHID
       calibrated_data$sampletype <- meta_data$sampletype
+      # calibrated_data[,datetime := round_date(datetime, unit = "minutes")]
+      # calibrated_data[,datetime := round_date(datetime, unit = "minutes")]
+      # calibrated_data[,datetime := round_date(datetime, unit = "minutes")]
+      # calibrated_data[,datetime := round_date(datetime, unit = "minutes")]
+      calibrated_data[,datetime := round_date(datetime, unit = "minutes")]
       
       return(calibrated_data)
     }
   }
 }
+

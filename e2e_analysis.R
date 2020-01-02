@@ -10,7 +10,7 @@ mobenzi <- mobenzi_import_fun() # Import Mobenzi data
 path_other <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/Excel databases/Other databases.xlsx"
 metadata_ambient <- ambient_import_fun(path_other,sheetname='Ambient Sampling')
 metadata_filter_record <- upas_record_import_fun(path_other, sheetname='UPAS Filter record')
-path_emissions <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/Excel databases/2019 Kenya Emissions database.xlsx"
+path_emissions <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/Excel databases/USE THIS COPY_2019 Kenya Emissions database.xlsx"
 meta_emissions <- emissions_import_fun(path_emissions,sheetname='Ambient Sampling')
 
 
@@ -37,8 +37,10 @@ file_list_lascar <- list.files(lascarfilepath, pattern='.txt|.TXT', full.names =
 file_list_lascar_caa <- list.files(lascarfilepath_caa, pattern='.txt|.TXT', full.names = T,recursive = F)
 lascar_meta <- ldply(setdiff(c(file_list_lascar,file_list_lascar_caa),processed_filelist), lascar_qa_fun, .progress = 'text',tz=local_tz)  
 
+
 # Time series Lascar
-lascar_calibrated_timeseries <- rbind(lascar_calibrated_timeseries,ldply(setdiff(c(file_list_lascar,file_list_lascar_caa),processed_filelist), lascar_cali_fun, .progress = 'text',tz=local_tz))
+# lascar_calibrated_timeseries <- rbind(lascar_calibrated_timeseries,ldply(setdiff(c(file_list_lascar,file_list_lascar_caa),processed_filelist), lascar_cali_fun, .progress = 'text',tz=local_tz))
+lascar_calibrated_timeseries <- ldply(c(file_list_lascar,file_list_lascar_caa), lascar_cali_fun, .progress = 'text',tz=local_tz)
 saveRDS(lascar_calibrated_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Calibrated Lascar.R")
 
 
@@ -48,7 +50,7 @@ file_list_pats <- list.files(patsfilepath, pattern='.csv|.CSV', full.names = T,r
 pats_meta_qaqc <- ldply(file_list_pats, pats_qa_fun, .progress = 'text',tz="UTC")
 pats_data_timeseries <-as.data.table(ldply(file_list_pats, pats_import_fun, .progress = 'text',tz="UTC",mobenzi$preplacement))
 saveRDS(pats_data_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/pats_data_timeseries.R")
-# Import ECM/Micropem data, and join with the PATS+ data
+# Todo: Import ECM/Micropem data, and join with the PATS+ data
 
 # Beacon data
 beaconfilepath <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/Beacon Logger"
@@ -58,18 +60,18 @@ beacon_meta_qaqc <- ldply(setdiff(file_list_beacon,processed_filelist), beacon_q
 # Import Beacon timeseries, with metadata
 beacon_time_corrections=data.frame(filename=c("2019-09-19_KE152-KE004-L_1296","2019-09-19_KE152-KE004-L_129asdfsdf"),
                                    newstartdatetime=c(ymd_hms("2019-09-18T11:44:52GMT",tz="UTC"),ymd_hms("2019-09-18T11:00:52GMT",tz="UTC")))
-beacon_data_timeseries <-rbind(beacon_data_timeseries,as.data.table(ldply(setdiff(file_list_beacon,processed_filelist), beacon_import_fun,
+# beacon_data_timeseries <-rbind(beacon_data_timeseries,as.data.table(ldply(setdiff(file_list_beacon,processed_filelist), beacon_import_fun,
                                                                           .progress = 'text',tz="UTC",mobenzi$preplacement,beacon_time_corrections)))
+beacon_data_timeseries <-ldply(file_list_beacon, beacon_import_fun,.progress = 'text',tz="UTC",mobenzi$preplacement,beacon_time_corrections)
 saveRDS(beacon_data_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Beacon_RawData.R")
 
-# Build Beacon location time series
-# Use Mobenzi to figure out what instruments were in each deployments, plot stuff.
+# Build Beacon location time series with exposure estimates
 mobenzilist <- lapply(seq_len(nrow(mobenzi$preplacement)), function(i) mobenzi$preplacement[i,])
 beacon_localization <- ldply(mobenzilist, beacon_deployment_fun, .progress = 'text',equipment_IDs,tz,local_tz,beacon_data_timeseries,
-                             lascar_calibrated_timeseries,pats_data_timeseries) 
+                             lascar_calibrated_timeseries,lascar_calibrated_timeseries) 
 saveRDS(beacon_localization,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Beacon_Locations.R")
 
-# * []Get Stove usage data integrated into analysis stream.
+# * Todo: Get Stove usage data integrated into analysis stream.
 # * Do basic usage analysis using the SUMs code
 # * Integrate events as time series flags.  Name variables based on possible stove types/locations: Indoor Trad/Outdoor Trad/LPG1/LPG2/Jiko/TraditionalCharcoal, etc.
 
@@ -79,7 +81,7 @@ file_list_PATS <- list.files("~/Dropbox/CA(Kenya)/UNOPs/Data from the team/PATS+
 filename_otherinstruments <- rbindlist(lapply(c(file_list_micropem,file_list_PATS), FUN=parse_filename_fun))
 
 
-# Build deployment checklist.
+# Use Mobenzi to figure out what instruments were in each deployments, compare with file names.
 deployment_check = ldply(mobenzilist, deployment_check_fun, .progress = 'text',equipment_IDs,tz,local_tz,meta_emissions,beacon_meta_qaqc,tsi_meta,lascar_meta,upasmeta)
 
 

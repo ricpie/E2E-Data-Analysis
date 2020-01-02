@@ -122,7 +122,7 @@ apply_lascar_calibration <- function(file,loggerIDval,raw_data){
       instrument = NA
     )}
   calibrated_data <- dplyr::mutate(raw_data,CO_ppm = CO_raw*logger_cali$COslope + logger_cali$COzero) %>%
-    dplyr::mutate(-CO_raw)
+    dplyr::select(-CO_raw)
 }
 
 ambient_import_fun <- function(path_other,sheetname){
