@@ -1,0 +1,2 @@
+download_date,file,datetime_start,datetime_end,qa_date,neph_slope,neph_offset,serial,hardware_dt,software_dt,software_vers,pid,loc,study_phase,filter_id,sampling_mode,shutdown_reason,dur,dur_flag,flow_avg,flow_sd,flow_min,flow_max,n_flow_deviation,percent_flow_deviation,flow_flag,bl_start,bl_night,bl_end,bl_flag,neph_mean,neph_sd,neph_min,neph_max,neph_n,neph_neg_n,neph_percent_neg,median_neg_neph,neph_flag,flag_total,flags,smry,analysis
+NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA

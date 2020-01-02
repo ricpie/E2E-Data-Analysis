@@ -1,0 +1,448 @@
+---
+title: "PeruNama2019_Plotting"
+author: "ricardo_piedrahita"
+date: "11/4/2019"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: united
+    self_contained: yes
+---
+
+```{r setup, include=FALSE,echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source('../r_scripts/load.R')
+# source('../r_scripts/load_data.R')
+```
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(fig.path='../figures/', warning=FALSE, message=FALSE, cache=FALSE)
+```
+
+# Import temperature data and metadata files
+```{r load_data, warning=FALSE}
+#Loads all SUMSARIZED data.  Reloads the RDS file if reimport_data is set to FALSE.  This is faster if all the data has been previously imported by setting it to TRUE.
+kpt_path <- "~/Dropbox/Peru 2019 NAMA Internal/Analysis/KPT and Survey/KPT_V29.10.2019_19.00_V1.xlsx"  
+kpt_data <- read_excel(kpt_path,sheet = 'Check_MR',skip=6)
+saveRDS(kpt_data, file ="r_files/kpt_data.RDS")
+
+#Save the sumsarized data to a single dataframe called sumsarized.RDS, located in r_files.
+kpt_data_all <- readRDS("../r_files/kpt_data.RDS") 
+kpt_data_all$`Annual total household CO2e emissions [tons/year]` <- as.numeric(kpt_data_all$`Annual total household CO2e emissions [tons/year]` )
+kpt_data_all$`Annual CO2e emissions per SA [tons/year/SA]` <- as.numeric(kpt_data_all$`Annual CO2e emissions per SA [tons/year/SA]`)
+kpt_data_all$`Chimney Corrosion (1=corroded, 2=partial, 3=good condition)` <- as.factor(kpt_data_all$`Chimney Corrosion (1=corroded, 2=partial, 3=good condition)`)
+kpt_data_all$`Combustion chamber` <- as.factor(kpt_data_all$`Combustion chamber`)
+kpt_data_all$Grating <- as.factor(kpt_data_all$Grating)
+kpt_data_all$`Plancha/top`<-as.factor(kpt_data_all$`Plancha/top`)
+kpt_data_all$`Study Group` <- as.factor(kpt_data_all$`Study Group`)
+kpt_data_all$`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)` <- as.numeric(kpt_data_all$`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)`)
+survey_data_all <- dplyr::mutate(kpt_data_all,`More or less fuel than usual Day 1`= gsub('More','Mas',`More or less fuel than usual Day 1`)) %>%
+  dplyr::mutate(`More or less fuel than usual Day 1`= gsub('Less','Menos',`More or less fuel than usual Day 1`)) %>%
+  dplyr::mutate(`More or less fuel than usual Day 1`= gsub('Same','Mismo',`More or less fuel than usual Day 1`)) %>%
+  dplyr::mutate(`More or less fuel than usual Day 2`= gsub('More','Mas',`More or less fuel than usual Day 2`)) %>%
+  dplyr::mutate(`More or less fuel than usual Day 2`= gsub('Less','Menos',`More or less fuel than usual Day 2`)) %>%
+  dplyr::mutate(`More or less fuel than usual Day 2`= gsub('Same','Mismo',`More or less fuel than usual Day 2`)) %>% # `Study Group`
+  dplyr::mutate(Grating= gsub('No usa rejilla','Rejilla no instalada',Grating)) %>% # `Study Group`
+  dplyr::mutate(`Study Group`= gsub('Improved','Mejorada',`Study Group`)) %>%  
+  dplyr::mutate(`Study Group`= gsub('Baseline','Tradicional',`Study Group`)) %>%
+  dplyr::mutate(`Stove name`= gsub('Cocina mejorada selva','Cocina selva',`Stove name`)) %>%  
+  dplyr::mutate(Fase = "Fase1") %>%
+  dplyr::mutate(Fase = if_else(`Region name` == "Huanuco" | `Region name` == "Huancavelica" | `Region name` == "Cusco","Fase 1","Fase 2")) %>%
+  dplyr::filter(!is.na(Household)) 
+
+#Analyze KPT phase 1 and phase 2 data separately if needed.  Mainly useful for plotting and reporting needs.        
+
+survey_data_fase1 <- dplyr::filter(survey_data_all,`Region name` == "Huanuco" | `Region name` == "Huancavelica" | `Region name` == "Cusco" ) 
+survey_data_fase2 <- dplyr::filter(survey_data_all,`Region name` != "Huanuco" & `Region name` != "Huancavelica" & `Region name` != "Cusco" ) 
+kpt_data_all <- dplyr::filter(survey_data_all,`KPT Ocurring?` == 1) 
+kpt_data_fase1 <- dplyr::filter(kpt_data_all,`Region name` == "Huanuco" | `Region name` == "Huancavelica" | `Region name` == "Cusco" ) 
+kpt_data_fase2 <- dplyr::filter(kpt_data_all,`Region name` != "Huanuco" & `Region name` != "Huancavelica" & `Region name` != "Cusco" ) 
+#%>%
+#dplyr::filter(`Study Group` == 'Tradicional' | (`Primary stove age (months)` < 24 & `Study Group` == 'Mejorada'))
+# dplyr::mutate(`Stove name`= gsub('Tradicional/3-piedras','Trad',`Stove name`)) %>%  
+# dplyr::mutate(`Stove name`= gsub('Haku Wiñay tipo valle interandino','Haku Inter',`Stove name`)) %>%  
+# dplyr::mutate(`Stove name`= gsub('Inkawasi 3 hornillas','Inkawasi 3H',`Stove name`)) 
+```
+
+# Plot functions for main KPT results
+
+```{r figures,echo=FALSE, fig.width=8, fig.height=4}
+
+
+give.mean_minutes_kg <- function(x){
+  return(c(y =mean(x)+2, label = round(mean(x),digits=2)))}
+give.mean_minutes_LPG <- function(x){
+  return(c(y =mean(x)+0.25, label = round(mean(x),digits=2)))}
+give.mean_minutes_energia <- function(x){
+  return(c(y =mean(x)+10, label = round(mean(x),digits=1)))}
+
+#To make box and whiskers quantiles rather than IQRs.
+f <- function(x) {
+  r <- quantile(x, probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
+  names(r) <- c("ymin", "lower", "middle", "upper", "ymax")
+  r }
+give.n <- function(x){
+  return(c(y = 0, label = length(x)))
+}
+
+#Box plot of KPT results, by two groups, and by stove type.
+kpt_plot <- function(df, x_var, y_var , facet_var1 , facet_var2 , plot_title, xlabel,ylabel,giver){
+  ggplot(df,aes_string(x=x_var, y = y_var)) +
+    stat_summary(fun.data = f, geom="boxplot") +   
+    geom_jitter(height = 0,width = 0.1,alpha = 0.25) +
+    stat_summary(fun.y=mean, colour="blue", geom="point", shape=18, size=4.5,alpha = 0.5)+
+    stat_summary(fun.data = giver, geom = "text",colour="blue") + 
+    labs(title= plot_title,y=ylabel,x=xlabel) + stat_summary(fun.data = give.n, geom = "text") + 
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10))+
+    theme(axis.text.x = element_text(angle = 60, hjust = 1,size=8), axis.title=element_text(size=9)) + 
+    facet_grid(as.formula(paste("~",facet_var1,"+",facet_var2)),scales = "free",labeller = labeller(facet_var = label_wrap_gen(width = 15)))
+}
+#________________________________________________________
+
+#________________________________________________________
+
+#Box plot of KPT results, by region, and community, and by stove type.  With T-tests.
+kpt_plot_ttest <- function(df, x_var, y_var , facet_var1 , facet_var2 , plot_title, xlabel,ylabel,giver){
+  ggplot(df,aes_string(x=x_var, y = y_var)) +
+    stat_summary(fun.data = f, geom="boxplot") +   
+    geom_jitter(height = 0,width = 0.1,alpha = 0.25) +
+    stat_summary(fun.y=mean, colour="blue", geom="point", shape=18, size=4.5,alpha = 0.5)+
+    # stat_summary(fun.data = giver, geom = "text",colour="blue") + 
+    # labs(y=ylabel,x=xlabel) + stat_summary(fun.data = give.n, geom = "text") + 
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 10))+
+    # theme(axis.text.x = element_text(angle = 60, hjust = 1)) + 
+    facet_grid(as.formula(paste("~",facet_var1,"+",facet_var2)),scales = "free",labeller = labeller(facet_var = label_wrap_gen(width = 15))) +
+    stat_compare_means(method = "t.test") 
+}
+#________________________________________________________
+
+#________________________________________________________
+
+#Box plot of KPT results, by ONE groups, and by stove type.
+kpt_plot_onevar <- function(df, x_var, y_var , facet_var1, plot_title, xlabel,ylabel,giver){
+  ggplot(df,aes_string(x=x_var, y = y_var)) +
+    stat_summary(fun.data = f, geom="boxplot") +   
+    geom_jitter(height = 0,width = 0.1,alpha = 0.25) +
+    stat_summary(fun.y=mean, colour="blue", geom="point", shape=18, size=4.5,alpha = 0.5)+
+    stat_summary(fun.data = giver, geom = "text",colour="blue") + 
+    labs(title= plot_title,y=ylabel,x=xlabel) + stat_summary(fun.data = give.n, geom = "text") + 
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10))+
+    theme(axis.text.x = element_text(angle = 60, hjust = 1,size=8),axis.title=element_text(size=9)) + 
+    # stat_compare_means(method = "t.test") 
+    facet_grid(as.formula(paste("~",facet_var1)),scales = "free",labeller = labeller(facet_var = label_wrap_gen(width = 15)))
+}
+#________________________________________________________
+
+#________________________________________________________
+
+#Box plot of KPT results, by ONE groups, and by stove type.
+kpt_plot_onevar_ttest <- function(df, x_var, y_var , facet_var1, plot_title, xlabel,ylabel,giver){
+  ggplot(df,aes_string(x=x_var, y = y_var)) +
+    stat_compare_means(method = "t.test") +
+    stat_summary(fun.data = f, geom="boxplot") +   
+    geom_jitter(height = 0,width = 0.1,alpha = 0.25) +
+    stat_summary(fun.y=mean, colour="blue", geom="point", shape=18, size=4.5,alpha = 0.5)+
+    stat_summary(fun.data = giver, geom = "text",colour="blue") + 
+    labs(title= plot_title,y=ylabel,x=xlabel) + stat_summary(fun.data = give.n, geom = "text") + 
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10))+
+    theme(axis.text.x = element_text(angle = 60, hjust = 1)) + 
+    facet_grid(as.formula(paste("~",facet_var1)),scales = "free",labeller = labeller(facet_var = label_wrap_gen(width = 15)))
+}
+#________________________________________________________
+
+#________________________________________________________
+
+all_plots <- function(kpt_data_all){
+  region_community_fuelplot <- kpt_plot(kpt_data_all, x_var="`Stove name`", y_var = "`Total Mean_dry_daily_fuel (kg/day)`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="",ylabel="Consumo de leña [kg/día]", xlabel="",give.mean_minutes_kg ); print(region_community_fuelplot)
+  # region_community_fuelplot_t <- kpt_plot_ttest(kpt_data_all, x_var="`Stove name`", y_var = "`Total Mean_dry_daily_fuel (kg/day)`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = "Consumo de leña [kg/día]",give.mean_minutes_kg);print(region_community_fuelplot_t)
+  
+  region_community_fuelSAplot <- kpt_plot(kpt_data_all, x_var="`Stove name`", y_var = "`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = "Consumo de leña por día por adulto estándar [kg/día/SA]",give.mean_minutes_kg ); print(region_community_fuelSAplot)
+  # region_community_fuelSAplot_t <- kpt_plot_ttest(kpt_data_all, x_var="`Stove name`", y_var = "`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = "Consumo de leña por adulto estándar [kg/día/SA]",give.mean_minutes_kg ); print(region_community_fuelSAplot_t)
+  
+  
+  # region_community_biomassMJ_SAplot <- kpt_plot(kpt_data_all, x_var="`Stove name`", y_var = "`Total biomass energy used per SA (MJ/day/SA)`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="Energia de biomasa leñosa por día por SA", xlabel="",ylabel = "[MJ/día/SA]",give.mean_minutes_energia);print(region_community_biomassMJ_SAplot)
+  # region_community_biomassMJ_SAplot_t <- kpt_plot_ttest(kpt_data_all, x_var="`Stove name`", y_var = "`Total biomass energy used per SA (MJ/day/SA)`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = "Energia de biomasa leñosa por SA [MJ/día/SA]",give.mean_minutes_energia ); print(region_community_biomassMJ_SAplot_t)
+  
+  #Box plot of KPT results, by region, and community, and by stove type, per capita
+  region_CO2e_SAplot <- kpt_plot(kpt_data_all, x_var="`Stove name`", y_var = "`Annual CO2e emissions per SA [tons/year/SA]`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = "Emisiones CO2e por año por adulto estandar [t/año/SA]",give.mean_minutes_kg);print(region_CO2e_SAplot)
+  # Regional_CO2e_SAplot_t <- kpt_plot_ttest(kpt_data_all, x_var="`Stove name`", y_var = "`Annual total household CO2e emissions [tons/year]`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = "Emisiones CO2e [t/año/SA]",give.mean_minutes_kg);print(Regional_CO2e_SAplot_t+  stat_compare_means(method = "t.test"))
+  
+  region_community_MJ_SAplot <- kpt_plot(kpt_data_all, x_var="`Stove name`", y_var = "`Total energy used per SA (MJ/day/SA)`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = "Consumo de energia por día por adulto estándar [MJ/día/SA]",give.mean_minutes_energia );print(region_community_MJ_SAplot)
+  # region_community_MJ_SAplot_t <- kpt_plot_ttest(kpt_data_all, x_var="`Stove name`", y_var = "`Total energy used per SA (MJ/day/SA)`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = "Consumo de energia por adulto estándar [MJ/día/SA]",give.mean_minutes_energia );print(region_community_MJ_SAplot_t)
+  
+  # #Box plot of KPT results, by region ONLY, and by stove type.
+  # region_kg_SAplot <- kpt_plot_onevar(kpt_data_all, x_var="`Study Group`", y_var = "`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)`", facet_var1 = "`Region name`", plot_title="Consumo de leña por día por adulto estándar", xlabel="",ylabel = " [kg/día/SA]",give.mean_minutes_kg);print(region_kg_SAplot)
+  
+  #LPG wood equivalent value.
+  region_community_LPGequivalent_SAplot <- kpt_plot(kpt_data_all, x_var="`Stove name`", y_var = "`Total wood equivalent energy used (MJ/day/SA)`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = "Energia en terminos de leña equivalente / día / SA [MJ/día/SA]" ,give.mean_minutes_energia); print(region_community_LPGequivalent_SAplot)
+  # region_community_LPG_SAplot_t <- kpt_plot_ttest(kpt_data_all, x_var="`Stove name`", y_var = "`Total LPG energy used per SA (MJ/day/SA)`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = "Energia de GLP por SA [MJ/día/SA]",give.mean_minutes_LPG ); print(region_community_LPG_SAplot_t)
+  
+  region_community_LPG_SAplot <- kpt_plot(kpt_data_all, x_var="`Stove name`", y_var = "`Total LPG energy used per SA (MJ/day/SA)`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = "Energia de GLP por día por adulto estándar [MJ/día/SA]" ,give.mean_minutes_kg); print(region_community_LPG_SAplot)
+  # region_community_LPG_SAplot_t <- kpt_plot_ttest(kpt_data_all, x_var="`Stove name`", y_var = "`Total LPG energy used per SA (MJ/day/SA)`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = "Energia de GLP por SA [MJ/día/SA]",give.mean_minutes_LPG ); print(region_community_LPG_SAplot_t)
+  
+  region_community_LPGkg_SAplot <- kpt_plot(kpt_data_all, x_var="`Stove name`", y_var = "`Total LPG used (kg/day/SA)`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = " Kg de GLP por día por adulto estándar [Kg/día/SA]",give.mean_minutes_LPG ); print(region_community_LPGkg_SAplot)
+  
+  # #Box plot of KPT results, countrywide, and by stove type.
+  # national_kg_SAplot <- kpt_plot_onevar(kpt_data_all, x_var="`Study Group`", y_var = "`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)`", facet_var1 = "`Study Group`", plot_title="Consumo de leña por día por adulto estándar", xlabel="",ylabel = " [kg/día/SA]",give.mean_minutes_kg);print(national_kg_SAplot)
+  
+  
+  
+  national_wood_SAplot <- kpt_plot_onevar(kpt_data_all, x_var="`Study Group`", y_var = "`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)`", facet_var1 = "`Study Group`", plot_title="", xlabel="",ylabel = "Consumo de leña por día por adulto estándar [kg/día/SA]",giver=give.mean_minutes_energia ); print(national_wood_SAplot)
+  
+  #Box plot of KPT results, countrywide, and by stove type.
+  national_CO2e_SAplot <- kpt_plot_onevar(kpt_data_all, x_var="`Study Group`", y_var = "`Annual CO2e emissions per SA [tons/year/SA]`", facet_var1 = "`Study Group`", plot_title="", xlabel="",ylabel = " Emisiones CO2e por año por adulto estandar [t/año/SA]",give.mean_minutes_kg);print(national_CO2e_SAplot)
+  
+  national_MJ_SAplot <- kpt_plot_onevar(kpt_data_all, x_var="`Study Group`", y_var = "`Total energy used per SA (MJ/day/SA)`", facet_var1 = "`Study Group`", plot_title="", xlabel="",ylabel = "Consumo de energia por día por adulto estándar [MJ/día/SA]",giver=give.mean_minutes_energia ); print(national_MJ_SAplot)
+  
+  #Box plot of KPT results, by region, and community, and by stove type.
+  # Regional_CO2e_totalplot <- kpt_plot(kpt_data_all, x_var="`Stove name`", y_var = "`Annual total household CO2e emissions [tons/year]`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="Emisiones CO2e en los hogares ", xlabel="",ylabel = "[t/año]",give.mean_minutes_kg);Regional_CO2e_totalplot
+  # Regional_CO2e_totalplot_t <- kpt_plot_ttest(kpt_data_all, x_var="`Stove name`", y_var = "`Annual total household CO2e emissions [tons/year]`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", plot_title="", xlabel="",ylabel = "Emisiones CO2e en los hogares [t/año]",give.mean_minutes_kg);print(Regional_CO2e_totalplot_t)
+  
+  
+  #Stove used more less or same as typical, day 1
+  gMoreLess <- ggplot(kpt_data_all,aes(`More or less fuel than usual Day 1`)) +
+    geom_bar()+
+    facet_grid(~`Stove name`+`Community name`, scale="free_x",space = "free") +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1))+
+    scale_y_continuous(breaks=pretty_breaks()) + 
+    labs(y="Hogares",x="") 
+  print(gMoreLess)
+  
+  gMoreLess2 <- ggplot(kpt_data_all,aes(`More or less fuel than usual Day 2`)) +
+    facet_grid(~`Stove name`+`Community name`, scale="free_x",space = "free") +
+    geom_bar()+
+    theme(axis.text.x = element_text(angle = 60, hjust = 1))+
+    scale_y_continuous(breaks=pretty_breaks()) + 
+    labs(y="Hogares",x="") 
+  print(gMoreLess2)
+}
+# 
+# lm_eqn = function(df){
+#     m = lm(`Primary stove age (months)` ~ `Annual CO2e emissions per SA [tons/year/SA]`, df);
+#     eq <- substitute(~~R^2~"="~r2, 
+#                      list(r2 = format(summary(m)$r.squared, digits = 3)))
+#     as.character(as.expression(eq));                 
+# }
+# eqns <- by(kpt_data, kpt_data$`Annual CO2e emissions per SA [tons/year/SA]`, lm_eqn)
+# df2 <- data.frame(eq = unclass(eqns), roi_size = as.numeric(names(eqns)))
+
+```
+
+#STATS PLOTS
+```{r ttestplots,echo=TRUE,fig.width=8, fig.height=8}
+
+ttestplot <-  ggplot(kpt_data_all,aes_string(x="`Stove name`", y = "`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)`")) +
+  stat_summary(fun.data = f, geom="boxplot") +   
+  geom_jitter(height = 0,width = 0.1,alpha = 0.25) +
+  stat_summary(fun.y=mean, colour="blue", geom="point", shape=18, size=4.5,alpha = 0.5)+
+  facet_wrap(~`Region name`+`Community name`,ncol = 3,labeller = labeller(facet_var = label_wrap_gen(width = 15))) +
+  stat_compare_means(method = "t.test")+  
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1)) 
+ttestplot
+ttestplot2 <-  ggplot(kpt_data_all,aes_string(x="`Stove name`", y = "`Annual CO2e emissions per SA [tons/year/SA]`")) +
+  stat_summary(fun.data = f, geom="boxplot") +   
+  geom_jitter(height = 0,width = 0.1,alpha = 0.25) +
+  stat_summary(fun.y=mean, colour="blue", geom="point", shape=18, size=4.5,alpha = 0.5)+
+  facet_wrap(~`Region name`+`Community name`,ncol = 3,labeller = labeller(facet_var = label_wrap_gen(width = 15))) +
+  stat_compare_means(method = "t.test") +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10))+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))  
+ttestplot2
+```
+
+# Phase 1 KPT figures
+
+```{r all_plots_together,echo=TRUE,fig.width=7, fig.height=4}
+all_plots(kpt_data_fase1)
+
+```
+
+# Phase 2 KPT figures
+
+```{r all_phase1_plots,echo=TRUE, fig.width=7, fig.height=4}
+all_plots(kpt_data_fase2)
+```
+
+# All data KPT figures
+
+```{r all_phase2_plots,echo=TRUE, fig.width=7, fig.height=4}
+# all_plots(kpt_data_all)
+```
+
+```{r AgeFigures,echo=FALSE, fig.width=7, fig.height=4}
+
+
+eff_points <- function(df, x_var, y_var, facet_var1,facet_var2, plot_title, xlabel,ylabel) {
+  ggplot(df, aes_string(x=x_var,y=y_var)) +
+    geom_point() +
+    facet_grid(as.formula(paste("~",facet_var1,"+",facet_var2)),scales = "free",labeller = labeller(facet_var = label_wrap_gen(width = 15)))+
+    theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+    # scale_y_continuous(breaks=pretty_breaks()) + 
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 20))+
+    labs(title=plot_title,y=ylabel,x = xlabel) + 
+    geom_smooth(method='lm')# +
+  # xlim(0, xlim2) + ylim(0,ylim2)
+}
+
+eff_points2 <- function(df, x_var, y_var, facet_var, plot_title, xlabel,ylabel) {
+  ggplot(df, aes_string(x=x_var,y=y_var)) +
+    geom_point() +
+    facet_wrap(facet_var, scales = "free",labeller = labeller(facet_var = label_wrap_gen(width = 15))) +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1),axis.title=element_text(size=9)) +
+    # scale_x_discrete(labels = function(x) str_wrap(x, width = 20))+
+    labs(title=plot_title,x="",y=ylabel,x = xlabel) + 
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 10))+
+    geom_smooth(method='lm')# +
+  # xlim(0, xlim2) + ylim(0,ylim2)
+}
+#Scatter of efficiency vs. Chimney
+all_eff_plots <- function(kpt_data_all){
+  
+  #Scatter of efficiency vs. main cook age
+  eff_age<-eff_points(asdf<-dplyr::filter(kpt_data_all,`Stove name` != "Tradicional/3-piedras"),x_var ="`Primary stove age (months)`", y_var =  "`Annual CO2e emissions per SA [tons/year/SA]`",facet_var1 = "`Region name`",facet_var2 = "`Stove name`",plot_title = "Edad de cocina y emisiones",xlabel = "Edad de cocinas (meses)",ylabel = " Emisiones CO2e por año por adulto estandar [t/año/SA]")
+  print(eff_age)
+  
+  #Scatter of efficiency vs. stove age
+  eff_age<-eff_points(asdf<-dplyr::filter(kpt_data_all,`Stove name` != "Tradicional/3-piedras"),x_var ="`Primary stove age (months)`", y_var = "`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)`",facet_var1 = "`Region name`",facet_var2 = "`Stove name`",plot_title = "Edad de cocina y efficiencia",xlabel = "Edad de cocinas (meses)",ylabel = "Consumo de combustible de biomasa [kg/dia/SA]")
+  print(eff_age)
+  
+  eff_chimney<-eff_points2(kpt_data_all,x_var ="`Chimney Corrosion (1=corroded, 2=partial, 3=good condition)`", y_var = "`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)`",facet_var = "`Stove name`",plot_title = "Condición de la  chimenea y efficiencia",xlabel = "Condicion de chimenea",ylabel = "Consumo de combustible de biomasa [kg/dia/SA]")
+  print(eff_chimney)
+  #Scatter of efficiency vs. combustion chamber
+  eff_chamber<-eff_points2(kpt_data_all,x_var ="`Combustion chamber`", y_var = "`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)`",facet_var = "`Stove name`",plot_title = "Condicion de la camera de combustion y efficiencia",xlabel = "Condición de la camara de combustion",ylabel = "Consumo de combustible de biomasa [kg/dia/SA]")
+  print(eff_chamber)
+  #Scatter of efficiency vs. grating
+  eff_rejilla<-eff_points2(kpt_data_all,x_var ="Grating", y_var = "`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)`",facet_var = "`Stove name`",plot_title = "Condicion de la rejilla y efficiencia",xlabel = "Condición de la rejilla",ylabel = "Consumo de combustible de biomasa [kg/dia/SA]")
+  print(eff_rejilla)
+  eff_plancha <- eff_points2(kpt_data_all,x_var ="`Plancha/top`", y_var = "`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)`",facet_var = "`Stove name`",plot_title = "Condicion de la plancha y efficiencia",xlabel = "Condición de la plancha",ylabel = "Consumo de combustible de biomasa [kg/dia/SA]")
+  print(eff_plancha)
+  eff_base <- eff_points2(kpt_data_all,x_var ="Base", y_var = "`Total Mean_dry_daily_fuel per Standard Adult (kg/day/SA)`",facet_var = "`Stove name`",plot_title = "Condicion de la base y efficiencia",xlabel = "Condición de la base",ylabel = "Consumo de combustible de biomasa [kg/dia/SA]")
+  print(eff_base)
+}
+
+
+```
+
+
+
+# Age phase 1 figures
+```{r all_effphase1_plots,echo=TRUE, fig.width=8, fig.height=4}
+all_eff_plots(kpt_data_fase1)
+```
+
+# Age phase 2 figures
+```{r all_effphase2_plots,echo=TRUE, fig.width=8, fig.height=4}
+all_eff_plots(kpt_data_fase2)
+```
+
+# Age all data figures
+```{r all_effplots_together,echo=TRUE, fig.width=8, fig.height=4}
+# all_eff_plots(kpt_data_all)
+```
+
+```{r ConditionFigures,echo=TRUE, fig.width=7, fig.height=8}
+
+#Bar plot with categories
+condition_bar <- function(df, y_var, facet_var,plot_title,ylabel) {
+  ggplot(df, aes_string(y_var)) +
+    geom_bar()+
+    facet_wrap(facet_var, scales = "fixed",ncol = 2,labeller = labeller(facet_var = label_wrap_gen(width = 15))) +
+    scale_y_continuous(breaks=pretty_breaks()) + 
+    theme(axis.text.x = element_text(angle = 60, hjust = 1,size=10),axis.title=element_text(size=9)) +
+    scale_y_continuous(breaks=pretty_breaks()) + 
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 25))+
+    labs(title=plot_title,x="",y=ylabel)
+}
+all_condition_plots <- function(kpt_data_all){
+  condition_chamber<-condition_bar(kpt_data_all,"`Combustion chamber`","`Stove name`","Condicion de la camera de combustion","Hogares"); print(condition_chamber)
+  condition_chimney<-condition_bar(kpt_data_all,"`Chimney Corrosion (1=corroded, 2=partial, 3=good condition)`","`Stove name`","Condicion de la chimenea","Hogares"); print(condition_chimney)
+  condition_rejilla<-condition_bar(kpt_data_all,"`Grating`","`Stove name`","Condicion de la rejilla","Hogares");print(condition_rejilla)
+  condition_base<-condition_bar(kpt_data_all,"`Base`","`Stove name`","Condicion de la base","Hogares");print(condition_base)
+  condition_plancha<-condition_bar(kpt_data_all,"`Plancha/top`","`Stove name`","Condicion de la plancha","Hogares");print(condition_plancha)
+  frequency_ash<-condition_bar(kpt_data_all,"`Ash cleaning`","`Stove name`","Frecuencia de limpiada de cenizas","Hogares");print(frequency_ash)
+  frequency_chimeney<-condition_bar(kpt_data_all,"`Flue cleaning frequency`","`Stove name`","Frecuencia de limpiada de chimenea","Hogares");print(frequency_chimeney)
+  frequency_cracks<-condition_bar(kpt_data_all,"`Frequency of cracks repaired`","`Stove name`","Frecuencia de arreglo de grietas","Hogares");print(frequency_cracks)
+  frequency_parts<-condition_bar(kpt_data_all,"`Parts replaced`","`Stove name`","Frecuencia de remplazo de partes","Hogares");print(frequency_parts)
+}
+
+
+
+```
+
+# Condition phase 1 figures
+```{r all_condplots_together,echo=TRUE, fig.width=7, fig.height=8}
+all_condition_plots(survey_data_fase1)
+```
+
+# Condition phase 2 figures
+```{r all_condphase1_plots,echo=TRUE, fig.width=7, fig.height=8}
+all_condition_plots(survey_data_fase2)
+```
+
+# Condition all data figures
+```{r all_condphase2_plots,echo=TRUE, fig.width=7, fig.height=8}
+# all_condition_plots(survey_data_all)
+```
+
+# Wood plots
+```{r wood_plots,echo=TRUE, fig.width=6, fig.height=10}
+
+condition_bar_values <- function(df, y_var, facet_var1,facet_var2,plot_title,ylabel) {
+  ggplot(df, aes_string(y_var)) +
+    geom_bar() +
+    facet_wrap(as.formula(paste("~",facet_var1,"+",facet_var2)),scales = "fixed",ncol = 2,labeller = labeller(facet_var = label_wrap_gen(width = 15))) +
+    scale_y_continuous(breaks=pretty_breaks()) + 
+    theme(axis.text.x = element_text(angle = 60, hjust = 1,size=12)) +
+    scale_y_continuous(breaks=pretty_breaks()) + 
+    scale_x_discrete(labels = function(x) str_wrap(x, width = 30)) +
+    labs(title=plot_title,x="",y=ylabel)
+}
+
+wood_collection_plots <- function(kpt_data_all){
+  fraction_purchased<-condition_bar(kpt_data_all,"`Fraction purchased`","`Region name`","Recogida y compra de leña","Hogares"); print(fraction_purchased)
+  wood_from_where<-condition_bar(kpt_data_all,"`Wood from where`","`Region name`","De donde proviene la leña","Hogares"); print(wood_from_where)
+  wood_collected_how <-condition_bar(kpt_data_all,"`Wood collected how`","`Region name`","Como se recoge la leña","Hogares"); print(wood_collected_how)
+  tree_percent_left<-condition_bar(kpt_data_all,"`Tree percent left`","`Region name`","Porcentaje de arbol que se deja al recoger leña","Hogares"); print(tree_percent_left)
+  wood_storage<-condition_bar(kpt_data_all,"`Where is the wood stored`","`Region name`","Metodo de guardar leña","Hogares"); print(wood_storage)
+  
+  
+  collected_permonth_this_season <- kpt_plot(kpt_data_all, x_var="`Region name`", y_var = "`Collection per month this season`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", xlabel="",ylabel = "Veces por mes", plot_title = "Frecuencia de recoleccion de leña en esta temporada",give.mean_minutes_kg);print(collected_permonth_this_season)
+  cost_pertrip <- kpt_plot(kpt_data_all, x_var="`Region name`", y_var = "`Wood cost per trip`", facet_var1 = "`Region name`", facet_var2 = "`Community name`",  xlabel="",ylabel = "Soles por viaje", plot_title = "Costo de recoleccion de leña en esta temporada ",give.mean_minutes_energia);print(cost_pertrip)
+  time_percollection <- kpt_plot(kpt_data_all, x_var="`Region name`", y_var = "`Wood collection trip time`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", xlabel="",ylabel ="Horas por viaje" , plot_title = "Tiempo para un viaje de recoleccionar leña",give.mean_minutes_kg);print(time_percollection)
+  time_perpurchase <- kpt_plot(kpt_data_all, x_var="`Region name`", y_var = "`Time spent per purchase`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", xlabel="",ylabel ="Horas por viaje" , plot_title = "Tiempo para comprar leña",give.mean_minutes_kg);print(time_perpurchase)
+  
+  collected_permonth_annual <- kpt_plot(kpt_data_all, x_var="`Region name`", y_var = "`Collection per month annually`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", xlabel="",ylabel ="Veces por mes" , plot_title = "Frecuencia de recoleccion de leña durante el año",give.mean_minutes_kg);print(collected_permonth_annual)                             
+  time_perpurchase_annual <- kpt_plot(kpt_data_all, x_var="`Region name`", y_var = "`Wood collection trip time`", facet_var1 = "`Region name`", facet_var2 = "`Community name`", xlabel="",ylabel = "Horas por viaje", plot_title = "Tiempo para comprar leña durante el año",give.mean_minutes_kg);print(time_perpurchase_annual)
+  
+  valuemost<-condition_bar_values(kpt_data_all,"`Value most`","`Community name`","`Stove name`","Que es lo mas valorado de esta cocina","Hogares"); print(valuemost)
+  dfvalue <- reshape(kpt_data_all,idvar=c("`Stove name`"),varying = c('Value.1','Value.2','Value.3','Value.4'),direction="long",times='Value') %>% dplyr::select(`Stove name`,Value,`Region name`,`Community name`) %>% dplyr::filter(Value != '0')
+  value1<-condition_bar_values(dfvalue,"Value","`Community name`","`Stove name`","Que mas valora de esta cocina","Hogares"); print(value1)
+  
+  challengemost<-condition_bar_values(kpt_data_all,"`Challenge most`","`Community name`","`Stove name`","Mayor desafio con esta cocina","Hogares"); print(challengemost)
+  dfChallenge <- reshape(kpt_data_all,idvar=c("`Stove name`"),varying = c('Challenge.1','Challenge.2'),direction="long",times='Challenge') %>% dplyr::select(`Stove name`,Challenge,`Region name`,`Community name`) %>% dplyr::filter(Challenge != '0')
+  challenge1<-condition_bar_values(dfChallenge,"`Challenge`","`Community name`","`Stove name`","Que otros desafios tiene con esta cocina","Hogares"); print(challenge1)
+  
+}
+```
+
+
+# wood phase 1 figures
+```{r all_woodplots_together,echo=TRUE, fig.width=7, fig.height=8}
+wood_collection_plots(survey_data_fase1)
+```
+
+# wood phase 2 figures
+```{r all_woodphase1_plots,echo=TRUE, fig.width=7, fig.height=8}
+wood_collection_plots(survey_data_fase2)
+```
+
+# wood all data figures
+```{r all_woodphase2_plots,echo=TRUE, fig.width=7, fig.height=10}
+wood_collection_plots(survey_data_all)
+```
+
+
+
+

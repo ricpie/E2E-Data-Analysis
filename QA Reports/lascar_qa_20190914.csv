@@ -1,0 +1,4 @@
+"","download_date","file","qa_date","serial","pid","loc","study_phase","sampling_rate_minutes","dur","dur_flag","bl_start","bl_night","bl_end","bl_flag","max_1hr_avg","max_1hr_avg_flag","Daily_avg","Daily_avg_flag","Daily_sd","Daily_stdev_flag","elevated_night_flag","nonresponsive_flag","flag_total","flags"
+"1",NA,"2019-05-15_ KE034-KE011-K _LAS142.txt",2019-09-15,NA,"2019-05-15"," KE034-KE011-K ","LAS142.txt",0.166666666666667,1.30405092592593,0,0,0,0,0,2.75138888888889,0,0.171148384806532,0,1.9766923219649,0,0,0,0,""
+"2",NA,"2019-05-15_ KE034-KE011-K _LAS5122.txt",2019-09-15,NA,"2019-05-15"," KE034-KE011-K ","LAS5122.txt",0.166666666666667,1.30289351851852,0,0,0,0,0,2.72777777777778,0,0.305693728903891,0,1.61763580059553,0,0,0,0,""
+"3",NA,"2019-05-15_ KE034-KE011-K _LAS523.txt",2019-09-15,NA,"2019-05-15"," KE034-KE011-K ","LAS523.txt",0.166666666666667,1.22349537037037,0,0,0,0,0,66.1819444444444,0,3.68440219447597,0,20.2960254701215,1,0,0,1,"Daily_stdev"
