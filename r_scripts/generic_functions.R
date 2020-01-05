@@ -121,8 +121,8 @@ apply_lascar_calibration <- function(file,loggerIDval,raw_data){
       R2 = NA,
       instrument = NA
     )}
-  calibrated_data <- dplyr::mutate(raw_data,CO_ppm = CO_raw*logger_cali$COslope + logger_cali$COzero) %>%
-    dplyr::select(-CO_raw)
+  calibrated_data <- as.data.table(dplyr::mutate(raw_data,CO_ppm = CO_raw*logger_cali$COslope + logger_cali$COzero) %>%
+                                     dplyr::select(-CO_raw)
 }
 
 ambient_import_fun <- function(path_other,sheetname){
@@ -136,22 +136,22 @@ ambient_import_fun <- function(path_other,sheetname){
   meta_ambient
 }
 
-emissions_import_fun <- function(path_emissions,sheetname){
+emissions_import_fun <- function(path_emissions,sheetname,local_tz){
   meta_emissions <- read_excel(path_emissions,sheet = 'Data',skip=2)#[,c(1:12)]
   meta_emissions <- meta_emissions[!is.na(meta_emissions$`Date [m/d/y]`) & !is.na(meta_emissions$HH_ID),]
-  meta_emissions$Date <- as.POSIXct(meta_emissions$`Date [m/d/y]`,tz="Africa/Nairobi",tryFormats = c("%Y-%m-%d","%d-%m-%Y"))
-  BG_initial_start_time <- strftime(meta_emissions$`Initial BG START [hh:mm:ss]`, format="%H:%M:%S",tz="Africa/Nairobi")
-  meta_emissions$datetime_BGi_start <- as.POSIXct(paste(meta_emissions$Date,BG_initial_start_time,sep = " "),tz = "Africa/Nairobi")
-  Sample_start_time <- strftime(meta_emissions$`Sample START [hh:mm:ss]`, format="%H:%M:%S",tz="Africa/Nairobi")
-  meta_emissions$datetime_sample_start <- as.POSIXct(paste(meta_emissions$Date,Sample_start_time,sep = " "),tz = "Africa/Nairobi")
-  Sample_end_time <- strftime(meta_emissions$`Sample END time`, format="%H:%M:%S",tz="Africa/Nairobi")
-  meta_emissions$datetime_sample_end <- as.POSIXct(paste(meta_emissions$Date,Sample_end_time,sep = " "),tz = "Africa/Nairobi")
-  BG_end_start_time <- strftime(meta_emissions$`Final Background start time`, format="%H:%M:%S",tz="Africa/Nairobi")
-  meta_emissions$datetime_BGf_start <- as.POSIXct(paste(meta_emissions$Date,BG_end_start_time,sep = " "),tz = "Africa/Nairobi")
-  datetimedecaystart <- strftime(as.character(meta_emissions$datetimedecaystart), format="%H:%M:%S",tz="Africa/Nairobi")
-  meta_emissions$datetimedecaystart<-as.POSIXct(paste(meta_emissions$Date,datetimedecaystart,sep = " "),tz = "Africa/Nairobi")
-  datetimedecayend <- strftime(as.character(meta_emissions$datetimedecayend), format="%H:%M:%S",tz="Africa/Nairobi")
-  meta_emissions$datetimedecayend <- as.POSIXct(paste(meta_emissions$Date,datetimedecayend,sep = " "),tz = "Africa/Nairobi")
+  meta_emissions$Date <- as.POSIXct(meta_emissions$`Date [m/d/y]`,tz=local_tz,tryFormats = c("%Y-%m-%d","%d-%m-%Y"))
+  BG_initial_start_time <- strftime(meta_emissions$`Initial BG START [hh:mm:ss]`, format="%H:%M:%S",tz=local_tz)
+  meta_emissions$datetime_BGi_start <- as.POSIXct(paste(meta_emissions$Date,BG_initial_start_time,sep = " "),tz = local_tz)
+  Sample_start_time <- strftime(meta_emissions$`Sample START [hh:mm:ss]`, format="%H:%M:%S",tz=local_tz)
+  meta_emissions$datetime_sample_start <- as.POSIXct(paste(meta_emissions$Date,Sample_start_time,sep = " "),tz = local_tz)
+  Sample_end_time <- strftime(meta_emissions$`Sample END time`, format="%H:%M:%S",tz=local_tz)
+  meta_emissions$datetime_sample_end <- as.POSIXct(paste(meta_emissions$Date,Sample_end_time,sep = " "),tz = local_tz)
+  BG_end_start_time <- strftime(meta_emissions$`Final Background start time`, format="%H:%M:%S",tz=local_tz)
+  meta_emissions$datetime_BGf_start <- as.POSIXct(paste(meta_emissions$Date,BG_end_start_time,sep = " "),tz = local_tz)
+  datetimedecaystart <- strftime(as.character(meta_emissions$datetimedecaystart), format="%H:%M:%S",tz=local_tz)
+  meta_emissions$datetimedecaystart<-as.POSIXct(paste(meta_emissions$Date,datetimedecaystart,sep = " "),tz = local_tz)
+  datetimedecayend <- strftime(as.character(meta_emissions$datetimedecayend), format="%H:%M:%S",tz=local_tz)
+  meta_emissions$datetimedecayend <- as.POSIXct(paste(meta_emissions$Date,datetimedecayend,sep = " "),tz = local_tz)
   
   matches <- regmatches(meta_emissions$HH_ID, gregexpr("[[:digit:]]+", meta_emissions$HH_ID))
   meta_emissions$HHID =  as.numeric(matches)
@@ -332,11 +332,23 @@ deployment_check_fun <-  function(preplacement,equipment_IDs,tz,local_tz,meta_em
     deployment$HHID <- preplacement$HHID
     deployment$datetime_start <- start_time
     deployment})
-  
 }
 
 
-
-
+emailgroup <-  function(todays_date){
+  sender <- "beaconnih@gmail.com"
+  recipients <- c("rpiedrahita@berkeleyair.com","M.Shupler@liverpool.ac.uk","mrossanese@berkeleyair.com","sdelapena@berkeleyair.com")
+  send.mail(from = sender,
+            to = recipients,
+            subject = paste0("UNOPS/CAA QA Report ",as.character(Sys.Date())),
+            body = "UNOPS/CAA data report (new format). Please correct filenames as needed, and note any devices that need maintenance. 
+          The Deployment Summary worksheet has information from the filenames, Mobenzi, and Excel emissions database.  These should be cross-referenced and disparities investigated!",
+            smtp = list(host.name = "smtp.gmail.com", port = 465, 
+                        user.name = "beaconnih@gmail.com",            
+                        passwd = "CookaBLE99", ssl = TRUE),
+            authenticate = TRUE,
+            attach.files = c(paste0("QA Reports/QA report", "_", todays_date, ".xlsx")),
+            send = TRUE)
+}
 
 

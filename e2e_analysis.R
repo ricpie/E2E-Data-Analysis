@@ -1,9 +1,9 @@
 ## Analyze UNOPS E2E data
+# Import data, perform QAQC check.  If email == 1, send an email out.
 source('r_scripts/load.R')
 
 processed_filelist <- "c" #readLines('Processed Data/processed_filelist.csv') #uncomment to speed up, once fully debugged.
-lascar_cali_import()
-mobenzi <- mobenzi_import_fun() # Import Mobenzi data
+email = 1 #Set to 1 to send out summary qaqc email, else 0
 
 
 # Excel metadata import
@@ -11,7 +11,7 @@ path_other <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/Excel databases/Othe
 metadata_ambient <- ambient_import_fun(path_other,sheetname='Ambient Sampling')
 metadata_filter_record <- upas_record_import_fun(path_other, sheetname='UPAS Filter record')
 path_emissions <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/Excel databases/USE THIS COPY_2019 Kenya Emissions database.xlsx"
-meta_emissions <- emissions_import_fun(path_emissions,sheetname='Ambient Sampling')
+meta_emissions <- emissions_import_fun(path_emissions,sheetname='Ambient Sampling',local_tz)
 
 
 # TSI Data.  TSI data needs to be manually prepared by only keeping the data from the test of interest.  Multiple tests in the same file will break it.
@@ -20,14 +20,9 @@ tsifilepath <- "~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed D
 file_list_tsi <- list.files(tsifilepath, pattern='.xls|.XLS', full.names = T,recursive = T)
 tsi_meta <- ldply(setdiff(file_list_tsi,processed_filelist), tsi_qa_fun, .progress = 'text',meta_emissions=meta_emissions,local_tz=local_tz) 
 #Time series TSI
-tsi_timeseries <- rbind(tsi_timeseries, ldply(setdiff(file_list_tsi,processed_filelist), tsi_metadata_fun, .progress = 'text',local_tz=local_tz))
+# tsi_timeseries <- rbind(tsi_timeseries, ldply(setdiff(file_list_tsi,processed_filelist), tsi_metadata_fun, .progress = 'text',local_tz=local_tz))
+tsi_timeseries <- ldply(file_list_tsi, tsi_metadata_fun, .progress = 'text',local_tz=local_tz)
 saveRDS(tsi_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/tsi_timeseries.R")
-
-
-# UPAS data
-datafilepath <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/UPAS" #For real
-file_list_upas <- list.files(datafilepath, pattern='.txt|.TXT', full.names = T,recursive = F)
-upasmeta <- as.data.frame(ldply(setdiff(file_list_upas,processed_filelist), UPAS_qa_fun, local_tz,.progress = 'text'))
 
 
 # Lascar data
@@ -36,40 +31,39 @@ lascarfilepath_caa <- "~/Dropbox/CA(Kenya)/Clean Air Africa/LASCAR Files"
 file_list_lascar <- list.files(lascarfilepath, pattern='.txt|.TXT', full.names = T,recursive = T)
 file_list_lascar_caa <- list.files(lascarfilepath_caa, pattern='.txt|.TXT', full.names = T,recursive = F)
 lascar_meta <- ldply(setdiff(c(file_list_lascar,file_list_lascar_caa),processed_filelist), lascar_qa_fun, .progress = 'text',tz=local_tz)  
-
-
 # Time series Lascar
 # lascar_calibrated_timeseries <- rbind(lascar_calibrated_timeseries,ldply(setdiff(c(file_list_lascar,file_list_lascar_caa),processed_filelist), lascar_cali_fun, .progress = 'text',tz=local_tz))
-lascar_calibrated_timeseries <- ldply(c(file_list_lascar,file_list_lascar_caa), lascar_cali_fun, .progress = 'text',tz=local_tz)
-saveRDS(lascar_calibrated_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Calibrated Lascar.R")
+lascar_calibrated_timeseries <- as.data.table(ldply(c(file_list_lascar,file_list_lascar_caa), lascar_cali_fun, .progress = 'text',tz=local_tz))
+saveRDS(lascar_calibrated_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/lascar_calibrated_timeseries.R")
+
+
+# UPAS data
+datafilepath <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/UPAS" #For real
+file_list_upas <- list.files(datafilepath, pattern='.txt|.TXT', full.names = T,recursive = F)
+upasmeta <- as.data.frame(ldply(setdiff(file_list_upas,processed_filelist), UPAS_qa_fun, local_tz,.progress = 'text'))
 
 
 # PATS+ data - currently using default calibrations.  Add normalizations as available (Excel, after getting filter weights)
 patsfilepath <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/PATS+"
 file_list_pats <- list.files(patsfilepath, pattern='.csv|.CSV', full.names = T,recursive = T)
-pats_meta_qaqc <- ldply(file_list_pats, pats_qa_fun, .progress = 'text',tz="UTC")
-pats_data_timeseries <-as.data.table(ldply(file_list_pats, pats_import_fun, .progress = 'text',tz="UTC",mobenzi$preplacement))
+pats_meta_qaqc <- ldply(file_list_pats, pats_qa_fun, .progress = 'text',local_tz="UTC")
+pats_data_timeseries <-as.data.table(ldply(file_list_pats, pats_import_fun, .progress = 'text',local_tz="UTC",mobenzi$preplacement))
 saveRDS(pats_data_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/pats_data_timeseries.R")
 # Todo: Import ECM/Micropem data, and join with the PATS+ data
+
 
 # Beacon data
 beaconfilepath <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/Beacon Logger"
 file_list_beacon <- list.files(beaconfilepath, pattern='.csv|.CSV', full.names = T,recursive = T)
 beacon_meta_qaqc <- ldply(setdiff(file_list_beacon,processed_filelist), beacon_qa_fun, .progress = 'text',tz="UTC")#This is correct as UTC because the data was collected in UTC.
-
 # Import Beacon timeseries, with metadata
 beacon_time_corrections=data.frame(filename=c("2019-09-19_KE152-KE004-L_1296","2019-09-19_KE152-KE004-L_129asdfsdf"),
                                    newstartdatetime=c(ymd_hms("2019-09-18T11:44:52GMT",tz="UTC"),ymd_hms("2019-09-18T11:00:52GMT",tz="UTC")))
 # beacon_data_timeseries <-rbind(beacon_data_timeseries,as.data.table(ldply(setdiff(file_list_beacon,processed_filelist), beacon_import_fun,
-                                                                          .progress = 'text',tz="UTC",mobenzi$preplacement,beacon_time_corrections)))
-beacon_data_timeseries <-ldply(file_list_beacon, beacon_import_fun,.progress = 'text',tz="UTC",mobenzi$preplacement,beacon_time_corrections)
+# .progress = 'text',tz="UTC",mobenzi$preplacement,beacon_time_corrections)))
+beacon_data_timeseries <-as.data.table(ldply(file_list_beacon, beacon_import_fun,.progress = 'text',tz="UTC",mobenzi$preplacement,beacon_time_corrections))
 saveRDS(beacon_data_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Beacon_RawData.R")
 
-# Build Beacon location time series with exposure estimates
-mobenzilist <- lapply(seq_len(nrow(mobenzi$preplacement)), function(i) mobenzi$preplacement[i,])
-beacon_localization <- ldply(mobenzilist, beacon_deployment_fun, .progress = 'text',equipment_IDs,tz,local_tz,beacon_data_timeseries,
-                             lascar_calibrated_timeseries,lascar_calibrated_timeseries) 
-saveRDS(beacon_localization,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Beacon_Locations.R")
 
 # * Todo: Get Stove usage data integrated into analysis stream.
 # * Do basic usage analysis using the SUMs code
@@ -92,21 +86,22 @@ list_of_datasets <- list("Beacons" = beacon_meta_qaqc, "Lascar" = lascar_meta,
 write.xlsx(list_of_datasets, file = paste0("QA Reports/QA report", "_", todays_date, ".xlsx"))
 
 # Email out summaries
-sender <- "beaconnih@gmail.com"
-recipients <- c("rpiedrahita@berkeleyair.com","M.Shupler@liverpool.ac.uk","mrossanese@berkeleyair.com","sdelapena@berkeleyair.com")
-send.mail(from = sender,
-          to = recipients,
-          subject = paste0("UNOPS/CAA QA Report ",as.character(Sys.Date())),
-          body = "UNOPS/CAA data report (new format). Please correct filenames as needed, and note any devices that need maintenance. 
-          The Deployment Summary worksheet has information from the filenames, Mobenzi, and Excel emissions database.  These should be cross-referenced and disparities investigated!",
-          smtp = list(host.name = "smtp.gmail.com", port = 465, 
-                      user.name = "beaconnih@gmail.com",            
-                      passwd = "CookaBLE99", ssl = TRUE),
-          authenticate = TRUE,
-          attach.files = c(paste0("QA Reports/QA report", "_", todays_date, ".xlsx")),
-          send = TRUE)
+if (email==1){emailgroup(todays_date)}
 
 # writeLines(c(file_list_beacon,file_list_tsi,file_list_upas,file_list_lascar,file_list_caa), con="Processed Data/processed_filelist.R")
+
+#Plot data
+
+## Perform data merging
+# Build Beacon location time series with exposure estimates
+beacon_logger_COmerged <- ldply(mobenzilist, beacon_deployment_fun, .progress = 'text',equipment_IDs,tz,local_tz,beacon_data_timeseries,
+                                lascar_calibrated_timeseries,lascar_calibrated_timeseries) 
+saveRDS(beacon_logger_COmerged,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/beacon_logger_COmerged.R")
+
+
+#Perform analyses
+
+
 
 
 # #clear ws and quit

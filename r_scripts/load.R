@@ -7,9 +7,11 @@ todays_date <- gsub("-", "", as.character(Sys.Date()))
 local_tz = "Africa/Nairobi"
 equipment_IDs <- readRDS("Processed Data/equipment_IDs.R")
 lascar_cali_coefs <- readRDS("Processed Data/lascar_calibration_coefs.R")
-lascar_calibrated_timeseries <- readRDS("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Calibrated Lascar.R")
-tsi_timeseries <- readRDS("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/tsi_timeseries.R")
-beacon_data_timeseries<- readRDS("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Beacon_RawData.R")
+lascar_calibrated_timeseries <- readRDS("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/lascar_calibrated_timeseries.rds")
+pats_data_timeseries <- readRDS("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/pats_data_timeseries.rds")
+tsi_timeseries <- readRDS("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/tsi_timeseries.rds")
+beacon_data_timeseries<- readRDS("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Beacon_RawData.rds")
+beacon_logger_COmerged<- readRDS("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/beacon_logger_COmerged.rds")
 
 cl <- makeCluster(detectCores()[1])
 registerDoParallel(cl) 
@@ -22,3 +24,9 @@ source('r_scripts/pats_functions.R')
 source('r_scripts/beacon_functions.R')
 source('r_scripts/generic_functions.R')
 source('r_scripts/tsi_functions.R')
+
+lascar_cali_import()
+mobenzi <- mobenzi_import_fun() # Import Mobenzi data
+mobenzilist <- lapply(seq_len(nrow(mobenzi$preplacement)), function(i) mobenzi$preplacement[i,])
+
+

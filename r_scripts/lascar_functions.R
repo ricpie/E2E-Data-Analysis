@@ -196,6 +196,7 @@ lascar_qa_fun <- function(file, setShiny=TRUE,output= 'meta_data',tz){
   }
 }
 
+
 lascar_cali_fun <- function(file,output='calibrated_data',tz){
   ingest <- lascar_ingest(file, output=c('raw_data', 'meta_data'),tz)
   
@@ -208,14 +209,10 @@ lascar_cali_fun <- function(file,output='calibrated_data',tz){
       raw_data <- ingest$raw_data
       calibrated_data <- as.data.table(apply_lascar_calibration(file,meta_data$loggerID,raw_data)) 
       #Add some meta_data into the mix
-      calibrated_data$sampleID <- meta_data$sampleID
-      calibrated_data$loggerID <- meta_data$loggerID
-      calibrated_data$HHID <- meta_data$HHID
-      calibrated_data$sampletype <- meta_data$sampletype
-      # calibrated_data[,datetime := round_date(datetime, unit = "minutes")]
-      # calibrated_data[,datetime := round_date(datetime, unit = "minutes")]
-      # calibrated_data[,datetime := round_date(datetime, unit = "minutes")]
-      # calibrated_data[,datetime := round_date(datetime, unit = "minutes")]
+      calibrated_data[,sampleID := meta_data$sampleID]
+      calibrated_data[,loggerID := meta_data$loggerID]
+      calibrated_data[,HHID := meta_data$HHID]
+      calibrated_data[,sampletype := meta_data$sampletype]
       calibrated_data[,datetime := round_date(datetime, unit = "minutes")]
       
       return(calibrated_data)

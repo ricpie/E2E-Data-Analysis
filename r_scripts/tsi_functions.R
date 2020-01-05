@@ -115,7 +115,6 @@ tsi_qa_fun <- function(file,meta_emissions,local_tz,output= 'meta_data'){
       raw_data$BGdecay <- 0
       raw_data$BGdecay[raw_data$datetime<meta_matched$datetimedecayend & raw_data$datetime>meta_matched$datetimedecaystart] = 1 #Points that come after the decay start
       
-      
       meta_data = cbind(meta_data, first_minutes_bl_CO,first_minutes_bl_CO2,last_minutes_bl_CO,last_minutes_bl_CO2,Run_avg,Run_sd, bg_start_flag,bg_end_flag,nonresponsive_flag,CO2_maxout_flag,CO_maxout_flag)
       
       meta_data[, flag_total:=sum(bg_start_flag,bg_end_flag,nonresponsive_flag,CO2_maxout_flag,CO_maxout_flag), by=.SD]
@@ -124,7 +123,7 @@ tsi_qa_fun <- function(file,meta_emissions,local_tz,output= 'meta_data'){
       
       meta_data[, flags:=flags_str]
       
-      as.data.frame(raw_data)
+      raw_data<-as.data.table(raw_data)
       
       
       #Plot the CO and CO2 data and save it

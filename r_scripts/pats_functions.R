@@ -1,7 +1,7 @@
 # fwrite(meta_data, file="r_scripts/pats_dummy_meta_data.csv") 
 dummy_meta_data <- fread('r_scripts/pats_dummy_meta_data.csv')
 
-pats_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dummy_meta_data'){
+pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,dummy='dummy_meta_data'){
   dummy_meta_data <- get(dummy, envir=.GlobalEnv)
   badfileflag <- 0
   
@@ -39,7 +39,7 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dummy
       return(list(raw_data=NULL, meta_data=meta_data))
     }else{
       
-      raw_data[, datetime:=ymd_hms(as.character(dateTime), tz=tz)]
+      raw_data[, datetime:=ymd_hms(as.character(dateTime), tz=local_tz)]
       raw_data[,datetime := round_date(datetime, unit = "minutes")]
       
       #Sample rate. Time difference of samples, in minutes.
@@ -72,9 +72,9 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dummy
   # }
 }
 
-pats_qa_fun <- function(file,output= 'meta_data',tz){
+pats_qa_fun <- function(file,output= 'meta_data',local_tz){
   ingest = tryCatch({
-    ingest <- pats_ingest(file, output=c('raw_data', 'meta_data'),tz,dummy='dummy_meta_data')
+    ingest <- pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz,dummy='dummy_meta_data')
   }, error = function(e) {
     print('error ingesting')
     ingest = NULL
@@ -131,7 +131,7 @@ pats_qa_fun <- function(file,output= 'meta_data',tz){
       flags_str <- suppressWarnings(paste(melt(meta_data[,c(colnames(meta_data)[colnames(meta_data) %like% "flag"]), with=F])[value>0 & variable!="flag_total", gsub("_flag", "" , variable)] , collapse=", "))
       
       meta_data[, flags:=flags_str]
-      as.data.frame(raw_data)
+      raw_data <- as.data.table(raw_data)
       
       #Plot the PM data and save it
       tryCatch({ 
@@ -152,13 +152,31 @@ pats_qa_fun <- function(file,output= 'meta_data',tz){
       }, error = function(error_condition) {
       }, finally={})
       
+      #Plot the CO data and save it
+      tryCatch({ 
+        plot_name = gsub(".txt",".png",basename(file))
+        plot_name = paste0("QA Reports/Instrument Plots/patsCO_",gsub(".csv",".png",plot_name))
+        percentiles <- quantile(raw_data$CO_PPM,c(.05,.95))
+        cat_string <- paste("5th % PM (ugm3) = ",as.character(percentiles[1]),
+                            ", 95th % PM (ugm3)  = ",as.character(percentiles[2]))
+        if(!file.exists(plot_name) & !is.na(percentiles[1]) & mean(raw_data$CO_PPM)>-1){
+          png(filename=plot_name,width = 550, height = 480, res = 100)
+          plot(raw_data$datetime, raw_data$CO_PPM, main=plot_name,
+               type = "p", xlab = cat_string, ylab="Calibrated CO (ppm)",prob=TRUE,cex.main = .6,cex = .5)
+          grid(nx = 5, ny = 10, col = "lightgray", lty = "dotted",
+               lwd = par("lwd"), equilogs = TRUE)
+          dev.off()
+        }
+      }, error = function(error_condition) {
+      }, finally={})
+      
       return(meta_data)
     }
   }
 }
 
-pats_import_fun <- function(file,output='raw_data',tz){
-  ingest <- pats_ingest(file, output=c('raw_data', 'meta_data'),tz)
+pats_import_fun <- function(file,output='raw_data',local_tz){
+  ingest <- pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz)
   
   if(is.null(ingest)){return(NULL)}else{
     
