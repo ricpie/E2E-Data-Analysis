@@ -1,6 +1,6 @@
 # fwrite(meta_data, file="r_scripts/lascar_dummy_meta_data.csv") 
 dummy_meta_data <- fread('r_scripts/lascar_dummy_meta_data.csv')
-
+tz=local_tz
 lascar_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dummy_meta_data'){
   dummy_meta_data <- get(dummy, envir=.GlobalEnv)
   badfileflag <- 0
@@ -9,7 +9,7 @@ lascar_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dum
   filename = tryCatch({
     filename <- parse_filename_fun(file)
   }, error = function(e) {
-    print('error ingesting')
+    print('error ingesting filename for ',file)
     filename$flag  = 'bad'
   })
   
@@ -25,10 +25,15 @@ lascar_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dum
     badfileflag <- 1; slashpresence <- 1
     return(list(raw_data=NULL, meta_data=meta_data))
   } else{
+    
+    #Handle whether the data is from a Lascar or PATS+
     raw_data <- fread(file, skip = 2,sep=",",fill=TRUE)
-    raw_data<- raw_data[,1:3]
+    if (raw_data[1,1]=="HW Version"){
+      raw_data <- raw_data[30:dim(raw_data)[1],c(1,1,7)]
+    } else {raw_data<- raw_data[,1:3]}
     setnames(raw_data, c("SampleNum", "datetime", "CO_raw"))
     raw_data<-raw_data[complete.cases(raw_data), ]
+    raw_data$CO_raw = as.numeric(raw_data$CO_raw)
     
     # if(all(is.na(filename$sampleID))){
     #   #add "fake" meta_data
@@ -120,8 +125,6 @@ lascar_qa_fun <- function(file, setShiny=TRUE,output= 'meta_data',tz){
       raw_data <- ingest$raw_data
       calibrated_data <- as.data.table(apply_lascar_calibration(z,meta_data$loggerID,raw_data))
       
-      calibrated_data_long <- melt(calibrated_data[, c(2:4)], id.var='datetime')
-      
       #create a rounded dt variable
       calibrated_data[, round_time:=round_date(datetime, 'hour')]
       
@@ -159,7 +162,7 @@ lascar_qa_fun <- function(file, setShiny=TRUE,output= 'meta_data',tz){
       nonresponsive_flag <- if(sd(calibrated_data$CO_ppm,na.rm = TRUE)==0 || sum(is.na(calibrated_data$CO_ppm)) > 0){1}else{0}
       
       #sample duration
-      sample_duration <- calibrated_data_long[variable=='CO_ppm' & !is.na(value), as.numeric(difftime(max(datetime), min(datetime), units='days'))]
+      sample_duration <- as.numeric(difftime(max(calibrated_data$datetime), min(calibrated_data$datetime), units='days'))
       sample_duration_flag <- if(sample_duration < sample_duration_thresholds[1]/1440){1}else{0}
       
       meta_data = cbind(meta_data, night_hrs_bl,max_1hr_avg,Daily_avg,Daily_sd, max_1hr_avg_flag, Daily_avg_flag,Daily_stdev_flag, elevated_night_flag,nonresponsive_flag,sample_duration_flag,bl_flag)
@@ -209,11 +212,14 @@ lascar_cali_fun <- function(file,output='calibrated_data',tz){
       raw_data <- ingest$raw_data
       calibrated_data <- as.data.table(apply_lascar_calibration(file,meta_data$loggerID,raw_data)) 
       #Add some meta_data into the mix
+      calibrated_data[,datetime := round_date(datetime, unit = "minutes")]
       calibrated_data[,sampleID := meta_data$sampleID]
       calibrated_data[,loggerID := meta_data$loggerID]
       calibrated_data[,HHID := meta_data$HHID]
-      calibrated_data[,sampletype := meta_data$sampletype]
-      calibrated_data[,datetime := round_date(datetime, unit = "minutes")]
+      #Add a '2' if it is a PATS+.  Possible for there to be multiple duplicates.. K, K2, K22, etc.
+      if(grepl(meta_data$loggerID, "LAS|CAS")){ 
+        calibrated_data[,sampletype := meta_data$sampletype]
+      }else {calibrated_data[,sampletype := paste0(meta_data$sampletype,"2")]}
       
       return(calibrated_data)
     }

@@ -9,7 +9,8 @@ parse_filename_fun <- function(file){
     filename$basename = basename(filename$fullname)
     filename$basename_sansext = file_path_sans_ext(filename$basename)
     filename$sampleID = strsplit(filename$basename_sansext , "_")[[1]][2]
-    filename$loggerID = strsplit(filename$basename_sansext , "_")[[1]][3] 
+    filename$loggerID = strsplit(filename$basename_sansext , "_")[[1]][3]
+    if(is.na(filename$loggerID)){filename$loggerID = 'Missing'}
     filename$filterID = strsplit(filename$basename_sansext , "_")[[1]][4] 
     filename$sampletype= strsplit(basename(filename$sampleID), "-")[[1]][3]
     filename$fieldworkerIDstr = strsplit(basename(filename$sampleID), "-")[[1]][2]
@@ -109,20 +110,21 @@ lascar_cali_import <- function(lascarcalipath1,lascarcalipath2){
 }
 
 
-apply_lascar_calibration <- function(file,loggerIDval,raw_data){
+apply_lascar_calibration<- function(file,loggerIDval,raw_data) {
   lascar_cali_coefs <- readRDS("Processed Data/lascar_calibration_coefs.R")
-  lascar_cali_coefs<-as.data.table(lascar_cali_coefs)
-  logger_cali = lascar_cali_coefs[loggerID=="loggerIDval",]
+  lascar_cali_coefs <- as.data.table(lascar_cali_coefs)
+  logger_cali <- lascar_cali_coefs[loggerID=="loggerIDval",]
   if (!nrow(logger_cali)){
     logger_cali <- data.table(
       loggerID = NA,
       COslope = 1,
       COzero = 0,
       R2 = NA,
-      instrument = NA
-    )}
-  calibrated_data <- as.data.table(dplyr::mutate(raw_data,CO_ppm = CO_raw*logger_cali$COslope + logger_cali$COzero) %>%
-                                     dplyr::select(-CO_raw)
+      instrument = NA)
+  }
+  calibrated_data <- as.data.table(dplyr::mutate(raw_data,CO_ppm = CO_raw*logger_cali$COslope + logger_cali$COzero)) %>%
+    dplyr::select(-SampleNum)
+  calibrated_data
 }
 
 ambient_import_fun <- function(path_other,sheetname){
@@ -333,6 +335,7 @@ deployment_check_fun <-  function(preplacement,equipment_IDs,tz,local_tz,meta_em
     deployment$datetime_start <- start_time
     deployment})
 }
+
 
 
 emailgroup <-  function(todays_date){

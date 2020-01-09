@@ -9,7 +9,7 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,dummy=
   filename = tryCatch({
     filename <- parse_filename_fun(file)
   }, error = function(e) {
-    print('error ingesting')
+    print('error ingesting filename for ',file)
     filename$flag  = 'bad'
   })
   
