@@ -1,5 +1,6 @@
 
-ecm_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz){
+ecm_ingest <- function(file, output=c('raw_data', 'meta_data','preplacement'), local_tz,preplacement){
+  # preplacement<-mobenzilist[[11]]
   
   base::message(file, " QA-QC checking in progress")
   filename = tryCatch({
@@ -48,20 +49,34 @@ ecm_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz){
     HHID=filename$HHID,
     loggerID=filename$loggerID,
     filterID=filename$filterID,
+    qc = filename$flag,
     samplerate_minutes = sample_timediff/60,
     sampling_duration = dur
   )
   
+  #Add some meta_data into the mix
+  raw_data[,sampleID := meta_data$sampleID]
+  raw_data[,loggerID := meta_data$loggerID]
+  raw_data[,HHID := meta_data$HHID]
+  raw_data[,sampletype := meta_data$sampletype]
+  raw_data[,qc := meta_data$qc]
+  
+  #Add tags to the data streams
+  raw_data <- tag_timeseries_emissions(raw_data,meta_emissions,meta_data)
+  #Update this preplacement function when we have the ECM data!
+  # preplacement <- update_preplacement(preplacement,raw_data)
+  raw_data <- tag_timeseries_mobenzi(raw_data,preplacement,filename)
+  
   if(all(output=='meta_data')){return(meta_data)}else
     if(all(output=='raw_data')){return(raw_data)}else
-      if(all(output == c('raw_data', 'meta_data'))){
-        return(list(meta_data=meta_data, raw_data=raw_data))
+      if(all(output == c('raw_data', 'meta_data','preplacement'))){
+        return(list(meta_data=meta_data, raw_data=raw_data, preplacement=preplacement))
       }
 }  
 
 
-ecm_import_fun <- function(file,output='raw_data',local_tz){
-  ingest <- ecm_ingest(file, output=c('raw_data', 'meta_data'),local_tz)
+ecm_import_fun <- function(file,output='raw_data',local_tz,preplacement){
+  ingest <- ecm_ingest(file, output=c('raw_data', 'meta_data','preplacement'),local_tz,preplacement)
   
   if(is.null(ingest)){return(NULL)}else{
     
@@ -70,12 +85,6 @@ ecm_import_fun <- function(file,output='raw_data',local_tz){
       return(meta_data)
     }else{
       raw_data <- ingest$raw_data
-      
-      #Add some meta_data into the mix
-      raw_data$sampleID <- meta_data$sampleID
-      raw_data$loggerID <- meta_data$loggerID
-      raw_data$HHID <- meta_data$HHID
-      raw_data$sampletype <- meta_data$sampletype
       
       return(raw_data)
     }

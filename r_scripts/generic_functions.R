@@ -57,9 +57,13 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
   mobenzi_rapid <- read.table(filerapid, header=T,quote = "\"",sep=",",na.string=c("","null","NaN"),colClasses = "character")
   preplacement <- read.table(preplacementpath, header=T,quote = "\"",sep=",",na.string=c("","null","NaN"),colClasses = "character")[,1:89]
   preplacement <- preplacement[("Yes" == preplacement$A10 & !is.na(preplacement$A10)), ]
+  
   setnames(preplacement,c("Submission_Id","Fieldworker_Name","Fieldworker_Id","Handset_Asset_Code","Handset_Identifier","Received","Start","End","Duration__seconds_","Latitude","Longitude","Language","Survey_Version","Modified_By","Modified_On","Complete","Worker","UNOPS_Date","UNOPS_HH","Something","Age","Gender","Childrenunder5YN","HealthConditions","OKtoWearHealthConditions","AwayFromHomeMoreThan5Hours","WillingToWearAwayFromHome","MicropemID","LascarID","UNOPSworkerPresent","OKLivingRoom","OkEmissions","EmissionsTime","UNOPSWorker","BeaconID1","BeaconID2","WalkThrough1Start","WalkThrough1End","WalkThrough2Start","WalkThrough2End","WalkThrough3Start","WalkThrough3End","HHID","WalkTimetoMainRoad","NoManufacturedStove","HasChimney","TraditionalStoveFAfrica/Nairobiures","FanStoveFAfrica/Nairobiures","KitchenLocation","MicropemIDKitchen","LascarIDKitchen","UNOPSyn","BeaconLoggerIDKitchen","IntensiveEquipmentYN","IntensiveYN","PATSorECMYN","ECMIDKitchen","PATSIDKitchen","ElectricYN","KeroseneYN","LPGYN","TraditionalYN","ManufacturedYN","TSFYN","OtherYN","OtherStoveType","MicropemDistanceCM","MicropemHeightCM","PictureYN","Number_Of_Children","ChildAge","ChildGender","Child2Age","Child2Gender","Child3Age","Child3Gender","ECMIDChild1","ECMIDChild2","ECMIDChild3","unknown","LivingRoomMonitoringYN","RoomTypeSecondary","WallTypeSecondary","PATSIDSecondary","LascarIDSecondary","BeaconLoggerIDSecondary","PATSDistanceFloorSecondaryCM","PicsSecondaryYN","DevicesONTime"))
   preplacement$HHIDstr = substring(preplacement$HHID, 
                                    1, sapply(preplacement$HHID, function(x) unlist(gregexpr('-',x,perl=TRUE))[1])-1)
+  
+  preplacement$start_datetime <- as.POSIXct(paste(preplacement$UNOPS_Date,preplacement$DevicesONTime,sep = " "),tz = "Africa/Nairobi",
+                                            tryFormats = c("%d-%m-%Y %H:%M","%d-%m-%Y %H:%M:%OS","%d-%m-%y %H:%M","%d/%m/%Y %H:%M:%OS"))
   
   matches <- regmatches(preplacement$HHIDstr, gregexpr("[[:digit:]]+", preplacement$HHIDstr))
   preplacement$HHIDnumeric =  as.numeric(matches)
@@ -91,7 +95,7 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
 # }
 
 
-lascar_cali_import <- function(lascarcalipath1,lascarcalipath2){
+lascar_cali_import <- function(){
   lascarcalipath1 <- "~/Dropbox/UNOPS emissions exposure/Data/Calibrations/Lascar CO Calibration Template_8Aug_b_RP_trimmed.xlsx"
   lascarcalipath2 <- "~/Dropbox/UNOPS emissions exposure/Data/Calibrations/Lascar CO Calibration Template_8Aug_a_RP_trimmed.xlsx"
   lascar_cali_1 <- read_excel(lascarcalipath1,sheet = "CO cal Data",skip=4)[,c(2:5)]
@@ -123,7 +127,7 @@ apply_lascar_calibration<- function(file,loggerIDval,raw_data) {
       instrument = NA)
   }
   calibrated_data <- as.data.table(dplyr::mutate(raw_data,CO_ppm = CO_raw*logger_cali$COslope + logger_cali$COzero)) %>%
-    dplyr::select(-SampleNum)
+    dplyr::select(-SampleNum,-CO_raw)
   calibrated_data
 }
 
@@ -140,19 +144,20 @@ ambient_import_fun <- function(path_other,sheetname){
 
 emissions_import_fun <- function(path_emissions,sheetname,local_tz){
   meta_emissions <- read_excel(path_emissions,sheet = 'Data',skip=2)#[,c(1:12)]
-  meta_emissions <- meta_emissions[!is.na(meta_emissions$`Date [m/d/y]`) & !is.na(meta_emissions$HH_ID),]
+  meta_emissions <- meta_emissions[!is.na(meta_emissions$`Date [m/d/y]`) & !is.na(meta_emissions$HH_ID)
+                                   & !is.na(meta_emissions$`Sample START [hh:mm:ss]`),]
   meta_emissions$Date <- as.POSIXct(meta_emissions$`Date [m/d/y]`,tz=local_tz,tryFormats = c("%Y-%m-%d","%d-%m-%Y"))
-  BG_initial_start_time <- strftime(meta_emissions$`Initial BG START [hh:mm:ss]`, format="%H:%M:%S",tz=local_tz)
-  meta_emissions$datetime_BGi_start <- as.POSIXct(paste(meta_emissions$Date,BG_initial_start_time,sep = " "),tz = local_tz)
-  Sample_start_time <- strftime(meta_emissions$`Sample START [hh:mm:ss]`, format="%H:%M:%S",tz=local_tz)
+  BG_initial_start_time <- strftime(meta_emissions$`Initial BG START [hh:mm:ss]`, format="%H:%M:%S",tz="UTC") #This is what it's coming in as.
+  meta_emissions$datetime_BGi_start <- as.POSIXct(paste(meta_emissions$Date,BG_initial_start_time,sep = " "),tz = local_tz) #This is what we want it as.
+  Sample_start_time <- strftime(meta_emissions$`Sample START [hh:mm:ss]`, format="%H:%M:%S",tz="UTC")
   meta_emissions$datetime_sample_start <- as.POSIXct(paste(meta_emissions$Date,Sample_start_time,sep = " "),tz = local_tz)
-  Sample_end_time <- strftime(meta_emissions$`Sample END time`, format="%H:%M:%S",tz=local_tz)
+  Sample_end_time <- strftime(meta_emissions$`Sample END time`, format="%H:%M:%S",tz="UTC")
   meta_emissions$datetime_sample_end <- as.POSIXct(paste(meta_emissions$Date,Sample_end_time,sep = " "),tz = local_tz)
-  BG_end_start_time <- strftime(meta_emissions$`Final Background start time`, format="%H:%M:%S",tz=local_tz)
+  BG_end_start_time <- strftime(meta_emissions$`Final Background start time`, format="%H:%M:%S",tz="UTC")
   meta_emissions$datetime_BGf_start <- as.POSIXct(paste(meta_emissions$Date,BG_end_start_time,sep = " "),tz = local_tz)
-  datetimedecaystart <- strftime(as.character(meta_emissions$datetimedecaystart), format="%H:%M:%S",tz=local_tz)
+  datetimedecaystart <- strftime(as.character(meta_emissions$datetimedecaystart), format="%H:%M:%S",tz="UTC")
   meta_emissions$datetimedecaystart<-as.POSIXct(paste(meta_emissions$Date,datetimedecaystart,sep = " "),tz = local_tz)
-  datetimedecayend <- strftime(as.character(meta_emissions$datetimedecayend), format="%H:%M:%S",tz=local_tz)
+  datetimedecayend <- strftime(as.character(meta_emissions$datetimedecayend), format="%H:%M:%S",tz="UTC")
   meta_emissions$datetimedecayend <- as.POSIXct(paste(meta_emissions$Date,datetimedecayend,sep = " "),tz = local_tz)
   
   matches <- regmatches(meta_emissions$HH_ID, gregexpr("[[:digit:]]+", meta_emissions$HH_ID))
@@ -174,6 +179,13 @@ id_slicer_add <- function(x, n){
   return(str2)
 }
 
+#Convert ppm to mgm3
+ppm_to_mgm3_function <- function(Conc_PPM_BGS,MolarMass,ambient_temp_K,pressure_atm,R,Mass_Conv){
+  Vol_Conv <- 10^3 #L/m^3
+  Mass_Conc_num <- Conc_PPM_BGS*10^-6*pressure_atm*MolarMass*Vol_Conv*Mass_Conv
+  Mass_Conc_denom <- R*ambient_temp_K
+  Mass_Conc <-Mass_Conc_num/Mass_Conc_denom
+}
 
 
 #Get AER.  Provide a segment of CO2 data, calculate and return the AER (the slope), correlation, and plot it.
@@ -211,19 +223,31 @@ AER_fun <- function(file,meta_data,raw_data_AER,output = 'meta_data'){
 }
 
 
-ShiftTimeStamp <- function(beacon_logger_data, newstartdatetime,tz){
+ShiftTimeStamp_unops <- function(beacon_logger_data, newstartdatetime,TimeZone){
   
   #Number of seconds to shift the timestamps
   TimeShiftSeconds <- as.numeric(difftime(newstartdatetime, beacon_logger_data$datetime[1],units='secs'))
   
   #Shift the timestamps
   beacon_logger_data$datetime <- beacon_logger_data$datetime + TimeShiftSeconds
-  
+  beacon_logger_data
   #Get the timestamps in the right format.
-  beacon_logger_data[,datetime:=strftime(beacon_logger_data$datetime, "%Y-%m-%dT%H:%M:%S%Z", tz="GMT")]
+  # beacon_logger_data[,datetime:=strftime(beacon_logger_data$datetime, "%Y-%m-%dT%H:%M:%S%Z", tz="GMT")]
   
 }
 
+ambient_timeseries <- function(CO_calibrated_timeseries,pats_data_timeseries){
+  ambient_pats_data_timeseries <- pats_data_timeseries["A"==substr(sampletype,1,1),]
+  ambient_data <- CO_calibrated_timeseries["A"==substr(sampletype,1,1),]
+  ambient_data[,"CO_raw":=NULL]
+  # beacon_logger_COmerged = merge(beacon_logger_data,lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
+  
+  # ambient_data <- merge(ambient_data,ambient_pats_data_timeseries,by=c("datetime"),all.x = T, all.y = F)
+  ambient_data <- melt(ambient_data, id.vars = c('datetime', 'sampletype','qc'), measure.vars = 'CO_ppm')
+  meltedpats <- melt(pats_data_timeseries, id.vars = c('datetime', 'sampletype','qc'), measure.vars = c('PM_Estimate','degC_air','%RH_air','status'))
+  ambient_data <- rbind(ambient_data,meltedpats)
+  
+}
 
 
 #Summary of items required for a deployment, and the different sources.
@@ -353,5 +377,73 @@ emailgroup <-  function(todays_date){
             attach.files = c(paste0("QA Reports/QA report", "_", todays_date, ".xlsx")),
             send = TRUE)
 }
+
+truncate_timeseries <- function(raw_data,startdatetime,enddatetime){
+  raw_data <- dplyr::filter(raw_data,datetime>startdatetime)# & datetime<enddatetime)
+}
+
+
+#Add tag to data based on mobenzi info
+#Good.
+tag_timeseries_mobenzi <- function(raw_data,preplacement,filename){
+  #Get the relevant preplacement row, based on HHID and start date.
+  raw_data[,ecm_tags:="collecting"]
+  
+  if(raw_data$sampletype[1] %in% c('C','L','K','C2','L2','K2')){
+    preplacement$HHID <- preplacement$HHIDnumeric
+    preplacement_matched <- merge(raw_data[1,],preplacement, by="HHID") %>%
+      dplyr::filter(datetime-start_datetime<1)
+    if(dim(preplacement_matched)[1]>0){
+      raw_data[,ecm_tags := ifelse(datetime>preplacement_matched$start_datetime & datetime<preplacement_matched$start_datetime+86400,'deployed',ecm_tags)]
+      if(abs(raw_data$datetime[1]-raw_data$datetime[.N])>2){      
+        raw_data[,ecm_tags := ifelse(datetime > preplacement_matched$start_datetime+86400,'intensive',ecm_tags)]
+      }
+    } else {
+      print(paste('Error mobenzi-tagging ', filename$basename))
+      }
+  }
+  raw_data
+}
+
+
+#Add tag to data based on emissions database info
+tag_timeseries_emissions <- function(raw_data,meta_emissions,meta_data,filename){
+  #Get the relevant preplacement row, based on HHID and start date.
+  raw_data[,emission_tags:="collecting"]
+  
+  meta_matched <- dplyr::left_join(meta_data,meta_emissions,by="HHID") %>% #in case of repeated households, keep the nearest one
+    dplyr::filter(abs(difftime(datetime_start,datetimedecaystart,units='days'))<1)
+  
+  if(dim(meta_matched)[1]>0){
+    raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_sample_start,meta_matched$datetime_BGf_start)] ="cooking"
+    raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_BGi_start,meta_matched$datetime_sample_start) ] ="BG_initial"
+    raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_sample_end,meta_matched$datetime_BGf_start)] ="BG_final"
+  } else {
+    print(paste('Error mobenzi-tagging ', filename$basename))
+  }
+  raw_data
+}
+
+
+#Get start and stop times of ECM files to use in the deployments
+update_preplacement <- function(raw_data,preplacement){
+  #If it is a kitchen or cook's ECM
+  if(raw_data$sampletype[1] %in% c('C','K','K2')){
+    raw_data_temp <- raw_data[c(1,.N),.(datetime,HHID)]
+    raw_data_temp$UNOPS_Date <- as.Date(raw_data_temp$datetime, "%Y-%m-%d")
+    raw_data_temp$UNOPS_Date <-format(raw_data_temp$UNOPS_Date, "%d-%m-%Y")   
+    
+    #Get index of matching preplacement row
+    preplacement_test <- merge(preplacement,raw_data_temp[1,], by=c("HHID","UNOPS_Date")) %>%
+      dplyr::filter(datetime-start_datetime<1)
+    preplacement$ECM_start_k
+    preplacement_test
+    
+    
+    
+  }
+}
+
+
 
 

@@ -8,7 +8,7 @@ dummy_meta_data <- fread('r_scripts/beacon_dummy_meta_data.csv')
 #Import, use Mobenzi to figure out which deployment it is from.  
 #Correct time stamps if there are issues with them
 #Save timeseries of locations with meta_data.
-beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',tz){
+beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',timezone,preplacement){
    dummy_meta_data <- get(dummy, envir=.GlobalEnv)   
    base::message(file)
    if(nchar(basename(file)) < 30){message('File name not correct, check the file')
@@ -17,23 +17,23 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',tz){
    equipment_IDs <- readRDS("Processed Data/equipment_IDs.R")
    
    beacon_logger_data = fread(file,col.names = c('datetime',"MAC","RSSI"),skip = 1)
-   beacon_logger_data[,MAC := toupper(MAC)] 
-   beacon_logger_data[,datetime := ymd_hms(datetime,tz=tz)]
    
    #meta data
    filename <- parse_filename_fun(file)
    
-   if(all(is.na(filename$sampleID))){
+   if(all(is.na(filename$sampleID)) | dim(beacon_logger_data)[1]<5){
       #add "fake" meta_data
       meta_data <- dummy_meta_data
       meta_data$fullname <- basename(file)
       meta_data$basename <- "Check filename"
       meta_data$qa_date = as.Date(Sys.Date())
-      meta_data$datetime_start <- beacon_logger_data$datetime[1]
+      meta_data$datetime_start <- filename$datestart
+      meta_data$qc <- 'bad'
       meta_data$flag_total <- NA
       return(meta_data=as.data.table(meta_data))
    }else{
-      
+      beacon_logger_data[,MAC := toupper(MAC)] 
+      beacon_logger_data[,datetime := ymd_hms(datetime,tz=timezone)]
       keep <-names(tail(sort(table(beacon_logger_data$MAC)),2)) 
       beacon_logger_data_plot <- subset(beacon_logger_data, MAC %in% keep)
       
@@ -75,6 +75,7 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',tz){
          fieldworkernum=filename$fieldworkernum, 
          HHID=filename$HHID,
          loggerID=filename$loggerID,
+         qc = filename$flag,
          samplerate_minutes = beacon_logger_data_emitter$diff_time/60,
          sampling_duration = sample_duration
       )
@@ -102,32 +103,50 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',tz){
 }
 
 
-beacon_import_fun <- function(file,tz,preplacement,beacon_time_corrections){
-   
+beacon_import_fun <- function(file,TimeZone="UTC",preplacement=preplacement,beacon_time_corrections){
+   base::message(file)
    beacon_logger_data = fread(file,col.names = c('datetime',"MAC","RSSI"),skip = 1)
-   beacon_logger_data[,MAC := toupper(MAC)] 
-   beacon_logger_data[,datetime := ymd_hms(datetime,tz=tz)]
-   beacon_logger_data[,datetime := round_date(datetime, unit = "minutes")]
-   
    filename <- parse_filename_fun(file)
    
-   #Fix time stamps if they are bad.
-   if(beacon_logger_data$datetime[1]<as.POSIXct('2019-1-1')){
-      newstartdatetime<-beacon_time_corrections$newstartdatetime[grepl(filename$basename,beacon_time_corrections$filename)]
-      beacon_logger_data <- ShiftTimeStamp(beacon_logger_data, newstartdatetime,tz)
-   }
-   
-   
-   if(is.null(beacon_logger_data)){return(NULL)}else{
+   if(all(is.na(filename$sampleID)) | dim(beacon_logger_data)[1]<5){return(NULL)}else{
+      
+      beacon_logger_data[,MAC := toupper(MAC)] 
+      beacon_logger_data[,datetime := ymd_hms(datetime,tz=TimeZone)]
+
+      #Fix time stamps if they are bad.
+      if(beacon_logger_data$datetime[1]<as.POSIXct('2019-1-1')){
+         newstartdatetime<-beacon_time_corrections$newstartdatetime[grepl(filename$basename,beacon_time_corrections$filename)]
+         beacon_logger_data <- ShiftTimeStamp_unops(beacon_logger_data, newstartdatetime,TimeZone="UTC")
+      }
       
       #Add some meta_data into the mix
-      beacon_logger_data$sampleID <- filename$sampleID
-      beacon_logger_data$loggerID <- filename$loggerID
-      beacon_logger_data$HHID <- filename$HHID
-      beacon_logger_data$sampletype <- filename$sampletype
+      beacon_logger_data[,datetime := ymd_hms(datetime,tz=TimeZone)]
+      beacon_logger_data[,datetime := round_date(datetime, unit = "minutes")]
+      beacon_logger_data[,sampleID := filename$sampleID]
+      beacon_logger_data[,loggerID := filename$loggerID]
+      beacon_logger_data[,HHID := filename$HHID]
+      beacon_logger_data[,sampletype := filename$sampletype]
+      beacon_logger_data[,qc := filename$flag]
+      
+      meta_data <- data.table(
+         fullname=filename$fullname,basename=filename$basename,
+         qa_date = as.Date(Sys.Date()),
+         sampleID=filename$sampleID,
+         datestart=filename$datestart,
+         datetime_start = beacon_logger_data$datetime[1],
+         sampletype=filename$sampletype, 
+         fieldworkerID=filename$fieldworkerID, 
+         fieldworkernum=filename$fieldworkernum, 
+         HHID=filename$HHID,
+         loggerID=filename$loggerID,
+         qc = filename$flag
+         )
+      #Add some meta_data into the mix
+      beacon_logger_data <- tag_timeseries_mobenzi(beacon_logger_data,preplacement,filename)
+      beacon_logger_data <- tag_timeseries_emissions(beacon_logger_data,meta_emissions,meta_data,filename)
       beacon_logger_data<-beacon_logger_data[complete.cases(beacon_logger_data), ]
       
-      return(as.data.table(beacon_logger_data))
+      # return(as.data.table(beacon_logger_data))
    }
 }
 

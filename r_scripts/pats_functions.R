@@ -1,8 +1,10 @@
 # fwrite(meta_data, file="r_scripts/pats_dummy_meta_data.csv") 
 dummy_meta_data <- fread('r_scripts/pats_dummy_meta_data.csv')
 
-pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,dummy='dummy_meta_data'){
+pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,preplacement,dummy='dummy_meta_data',meta='meta_emissions'){
   dummy_meta_data <- get(dummy, envir=.GlobalEnv)
+  meta_emissions <- get(meta, envir=.GlobalEnv)
+  
   badfileflag <- 0
   
   base::message(file, " QA-QC checking in progress")
@@ -25,56 +27,67 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,dummy=
   #   badfileflag <- 1; slashpresence <- 1
   #   return(list(raw_data=NULL, meta_data=meta_data))
   # } else{
-    raw_data <- fread(file, skip = 30,sep=",",fill=TRUE)
+  raw_data <- fread(file, skip = 30,sep=",",fill=TRUE)
+  
+  if(badfileflag==1){
+    base::message(basename(file), " has no parseable date.")
+    #add "fake" meta_data
+    meta_data <- dummy_meta_data
+    meta_data$fullname = file
+    meta_data$basename = basename(file)
+    meta_data$qc <- 'bad'
+    meta_data[, c('smry', 'analysis') := NULL]
+    return(list(raw_data=NULL, meta_data=meta_data))
+  }else{
     
-    if(badfileflag==1){
-      base::message(basename(file), " has no parseable date.")
-      #add "fake" meta_data
-      meta_data <- dummy_meta_data
-      meta_data$fullname = file
-      meta_data$basename = basename(file)
-      meta_data$qa_date = as.Date(Sys.Date())
-      meta_data$flags <- 'No usable data'
-      meta_data[, c('smry', 'analysis') := NULL]
-      return(list(raw_data=NULL, meta_data=meta_data))
-    }else{
-      
-      raw_data[, datetime:=ymd_hms(as.character(dateTime), tz=local_tz)]
-      raw_data[,datetime := round_date(datetime, unit = "minutes")]
-      
-      #Sample rate. Time difference of samples, in minutes.
-      sample_timediff = as.numeric(median(diff(raw_data$datetime)))/60
-      
-      #Sampling duration
-      dur = difftime(max(raw_data$datetime),min(raw_data$datetime),units = 'days')
-      
-      meta_data <- data.table(
-        fullname=filename$fullname,
-        basename=filename$basename,
-        qa_date = as.Date(Sys.Date()),
-        datetime_start = raw_data$datetime[1],
-        sampleID=filename$sampleID ,
-        sampletype=filename$sampletype,
-        fieldworkerID=filename$fieldworkerID, 
-        fieldworkernum=filename$fieldworkernum, 
-        HHID=filename$HHID,
-        loggerID=filename$loggerID,
-        samplerate_minutes = sample_timediff/60,
-        sampling_duration = dur
-      )
-      
-      if(all(output=='meta_data')){return(meta_data)}else
-        if(all(output=='raw_data')){return(raw_data)}else
-          if(all(output == c('raw_data', 'meta_data'))){
-            return(list(meta_data=meta_data, raw_data=raw_data))
-          }
-    }  
+    raw_data[, datetime:=ymd_hms(as.character(dateTime), tz=local_tz)]
+    raw_data[,datetime := round_date(datetime, unit = "minutes")]
+
+    
+    #Sample rate. Time difference of samples, in minutes.
+    sample_timediff = as.numeric(median(diff(raw_data$datetime)))/60
+    
+    #Sampling duration
+    dur = difftime(max(raw_data$datetime),min(raw_data$datetime),units = 'days')
+    
+    meta_data <- data.table(
+      fullname=filename$fullname,
+      basename=filename$basename,
+      qa_date = as.Date(Sys.Date()),
+      datetime_start = raw_data$datetime[1],
+      sampleID=filename$sampleID ,
+      sampletype=filename$sampletype,
+      fieldworkerID=filename$fieldworkerID, 
+      fieldworkernum=filename$fieldworkernum, 
+      HHID=as.integer(filename$HHID),
+      loggerID=filename$loggerID,
+      qc = filename$flag,
+      samplerate_minutes = sample_timediff/60,
+      sampling_duration = dur
+    )
+    
+    #Add some meta_data into the mix
+    raw_data <- as.data.table(raw_data)
+    raw_data[,sampleID := meta_data$sampleID]
+    raw_data[,loggerID := meta_data$loggerID]
+    raw_data[,HHID := as.integer(meta_data$HHID)]
+    raw_data[,sampletype := meta_data$sampletype]
+    raw_data[,qc := meta_data$qc]
+    raw_data <- tag_timeseries_mobenzi(raw_data,preplacement,filename)
+    raw_data <- tag_timeseries_emissions(raw_data,meta_emissions,meta_data,filename)
+    
+    if(all(output=='meta_data')){return(meta_data)}else
+      if(all(output=='raw_data')){return(raw_data)}else
+        if(all(output == c('raw_data', 'meta_data'))){
+          return(list(meta_data=meta_data, raw_data=raw_data))
+        }
+  }  
   # }
 }
 
-pats_qa_fun <- function(file,output= 'meta_data',local_tz){
+pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",preplacement){
   ingest = tryCatch({
-    ingest <- pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz,dummy='dummy_meta_data')
+    ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz,preplacement))
   }, error = function(e) {
     print('error ingesting')
     ingest = NULL
@@ -90,6 +103,9 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz){
       
       #create a rounded dt variable
       raw_data[, round_time:=round_date(datetime, 'hour')]
+      
+      #Filter the data based on actual start and stop times - once I get them!
+      
       
       # Create a table with baseline parameters by hour
       # 5 percentile per hour, sd per hour, max per hour, num of observations per hour
@@ -110,9 +126,10 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz){
       
       #Calculate daily average concentration flag
       Daily_avg <- mean(raw_data$PM_Estimate,na.rm = TRUE)
+      
       Daily_avg_flag <- if(Daily_avg>=10*Daily_avg_threshold || sum(is.na(raw_data$PM_Estimate)) > 0){1}else{0}
       Daily_sd <- sd(raw_data$PM_Estimate,na.rm = TRUE)
-
+      
       #Calculate hourly average concentration flag
       max_1hr_avg <- max(bl_check$hr_ave,na.rm = TRUE)
       max_1hr_avg_flag <- if(max_1hr_avg>=50*max_1hr_avg_threshold || sum(is.na(bl_check$hr_ave)) > 0){1}else{0}
@@ -175,8 +192,10 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz){
   }
 }
 
-pats_import_fun <- function(file,output='raw_data',local_tz){
-  ingest <- pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz)
+pats_import_fun <- function(file,output='raw_data',local_tz,preplacement,meta='meta_emissions'){
+  meta_emissions <- get(meta, envir=.GlobalEnv)
+  
+  ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz="Africa/Nairobi",preplacement=preplacement))
   
   if(is.null(ingest)){return(NULL)}else{
     
@@ -184,14 +203,16 @@ pats_import_fun <- function(file,output='raw_data',local_tz){
     if('flags' %in% colnames(meta_data)){
       return(meta_data)
     }else{
-      raw_data <- as.data.table(ingest$raw_data)
-       
-      #Add some meta_data into the mix
-      raw_data$sampleID <- meta_data$sampleID
-      raw_data$loggerID <- meta_data$loggerID
-      raw_data$HHID <- meta_data$HHID
-      raw_data$sampletype <- meta_data$sampletype
       
+      raw_data <- as.data.table(ingest$raw_data)
+      raw_data[,dateTime := NULL]
+      raw_data[,V13:=NULL]
+      raw_data[,V16:=NULL]
+      raw_data[,V14:=NULL]
+      raw_data[,iButton_Temp:=NULL]
+      raw_data[,degC_sys:=NULL]
+      raw_data[,CO_mV:=NULL]
+      raw_data[,degC_CO:=NULL]
       return(raw_data)
     }
   }

@@ -2,163 +2,146 @@
 title: "e2e_analysis_mrkdn"
 author: "ricardo_piedrahita"
 date: "12/30/2019"
-output: html_document
+runtime: shiny
+output:
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    source: embed
+    vertical_layout: scroll
 ---
 
-```{r setup, include=FALSE}
+```{r global, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
 ## Analyze UNOPS E2E data
 source('r_scripts/load.R')
+source('r_scripts/load_data_functions_paths.R') #does this import the data??
+library(plotly)
+library(flexdashboard)
+library(rsconnect)
 
-processed_filelist <- "c" #readLines('Processed Data/processed_filelist.csv') #uncomment to speed up, once fully debugged.
-lascar_cali_import()
-mobenzi <- mobenzi_import_fun() # Import Mobenzi data
-```
 
-## Load metadata
+#import parameter data
+read_logs <- function(x){
+  step1 <- as.data.table(read_xlsx(x, col_types = c("text", "text", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "text", "text", "text", "text", "text","text","text","text")))
+  step1 <- setnames(step1, c('Parameter','Unit','Mean','SD','CV','Min','Max','Sample Size','Reference','Region','Country','Location','Density','Stove','Ref','Notes'))
+}
 
-```{r metadata}
+in_files <- list.files('WHO data', full.names=T, pattern='.xlsx')
+in_files <- in_files[ !grepl("~", in_files) ]
+in_data <- as.data.table(ldply(in_files, read_logs))
+in_data <- in_data[!(is.na(in_data$Parameter)),] #Remove NA rows.
 
-# Excel metadata import
-path_other <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/Excel databases/Other databases.xlsx"
-metadata_ambient <- ambient_import_fun(path_other,sheetname='Ambient Sampling')
-metadata_filter_record <- upas_record_import_fun(path_other, sheetname='UPAS Filter record')
-path_emissions <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/Excel databases/USE THIS COPY_2019 Kenya Emissions database.xlsx"
-meta_emissions <- emissions_import_fun(path_emissions,sheetname='Ambient Sampling')
 
-```
+#Import emission rate data
+#import parameter data
+read_emission_rates <- function(x){
+  step1 <- as.data.table(read_xlsx(x, col_types = c("text", "text", "text", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "text", "text", "text", "text","text")))
+  step1 <- setnames(step1, c('Stove','Pollutant','Unit','Arithmetic Mean','Median','SD','Min','Max','Sample Size','Sample Type','Fuel','Reference','Notes','Short Ref'))
+}
 
-## QAQC and plot TSI data
+in_em_files <- list.files('Emissions Rate Data', full.names=T, pattern='.xlsx')
+in_em_files <- in_em_files[ !grepl("~", in_em_files ) ]
+in_em_data <- as.data.table(ldply(in_em_files, read_emission_rates))
+in_em_data <- in_em_data[!(is.na(in_em_data$Stove)),] #Remove NA rows.
+in_em_data$`Arithmetic Mean` <- round(in_em_data$`Arithmetic Mean`,1)
+in_em_data$`Median` <- round(in_em_data$`Median`,1)
+in_em_data$`SD` <- round(in_em_data$`SD`,1)
+in_em_data$`Min` <- round(in_em_data$`Min`,1)
+in_em_data$`Max` <- round(in_em_data$`Max`,1)
 
-```{r TSI, echo=FALSE}
-
-# TSI Data.  TSI data needs to be manually prepared by only keeping the data from the test of interest.  Multiple tests in the same file will break it.
-# tsifilepath <- "/Users/ricardopiedrahita/Dropbox/CA(Kenya)/UNOPs/Data from the team/TSI"
-tsifilepath <- "~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Cleaned TSI Data" #the corrected files should be placed here.
-file_list_tsi <- list.files(tsifilepath, pattern='.xls|.XLS', full.names = T,recursive = T)
-tsi_meta <- ldply(setdiff(file_list_tsi,processed_filelist), tsi_qa_fun, .progress = 'text',meta_emissions=meta_emissions,local_tz=local_tz) 
-#Time series TSI
-tsi_timeseries <- rbind(tsi_timeseries, ldply(setdiff(file_list_tsi,processed_filelist), tsi_metadata_fun, .progress = 'text',local_tz=local_tz))
-saveRDS(tsi_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/tsi_timeseries.R")
-```
-
-## QAQC UPAS data
-
-```{r UPAS, echo=FALSE}
-
-# UPAS data
-datafilepath <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/UPAS" #For real
-file_list_upas <- list.files(datafilepath, pattern='.txt|.TXT', full.names = T,recursive = F)
-upasmeta <- as.data.frame(ldply(setdiff(file_list_upas,processed_filelist), UPAS_qa_fun, local_tz,.progress = 'text'))
 
 ```
 
-## QAQC and calibrate Lascar data
+Inputs {.sidebar}
+=====================================
+```{r}
+HTML("<br>")
+HTML("<p></p><p><strong>Overview</strong></p>Explore UNOPS/E2E data!</p>")
+HTML("<p>----</p>")
+selectInput('Deployment', HTML("<strong>Select a deployment</strong>"), choices = unique(preplacement[, HHID]), selected =NULL, multiple = FALSE, selectize = FALSE, width = NULL, size = NULL)
 
-```{r Lascar, echo=FALSE}
-# Lascar data
-lascarfilepath <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/Lascar" #For real
-lascarfilepath_caa <- "~/Dropbox/CA(Kenya)/Clean Air Africa/LASCAR Files"
-file_list_lascar <- list.files(lascarfilepath, pattern='.txt|.TXT', full.names = T,recursive = T)
-file_list_lascar_caa <- list.files(lascarfilepath_caa, pattern='.txt|.TXT', full.names = T,recursive = F)
-lascar_meta <- ldply(setdiff(c(file_list_lascar,file_list_lascar_caa),processed_filelist), lascar_qa_fun, .progress = 'text',tz=local_tz)  
-# Time series Lascar
-lascar_calibrated_timeseries <- rbind(lascar_calibrated_timeseries,ldply(setdiff(c(file_list_lascar,file_list_lascar_caa),processed_filelist), lascar_cali_fun, .progress = 'text',tz=local_tz))
-saveRDS(lascar_calibrated_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Calibrated Lascar.R")
-
+HTML("<p><strong>About</strong></p>")
+HTML("<p>The website was designed by Berkeley Air Monitoring Group</p>")
 ```
 
 
-## QAQC and calibrate PATS+ data
-
-```{r PATS, echo=FALSE}
-# PATS+ data
-patsfilepath <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/PATS+"
-file_list_pats <- list.files(patsfilepath, pattern='.csv|.CSV', full.names = T,recursive = T)
-pats_meta_qaqc <- ldply(file_list_pats, pats_qa_fun, .progress = 'text',tz="UTC")
-pats_data_timeseries <-as.data.table(ldply(file_list_pats, pats_import_fun, .progress = 'text',tz="UTC",mobenzi$preplacement))
-saveRDS(pats_data_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/pats_data_timeseries.R")
-```
-
-## QAQC and localize with Beacon data
-
-```{r Beacon, echo=FALSE}
-# Beacon data
-beaconfilepath <- "~/Dropbox/CA(Kenya)/UNOPs/Data from the team/Beacon Logger"
-file_list_beacon <- list.files(beaconfilepath, pattern='.csv|.CSV', full.names = T,recursive = T)
-beacon_meta_qaqc <- ldply(setdiff(file_list_beacon,processed_filelist), beacon_qa_fun, .progress = 'text',tz="UTC")#This is correct as UTC because the data was collected in UTC.
-
-# Import Beacon timeseries, with metadata
-beacon_time_corrections=data.frame(filename=c("2019-09-19_KE152-KE004-L_1296","2019-09-19_KE152-KE004-L_129asdfsdf"),
-                                   newstartdatetime=c(ymd_hms("2019-09-18T11:44:52GMT",tz="UTC"),ymd_hms("2019-09-18T11:00:52GMT",tz="UTC")))
-beacon_data_timeseries <-rbind(beacon_data_timeseries,as.data.table(ldply(setdiff(file_list_beacon,processed_filelist), beacon_import_fun, .progress = 'text',tz="UTC",mobenzi$preplacement,beacon_time_corrections)))
-saveRDS(beacon_data_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Beacon_RawData.R")
-
-# Build Beacon location time series
-# Use Mobenzi to figure out what instruments were in each deployments, plot stuff.
-mobenzilist <- lapply(seq_len(nrow(mobenzi$preplacement)), function(i) mobenzi$preplacement[i,])
-beacon_localization <- ldply(mobenzilist, beacon_deployment_fun, .progress = 'text',equipment_IDs,tz,local_tz,beacon_data_timeseries) 
-saveRDS(beacon_localization,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Beacon_Locations.R")
-```
-
-## Import and merge Dot data
-```{r dots, echo=FALSE}
-
-# * []Get Stove usage data integrated into analysis stream.
-# * Do basic usage analysis using the SUMs code
-# * Integrate events as time series flags.  Name variables based on possible stove types/locations: Indoor Trad/Outdoor Trad/LPG1/LPG2/Jiko/TraditionalCharcoal, etc.
-```
-
-## File names for other folders
-
-```{r filenames, echo=FALSE}
-#Check filenames of other instruments:
-file_list_micropem <- list.files("~/Dropbox/CA(Kenya)/Clean Air Africa/MicroPEM and ECM Raw Files", pattern='.csv|.CSV', full.names = T,recursive = T)
-file_list_PATS <- list.files("~/Dropbox/CA(Kenya)/UNOPs/Data from the team/PATS+", pattern='.csv|.CSV', full.names = T,recursive = T)
-filename_otherinstruments <- rbindlist(lapply(c(file_list_micropem,file_list_PATS), FUN=parse_filename_fun))
-
-```
-
-## Deployment roundup
-
-```{r Beacon, echo=FALSE}
-# Build deployment checklist.
-deployment_check = ldply(mobenzilist, deployment_check_fun, .progress = 'text',equipment_IDs,tz,local_tz,meta_emissions,beacon_meta_qaqc,tsi_meta,lascar_meta,upasmeta)
-
-```
-
-## Email out results
-
-```{r Beacon, echo=FALSE}
-list_of_datasets <- list("Beacons" = beacon_meta_qaqc, "Lascar" = lascar_meta,
-                         "UPAS"=upasmeta,"TSI"=tsi_meta,"PATS"=pats_meta_qaqc,
-                         "Other Filenames"=filename_otherinstruments,
-                         "Deployment Summary"=deployment_check)
-write.xlsx(list_of_datasets, file = paste0("QA Reports/QA report", "_", todays_date, ".xlsx"))
+```{r}
+# Reactive that returns the whole dataset if there is no selection
+# Sets data based on inputs, is for the plots
+selected_data <- reactive({
+  datar$preplacement <- preplacement[HHID %in% input$HHID]
+  # data <- dplyr::filter(in_data,grepl(paste0(input$Region,sep="|"),Region ))
+  datar$COppm <- CO_calibrated_timeseries[HHID %in% input$HHID]
+  datar$pats <- pats_data_timeseries[HHID %in% input$HHID]
+  datar$beacon <- beacon_logger_COmerged[HHID %in% input$HHID]
+  datar$tsi <- tsi_timeseries[HHID %in% input$HHID]
 
 
-# Email out summaries
-sender <- "beaconnih@gmail.com"
-recipients <- c("rpiedrahita@berkeleyair.com","M.Shupler@liverpool.ac.uk","mrossanese@berkeleyair.com","sdelapena@berkeleyair.com")
-# send.mail(from = sender,
-#           to = recipients,
-#           subject = paste0("UNOPS/CAA QA Report ",as.character(Sys.Date())),
-#           body = "UNOPS/CAA data report (new format). Please correct filenames as needed, and note any devices that need maintenance. 
-#           The Deployment Summary worksheet has information from the filenames, Mobenzi, and Excel emissions database.  These should be cross-referenced and disparities investigated!",
-#           smtp = list(host.name = "smtp.gmail.com", port = 465, 
-#                       user.name = "beaconnih@gmail.com",            
-#                       passwd = "CookaBLE99", ssl = TRUE),
-#           authenticate = TRUE,
-#           attach.files = c(paste0("QA Reports/QA report", "_", todays_date, ".xlsx")),
-#           send = TRUE)
+  return(datar)
+})
 
-# writeLines(c(file_list_beacon,file_list_tsi,file_list_upas,file_list_lascar,file_list_caa), con="Processed Data/processed_filelist.R")
+# Sets data based on inputs, is for the summary data tables/downloads
+selected_summary_data <- reactive({
+  dplyr::group_by(selected_data(),Parameter) %>%
+    summarise_all(funs(mean, max, sd), na.rm = TRUE) %>%
+      dplyr::rename(Unit = Unit_max,Mean = Mean_mean,SD = SD_mean,Min = Min_mean,Max = Max_mean) %>%
+      dplyr::mutate('Arithmetic Mean' = round(Mean,digits=2)) %>%
+      dplyr::mutate('Estimated Geometric Mean' = round(Mean/exp(0.5),digits=2)) %>% #Conversion from arithmetic to geometric mean assuming it follows a standard lognormal distribution.
+      dplyr::mutate(SD = round(SD,digits=2)) %>%
+      dplyr::mutate(Min = round(Min,digits=2)) %>%
+      dplyr::mutate(Max = round(Max,digits=2)) %>%
+      dplyr::select(Parameter,Unit,Min,Max,'Arithmetic Mean','Estimated Geometric Mean',SD)
 
+})
 
-# #clear ws and quit
-rm(list = ls())
-# quit(save = 'no')
+##AER plot
+output$aer_plot = renderPlotly({
+    p <- ggplot(aes(y = Mean, x = seq(1, length(Mean))), data = selected_data()[Parameter == "Air exchange rate"] ) + 
+      geom_errorbar(aes(ymin=Min, ymax=Max), colour="black", width=.1) +
+      geom_point(aes(shape = Region, fill = Ref, group = Notes, label = SD, label2 = Stove), alpha=0.75, size=4) + 
+      theme_bw(10) +
+      theme(legend.title=element_blank()) +
+      xlab(" ") +
+      ylab("Mean ACH (air changes/hour)") +
+      scale_x_continuous(breaks=1:length(selected_data()[Parameter == "Air exchange rate"]$Mean), labels= selected_data()[Parameter == "Air exchange rate"]$Country) +
+      theme(axis.text.x = element_text(angle = 30, hjust = 1))
+    p = ggplotly(p,tooltip = c("SD","Country","Notes","Stove","Ref","Mean")) %>% 
+      layout(autosize = F, width = 1000, height = 400, margin = m)
+    p
+})
+
+##Kitchen volume plot
+output$kitchen_volume = renderPlotly({
+    p <- ggplot(aes(Mean,  x = seq(1, length(Mean))), data = selected_data()[Parameter == "Kitchen volume"]) + 
+    geom_errorbar(aes(ymin=Min, ymax=Max), colour="black", width=.1) +
+    geom_point(aes(shape = Region, fill = Ref, group = Notes, label = SD, label2 = Stove), alpha=0.75, size=4) + 
+    theme_bw(10) +
+    theme(legend.title=element_blank()) +
+    xlab(" ") +
+    ylab("Kitchen volume (m<sup>3</sup>)") +
+    scale_x_continuous(breaks=1:length(selected_data()[Parameter == "Kitchen volume"]$Mean), labels= selected_data()[Parameter == "Kitchen volume"]$Country) +
+    theme(axis.text.x = element_text(angle = 30, hjust = 1)) 
+    p = ggplotly(p,tooltip = c("SD","Country","Notes","Stove","Ref","Mean")) %>% 
+      layout(autosize = F, width = 1000, height = 400, margin = m)
+    p
+})
+
+##Stove burn time plot
+output$burn_time = renderPlotly({
+    p <- ggplot(aes(Mean, x = seq(1, length(Mean))), data = selected_data()[Parameter == "Stove burn time"]) +
+    geom_errorbar(aes(ymin=Min, ymax=Max), colour="black", width=.1) +
+    geom_point(aes(shape = Region, fill = Ref, group = Notes, label = SD, label2 = Stove), alpha=0.75, size=4) + 
+    theme_bw(10) +
+    theme(legend.title=element_blank()) +
+    xlab(" ") +
+    ylab("Cooking time (hours/day)") +
+    scale_x_continuous(breaks=1:length(selected_data()[Parameter == "Stove burn time"]$Mean), labels= selected_data()[Parameter == "Stove burn time"]$Country) +
+    theme(axis.text.x = element_text(angle = 30, hjust = 1,size = 6))
+    p = ggplotly(p,tooltip = c("SD","Country","Notes","Stove","Ref","Mean")) %>% 
+      layout(autosize = F, width = 1200, height = 400, margin = m)
+    p
+})
 ```
 
 

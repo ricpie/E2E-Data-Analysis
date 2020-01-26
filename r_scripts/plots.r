@@ -6,7 +6,7 @@
 #________________________________________________________
 # plot timeseries data (default by filename)
 # takes a data frame and a column name of variable to plot
-timeseries_plot <- function(df, y_var, x_var, facet_var="HHID",color_var="flag", marker_shape="location") {
+timeseries_plot <- function(df, y_var, x_var, facet_var="HHID",color_var="qc", marker_shape="location") {
   
   ggplot(df, aes_string(y = y_var, x = x_var, color = color_var,shape = marker_shape)) +
     geom_point(alpha = 0.5) +
@@ -22,7 +22,7 @@ timeseries_plot <- function(df, y_var, x_var, facet_var="HHID",color_var="flag",
 #________________________________________________________
 # plot timeseries data by a fill color
 # takes a data frame and a column name of variable to plot
-box_plot <- function(df, y_var, fill_var = "flag", x_var = "HHID", y_units = "units") {
+box_plot <- function(df, y_var, fill_var = "qc", x_var = "HHID", y_units = "units") {
 
   ggplot(df, aes_string(y = y_var, x = x_var, fill = fill_var)) +
     geom_boxplot() +
@@ -37,7 +37,7 @@ box_plot <- function(df, y_var, fill_var = "flag", x_var = "HHID", y_units = "un
 
 #________________________________________________________
 # plot field data
-pointplot <- function(df, y_var, color_var = "flag", x_var = "HHID", y_units = "units") {
+pointplot <- function(df, y_var, color_var = "qc", x_var = "HHID", y_units = "units") {
 
   ggplot(df, aes_string(y = y_var, x = x_var, color = color_var)) +
     geom_point() +
@@ -114,9 +114,9 @@ plot_dot_line <- function(df, y_var, y_label, x_var = "firepower",
 #________________________________________________________
 
 #________________________________________________________
-# plot timeseries data (default by flag color)
+# plot timeseries data (default by qc color)
 # takes a data frame and a column name of variable to plot
-timeseries_plot_co <- function(df, y_var, x_var = "datetime",color_var="flag", marker_shape="location",facet_var = "HHID", y_units = "units") {
+timeseries_plot_co <- function(df, y_var, x_var = "datetime",color_var="qc", marker_shape="location",facet_var = "HHID", y_units = "units") {
   
   ggplot(df, aes_string(y = y_var, x = x_var, color = color_var,shape = marker_shape)) +
     geom_line() +
@@ -129,3 +129,4 @@ timeseries_plot_co <- function(df, y_var, x_var = "datetime",color_var="flag", m
   
 }
 #________________________________________________________
+

@@ -1,8 +1,9 @@
 # fwrite(meta_data, file="r_scripts/lascar_dummy_meta_data.csv") 
 dummy_meta_data <- fread('r_scripts/lascar_dummy_meta_data.csv')
-tz=local_tz
-lascar_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dummy_meta_data'){
+
+lascar_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz="Africa/Nairobi",dummy='dummy_meta_data',preplacement,meta='meta_emissions'){
   dummy_meta_data <- get(dummy, envir=.GlobalEnv)
+  meta_emissions <- get(meta, envir=.GlobalEnv)
   badfileflag <- 0
   
   base::message(file, " QA-QC checking in progress")
@@ -17,6 +18,7 @@ lascar_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dum
   meta_data$file <- file
   meta_data$qa_date = as.Date(Sys.Date())
   meta_data$flags <- 'No usable data'
+  meta_data$qc <- filename$flag
   suppressWarnings(meta_data[, c('smry', 'analysis') := NULL])
   
   #separate out raw, meta, and sensor data
@@ -34,7 +36,8 @@ lascar_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dum
     setnames(raw_data, c("SampleNum", "datetime", "CO_raw"))
     raw_data<-raw_data[complete.cases(raw_data), ]
     raw_data$CO_raw = as.numeric(raw_data$CO_raw)
-    
+    if(mean(raw_data$CO_raw)<0){meta_data$qc = 'bad';filename$flag = 'bad'}
+
     # if(all(is.na(filename$sampleID))){
     #   #add "fake" meta_data
     # 
@@ -63,6 +66,7 @@ lascar_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dum
       meta_data$basename = basename(file)
       meta_data$qa_date = as.Date(Sys.Date())
       meta_data$flags <- 'No usable data'
+      meta_data$qc <- "bad"
       meta_data[, c('smry', 'analysis') := NULL]
       return(list(raw_data=NULL, meta_data=meta_data))
     }else{
@@ -72,10 +76,10 @@ lascar_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dum
       
       date_format <- as.character(date_formats[value==date_formats[!is.na(value),min(value)], variable])
       
-      if(slashpresence==1){raw_data[, datetime:=dmy_hms(as.character(datetime), tz=tz)]} else
-        if(date_format=="mdy"){raw_data[, datetime:=mdy_hms(as.character(datetime), tz=tz)]} else
-          if(date_format=="ymd"){raw_data[, datetime:=ymd_hms(as.character(datetime), tz=tz)]} else
-            if(date_format=="dmy"){raw_data[, datetime:=dmy_hms(as.character(datetime), tz=tz)]}
+      if(slashpresence==1){raw_data[, datetime:=dmy_hms(as.character(datetime), tz=local_tz)]} else
+        if(date_format=="mdy"){raw_data[, datetime:=mdy_hms(as.character(datetime), tz=local_tz)]} else
+          if(date_format=="ymd"){raw_data[, datetime:=ymd_hms(as.character(datetime), tz=local_tz)]} else
+            if(date_format=="dmy"){raw_data[, datetime:=dmy_hms(as.character(datetime), tz=local_tz)]}
       
       #Sample rate. Time difference of samples, in minutes.
       sample_timediff = as.numeric(median(diff(raw_data$datetime)))/60
@@ -95,9 +99,23 @@ lascar_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dum
         fieldworkernum=filename$fieldworkernum, 
         HHID=filename$HHID,
         loggerID=filename$loggerID,
+        qc = filename$flag,
         samplerate_minutes = sample_timediff/60,
         sampling_duration = dur
       )
+      
+      #Add some meta_data into the mix
+      raw_data[,datetime := round_date(datetime, unit = "minutes")]
+      raw_data[,sampleID := meta_data$sampleID]
+      raw_data[,loggerID := meta_data$loggerID]
+      raw_data[,HHID := meta_data$HHID]
+      raw_data[,qc := meta_data$qc]
+      raw_data[,sampletype := meta_data$sampletype]
+      
+      raw_data <- tag_timeseries_mobenzi(raw_data,preplacement,filename)
+      #Tagging with emissions data because we want the Lascar data to calculate AERs.
+      raw_data <- tag_timeseries_emissions(raw_data,meta_emissions,meta_data,filename)
+      
       
       if(all(output=='meta_data')){return(meta_data)}else
         if(all(output=='raw_data')){return(raw_data)}else
@@ -108,9 +126,9 @@ lascar_ingest <- function(file, output=c('raw_data', 'meta_data'), tz,dummy='dum
   }
 }
 
-lascar_qa_fun <- function(file, setShiny=TRUE,output= 'meta_data',tz){
+lascar_qa_fun <- function(file, setShiny=TRUE,output= 'meta_data',local_tz="Africa/Nairobi",preplacement){
   ingest = tryCatch({
-    ingest <- lascar_ingest(file, output=c('raw_data', 'meta_data'),tz,dummy='dummy_meta_data')
+    ingest <- lascar_ingest(file, output=c('raw_data', 'meta_data'),local_tz="Africa/Nairobi",dummy='dummy_meta_data',preplacement=preplacement)
   }, error = function(e) {
     print('error ingesting')
     ingest = NULL
@@ -200,8 +218,8 @@ lascar_qa_fun <- function(file, setShiny=TRUE,output= 'meta_data',tz){
 }
 
 
-lascar_cali_fun <- function(file,output='calibrated_data',tz){
-  ingest <- lascar_ingest(file, output=c('raw_data', 'meta_data'),tz)
+lascar_cali_fun <- function(file,output='calibrated_data',local_tz="Africa/Nairobi",preplacement=preplacement){
+  ingest <- lascar_ingest(file, output=c('raw_data', 'meta_data'),local_tz="Africa/Nairobi",dummy='dummy_meta_data',preplacement=preplacement)
   
   if(is.null(ingest)){return(NULL)}else{
     
@@ -211,16 +229,11 @@ lascar_cali_fun <- function(file,output='calibrated_data',tz){
     }else{
       raw_data <- ingest$raw_data
       calibrated_data <- as.data.table(apply_lascar_calibration(file,meta_data$loggerID,raw_data)) 
-      #Add some meta_data into the mix
-      calibrated_data[,datetime := round_date(datetime, unit = "minutes")]
-      calibrated_data[,sampleID := meta_data$sampleID]
-      calibrated_data[,loggerID := meta_data$loggerID]
-      calibrated_data[,HHID := meta_data$HHID]
+
       #Add a '2' if it is a PATS+.  Possible for there to be multiple duplicates.. K, K2, K22, etc.
-      if(grepl(meta_data$loggerID, "LAS|CAS")){ 
+      if(grepl("LAS|CAS",meta_data$loggerID)){ 
         calibrated_data[,sampletype := meta_data$sampletype]
       }else {calibrated_data[,sampletype := paste0(meta_data$sampletype,"2")]}
-      
       return(calibrated_data)
     }
   }
