@@ -6,31 +6,19 @@
 #Keys: HHID, sampletype, location, datetime, HHIDdate
 source('r_scripts/load.R')
 source('r_scripts/load_data_functions_paths.R')
-
-todays_date <- gsub("-", "", as.character(Sys.Date()))
-local_tz = "Africa/Nairobi"
-processed_filelist <- "c" #readLines('Processed Data/processed_filelist.csv') #uncomment to speed up, once fully debugged.
-email = 0 #Set to 1 to send out summary qaqc email, else 0
-averaging_window = 1 #Minutes.  Use 1 or 5 generally.
-
-
-# Excel metadata import
-metadata_filter_record <- upas_record_import_fun(path_other, sheetname='UPAS Filter record')
-meta_emissions <- emissions_import_fun(path_emissions,sheetname='Ambient Sampling',local_tz)
-metadata_ambient <- ambient_import_fun(path_other,sheetname='Ambient Sampling')
+email = 1 #Set to 1 to send out summary qaqc email, else 0
 
 
 # TSI Data.  TSI data needs to be manually prepared by only keeping the data from the test of interest.  Multiple tests in the same file will break it.
 #If there is an error with AER, check the emissions databased in the decaystarttime and decayendtime fields - likely an empty row or NA value that is breaking it.
 tsi_meta_qaqc <- ldply(setdiff(file_list_tsi,processed_filelist), tsi_qa_fun, .progress = 'text',meta_emissions=meta_emissions,local_tz) 
-tsi_timeseries <- ldply(file_list_tsi, tsi_meta_data_fun, .progress = 'text',local_tz=local_tz)
+tsi_timeseries <- ldply(file_list_tsi, tsi_meta_data_fun, .progress = 'text',local_tz=local_tz,meta_emissions=meta_emissions)
 
 
 # ECM/MicroPEM data, join with the PATS+ data.  Includes compliance check and basic QAQC
 #This needs to go befor other instruments, because once we get it we will use it as the reference start and stop time.  
 # the function 'update_preplacement' needs to be finished, updated with the ECM's start and stop times.
 ecm_data_timeseries <-ldply(file_list_ECM, ecm_import_fun, .progress = 'text',local_tz=local_tz,preplacement=preplacement)
-
 
 
 # UPAS data import and check
@@ -71,6 +59,7 @@ filename_otherinstruments <- rbindlist(lapply(c(file_list_micropem,file_list_PAT
 
 # Use Mobenzi to figure out what instruments were in each deployments, compare with file names.
 #Add
+mobenzilist = lapply(as.list(1:dim(preplacement)[1]), function(x) preplacement[x[1],])
 deployment_check = ldply(mobenzilist, deployment_check_fun, .progress = 'text',equipment_IDs,tz,local_tz,meta_emissions,beacon_meta_qaqc,tsi_meta_qaqc,lascar_meta,upasmeta)
 
 
@@ -85,21 +74,20 @@ saveRDS(tsi_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Pro
 saveRDS(pats_data_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/pats_data_timeseries.rds")
 saveRDS(CO_calibrated_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/CO_calibrated_timeseries.rds")
 saveRDS(beacon_data_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Beacon_RawData.rds")
-
+saveRDS(upasmeta,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/upasmeta.rds")
+saveRDS(ecm_data_timeseries,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/ecm_data_timeseries.rds")
 
 # Email out summaries
 if (email==1){emailgroup(todays_date)}
 
 # writeLines(c(file_list_beacon,file_list_tsi,file_list_upas,file_list_lascar,file_list_caa), con="Processed Data/processed_filelist.R")
 
-
-  
-
 ambient_data <- ambient_timeseries(CO_calibrated_timeseries,pats_data_timeseries) #Try to get ambient met data from Matt or others?
 saveRDS(ambient_data,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/ambient_data.rds")
 
 #Perform analyses/modeling #ldply - for each deployment, run the model
 # Build Beacon location time series with exposure estimates
+
 beacon_logger_COmerged <- ldply(mobenzilist, beacon_deployment_fun, .progress = 'text',equipment_IDs,local_tz,beacon_data_timeseries, CO_calibrated_timeseries,pats_data_timeseries)
 saveRDS(beacon_logger_COmerged,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/beacon_logger_COmerged.rds")
 
@@ -110,8 +98,8 @@ saveRDS(beacon_logger_COmerged,"~/Dropbox/UNOPS emissions exposure/E2E Data Anal
 # beacon_walkthrough()
 
 #Plot data
-# plot_ambient <- timeseries_plot(dplyr::filter(ambient_data,variable=="CO_ppm" | variable=="PM_estimate")
-                                # , y_var="value", x_var="datetime", facet_var="variable",color_var="qc", marker_shape="qc")
+plot_ambient <- timeseries_plot(dplyr::filter(ambient_data,variable=="CO_ppm" | variable=="PM_estimate")
+                                , y_var="value", x_var="datetime", facet_var="variable",color_var="qc", marker_shape="qc")
 
 
 #Deployment plots
