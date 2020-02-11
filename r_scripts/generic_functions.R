@@ -239,7 +239,6 @@ ShiftTimeStamp_unops <- function(beacon_logger_data, newstartdatetime,TimeZone){
 ambient_timeseries <- function(CO_calibrated_timeseries,pats_data_timeseries){
   ambient_pats_data_timeseries <- pats_data_timeseries["A"==substr(sampletype,1,1),]
   ambient_data <- CO_calibrated_timeseries["A"==substr(sampletype,1,1),]
-  ambient_data[,"CO_raw":=NULL]
   # beacon_logger_COmerged = merge(beacon_logger_data,lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
   
   # ambient_data <- merge(ambient_data,ambient_pats_data_timeseries,by=c("datetime"),all.x = T, all.y = F)
@@ -378,8 +377,9 @@ emailgroup <-  function(todays_date){
             send = TRUE)
 }
 
+#Not done - need to truncate the ends.
 truncate_timeseries <- function(raw_data,startdatetime,enddatetime){
-  raw_data <- dplyr::filter(raw_data,datetime>startdatetime)# & datetime<enddatetime)
+  raw_data <- raw_data[datetime>startdatetime,]# & datetime<enddatetime)
 }
 
 
@@ -393,10 +393,12 @@ tag_timeseries_mobenzi <- function(raw_data,preplacement,filename){
     preplacement$HHID <- preplacement$HHIDnumeric
     preplacement_matched <- merge(raw_data[1,],preplacement, by="HHID") %>%
       dplyr::filter(datetime-start_datetime<1)
-    if(dim(preplacement_matched)[1]>0){
-      raw_data[,ecm_tags := ifelse(datetime>preplacement_matched$start_datetime & datetime<preplacement_matched$start_datetime+86400,'deployed',ecm_tags)]
-      if(abs(raw_data$datetime[1]-raw_data$datetime[.N])>2){      
-        raw_data[,ecm_tags := ifelse(datetime > preplacement_matched$start_datetime+86400,'intensive',ecm_tags)]
+    ECM_end = preplacement_matched$start_datetime+86400
+      
+    if(dim(preplacement_matched)[1]>0){ #If there is a match
+      raw_data[,ecm_tags := ifelse(datetime>preplacement_matched$start_datetime & datetime<ECM_end,'deployed',ecm_tags)]
+      if(abs(raw_data$datetime[1]-max(raw_data$datetime))>2){      
+        raw_data[,ecm_tags := ifelse(datetime > ECM_end,'intensive',ecm_tags)]
       }
     } else {
       print(paste('Error mobenzi-tagging ', filename$basename))
@@ -412,16 +414,18 @@ tag_timeseries_emissions <- function(raw_data,meta_emissions,meta_data,filename)
   raw_data[,emission_tags:="collecting"]
   
   meta_matched <- dplyr::left_join(meta_data,meta_emissions,by="HHID") %>% #in case of repeated households, keep the nearest one
-    dplyr::filter(abs(difftime(datetime_start,datetimedecaystart,units='days'))<1)
+    dplyr::filter(min(abs(difftime(datetime_start,datetimedecaystart,units='days')))==abs(difftime(datetime_start,datetimedecaystart,units='days')))
   
   if(dim(meta_matched)[1]>0){
     raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_sample_start,meta_matched$datetime_BGf_start)] ="cooking"
     raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_BGi_start,meta_matched$datetime_sample_start) ] ="BG_initial"
     raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_sample_end,meta_matched$datetime_BGf_start)] ="BG_final"
+  } else if(raw_data$sampletype[1] %in% 'A'){
+    print(paste('Ambient file found ', filename$basename))
   } else {
-    print(paste('Error mobenzi-tagging ', filename$basename))
+    print(paste('Error emissions-tagging, no meta_data matched ', filename$basename))
   }
-  raw_data
+  return(raw_data)
 }
 
 
