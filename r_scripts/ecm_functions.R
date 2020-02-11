@@ -62,11 +62,14 @@ ecm_ingest <- function(file, output=c('raw_data', 'meta_data','preplacement'), l
   raw_data[,qc := meta_data$qc]
   
   #Add tags to the data streams
-  raw_data <- tag_timeseries_emissions(raw_data,meta_emissions,meta_data)
+  raw_data <- tag_timeseries_emissions(raw_data,meta_emissions,meta_data,filename)
   #Update this preplacement function when we have the ECM data!
   # preplacement <- update_preplacement(preplacement,raw_data)
   raw_data <- tag_timeseries_mobenzi(raw_data,preplacement,filename)
   
+  #Filter the data based on actual start and stop times - once I get them!
+  # raw_data <- raw_data[ecm_tags=='deployed']
+
   if(all(output=='meta_data')){return(meta_data)}else
     if(all(output=='raw_data')){return(raw_data)}else
       if(all(output == c('raw_data', 'meta_data','preplacement'))){

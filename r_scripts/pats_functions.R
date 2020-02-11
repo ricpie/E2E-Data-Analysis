@@ -105,6 +105,7 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
       raw_data[, round_time:=round_date(datetime, 'hour')]
       
       #Filter the data based on actual start and stop times - once I get them!
+      # raw_data <- raw_data[ecm_tags=='deployed']
       
       
       # Create a table with baseline parameters by hour

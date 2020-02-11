@@ -146,6 +146,9 @@ lascar_qa_fun <- function(file, setShiny=TRUE,output= 'meta_data',local_tz="Afri
       #create a rounded dt variable
       calibrated_data[, round_time:=round_date(datetime, 'hour')]
       
+      #Filter the data based on actual start and stop times - once I get them!
+      # calibrated_data <- calibrated_data[ecm_tags=='deployed']
+      
       # Create a table with baseline parameters by hour
       # 5 percentile per hour, sd per hour, max per hour, num of observations per hour
       bl_check <- calibrated_data[!is.na(CO_ppm), list(hr_ave=mean(CO_ppm, na.rm=T),hr_p05=quantile(CO_ppm, 0.05, na.rm=T), hr_sd=sd(CO_ppm, na.rm=T), hr_n=length(CO_ppm)), by='round_time']

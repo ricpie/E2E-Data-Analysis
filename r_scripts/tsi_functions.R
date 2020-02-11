@@ -2,23 +2,27 @@
 dummy_meta_data <- fread("r_scripts/tsi_dummy_meta_data.csv")
 
 
-tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='dummy_meta_data'){
+tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='dummy_meta_data',meta="meta_emissions"){
   dummy_meta_data <- get(dummy, envir=.GlobalEnv)
+  meta_emissions <- get(meta, envir=.GlobalEnv)
   filename <- parse_filename_fun(file)
   badfileflag = 0
   #separate out raw, meta, and sensor data
   raw_data_temp <- fread(file, skip = 28,fill=TRUE)
-  if (nrow(raw_data_temp)<10 && ncol(raw_data_temp)<6){badfileflag <- 1}else 
-    if(ncol(raw_data_temp)==6){
-      raw_data <- fread(file, skip = 29,fill=TRUE)
-      raw_data<- raw_data[,1:6]
-      setnames(raw_data, c("Date",	"Time",	"CO2_ppm",	"RH",	"Temp_C","CO_ppm"))
-      raw_data<-raw_data[complete.cases(raw_data), ]}else{
-        raw_data <- fread(file, skip = 29,fill=TRUE)
-        raw_data<- raw_data[,1:7]
-        setnames(raw_data, c("Date",	"Time",	"CO2_ppm",	"RH",	"Temp_C",	"Wetbulb_C","CO_ppm"))
-        raw_data<-raw_data[complete.cases(raw_data), ]
-        raw_data <- raw_data[,c(1:5,7)]}
+  if (nrow(raw_data_temp)<10 && ncol(raw_data_temp)<6){
+    badfileflag <- 1
+  }else if(ncol(raw_data_temp)==6){
+    raw_data <- fread(file, skip = 29,fill=TRUE)
+    raw_data<- raw_data[,1:6]
+    setnames(raw_data, c("Date",	"Time",	"CO2_ppm",	"RH",	"Temp_C","CO_ppm"))
+    raw_data<-raw_data[complete.cases(raw_data), ]
+  }else {
+    raw_data <- fread(file, skip = 29,fill=TRUE)
+    raw_data<- raw_data[,1:7]
+    setnames(raw_data, c("Date",	"Time",	"CO2_ppm",	"RH",	"Temp_C",	"Wetbulb_C","CO_ppm"))
+    raw_data<-raw_data[complete.cases(raw_data), ]
+    raw_data <- raw_data[,c(1:5,7)]
+  }
   
   if(all(is.na(filename$sampleID)) || badfileflag == 1){
     #add "fake" meta_data
@@ -73,6 +77,15 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
       samplerate_minutes = sample_timediff,
       sampling_duration = dur
     )
+    meta_data <- dplyr::left_join(as.data.frame(meta_data),meta_emissions,by="HHID") %>% #in case of repeated households, keep the nearest one
+      dplyr::filter(abs(difftime(datetime_start,datetimedecaystart,units='days'))<1)
+    
+    raw_data$emission_tags <- 'cooking'
+    raw_data <- as.data.table(raw_data)
+    raw_data[,'emission_tags'][raw_data$datetime<meta_data$datetime_sample_start] ="BG_initial"
+    raw_data[,'emission_tags'][raw_data$datetime>meta_data$datetime_BGf_start] ="BG_final"
+    raw_data[,'emission_tags'][raw_data$datetime>meta_data$datetimedecaystart & raw_data$datetime<meta_data$datetimedecayend] ="Decay"
+    
   }
   if(all(output=='meta_data')){return(meta_data)}else
     if(all(output=='raw_data')){return(raw_data)}else
@@ -82,33 +95,27 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
 }
 
 
-tsi_qa_fun <- function(file,meta_emissions,local_tz="Africa/Nairobi",output= 'meta_data'){
-  ingest <- tsi_ingest(file, local_tz,output=c('raw_data', 'meta_data'))
+tsi_qa_fun <- function(file,local_tz="Africa/Nairobi",output= 'meta_data',meta_emissions="meta_emissions"){
+  ingest <- tsi_ingest(file,local_tz, output=c('raw_data', 'meta_data'),meta="meta_emissions")
+  
   base::message(file, " QA-QC checking in progress")
   
   if(is.null(ingest) | dim(ingest$raw)[1]<5){return(NULL)}else{
     meta_data <- ingest$meta_data
     #Get emissions database row of interest
-    meta_matched <- dplyr::left_join(meta_data,meta_emissions,by="HHID") %>% #in case of repeated households, keep the nearest one
-      dplyr::filter(abs(difftime(datetime_start,datetimedecaystart,units='days'))<1)
-    if('flags' %in% colnames(meta_data) | dim(meta_matched)[1]<1){
+    
+    if('flags' %in% colnames(meta_data) | dim(meta_data)[1]<1){
       return(meta_data)
     }else{
       
- 
-      
       raw_data <- ingest$raw_data
       
-      raw_data$emissions_tag <- 'cooking'
-      raw_data[,'emissions_tag'][raw_data$datetime<meta_matched$datetime_sample_start] ="BG_initial"
-      raw_data[,'emissions_tag'][raw_data$datetime>meta_matched$datetime_BGf_start] ="BG_final"
+      raw_data <- truncate_timeseries(raw_data,meta_data$datetime_BGi_start,max(raw_data$datetime))
+      sampleperiod <-  subset(raw_data,datetime>meta_data$datetime_sample_start & datetime<meta_data$datetime_sample_end) #Emissions sample period
+      BGi<- subset(raw_data,datetime<meta_data$datetime_sample_start) #initial background period
       
-      raw_data <- truncate_timeseries(raw_data,meta_matched$datetime_BGi_start,max(raw_data$datetime))
-      sampleperiod <-  subset(raw_data,datetime>meta_matched$datetime_sample_start & datetime<meta_matched$datetime_sample_end) #Emissions sample period
-      BGi<- subset(raw_data,datetime<meta_matched$datetime_sample_start) #initial background period
-      
-      BGf<- subset(raw_data,datetime>=meta_matched$datetimedecayend)#final background period. Playing it safer.
-      # BGf<- subset(raw_data,datetime>meta_matched$datetime_BGf_start)#final background period
+      BGf<- subset(raw_data,datetime>=meta_data$datetimedecayend)#final background period. Playing it safer.
+      # BGf<- subset(raw_data,datetime>meta_data$datetime_BGf_start)#final background period
       
       
       #check the initial and final background concentrations
@@ -140,19 +147,19 @@ tsi_qa_fun <- function(file,meta_emissions,local_tz="Africa/Nairobi",output= 'me
       MM_CO <- 28 #g/mol
       Mass_Conv <- 10^3 #mg/g
       R <- 0.08206 #Ideal gas constant: (𝑳. 𝒂𝒕𝒎)/(𝒎𝒐𝒍.𝑲)
-      pressure_atm <- meta_matched$`Pressure (hPa)`/1013.25
-      ambient_temp_K <- meta_matched$`Ambient Temp (C)`+273
-      # Fuel_C_Content <- meta_matched$fuel1
-      Burn_Time <- meta_matched$`Sample END time`-meta_matched$`Sample START [hh:mm:ss]`
+      pressure_atm <- meta_data$`Pressure (hPa)`/1013.25
+      ambient_temp_K <- meta_data$`Ambient Temp (C)`+273
+      # Fuel_C_Content <- meta_data$fuel1
+      Burn_Time <- meta_data$`Sample END time`-meta_data$`Sample START [hh:mm:ss]`
       # meta_data$Mass_Wood <-   #Wood consumed,excluding remaining charcoal, dry mass basis
-        
+      
       ppm_to_mgm3_function <- function(Conc_PPM_BGS,MolarMass,ambient_temp_K,pressure_atm,R,Mass_Conv){
         Vol_Conv <- 10^3 #L/m^3
         Mass_Conc_num <- Conc_PPM_BGS*10^-6*pressure_atm*MolarMass*Vol_Conv*Mass_Conv
         Mass_Conc_denom <- R*ambient_temp_K
         Mass_Conc <-Mass_Conc_num/Mass_Conc_denom
       }
-        
+      
       meta_data$CO_mgm3 <- ppm_to_mgm3_function(meta_data$Run_avg_CO_BGS,MM_CO,ambient_temp_K,pressure_atm,R,Mass_Conv)
       
       # meta_data$EF_CO <- meta_data$CO_mgm3*(1/(meta_data$Run_avg_CO_BGS+meta_data$Run_avg_CO2_BGS))*C_per_M3*Mass_Conv #[g_CO/kg_wood]
@@ -162,40 +169,35 @@ tsi_qa_fun <- function(file,meta_emissions,local_tz="Africa/Nairobi",output= 'me
       meta_data$MCE <- meta_data$Run_avg_CO2_BGS/(meta_data$Run_avg_CO2_BGS+meta_data$Run_avg_CO_BGS)
       
       #Get the PM2.5 and PM2.5 mass concentrations in mg/m3 into the emissions spreadsheet to get these values
-      # PM25_mgm3 <- meta_matched$PM25_mgm3
-      # PM25_BC_mgm3 <- meta_matched$PM25_BC_mgm3
+      # PM25_mgm3 <- meta_data$PM25_mgm3
+      # PM25_BC_mgm3 <- meta_data$PM25_BC_mgm3
       # EF_PM25 <- PM25_mgm3*(1/(meta_data$Run_avg_CO_BGS+meta_data$Run_avg_CO2_BGS))*C_per_M3*Wood_C_content*Mass_Conv
       # EF_PM25_BC <- PM25_BC_mgm3*(1/(meta_data$Run_avg_CO_BGS+meta_data$Run_avg_CO2_BGS))*C_per_M3*Wood_C_content*Mass_Conv
       
       #Air exchange rate calculated from CO decay.
-      raw_data_AER <- raw_data[raw_data$datetime<meta_matched$datetimedecayend & raw_data$datetime>meta_matched$datetimedecaystart,]
+      raw_data_AER <- raw_data[raw_data$datetime<meta_data$datetimedecayend & raw_data$datetime>meta_data$datetimedecaystart,]
       meta_data <- AER_fun(file,meta_data,raw_data_AER,output = 'meta_data')
-      raw_data$BGdecay <- 0
-      raw_data$BGdecay[raw_data$datetime<meta_matched$datetimedecayend & raw_data$datetime>meta_matched$datetimedecaystart] = 1 #Points that come after the decay start
-      raw_data[,'emissions_tag'][raw_data[,'datetime']>meta_matched$datetimedecaystart & raw_data[,'datetime']<meta_matched$datetimedecayend] ="Decay"
+      raw_data[,BGdecay := 0]
+      raw_data$BGdecay[raw_data$datetime<meta_data$datetimedecayend & raw_data$datetime>meta_data$datetimedecaystart] = 1 #Points that come after the decay start
       
       meta_data = cbind(meta_data, first_minutes_bl_CO,first_minutes_bl_CO2,last_minutes_bl_CO,last_minutes_bl_CO2,Run_avg_CO,Run_sd_CO,Run_avg_CO2,Run_sd_CO2, 
                         bg_start_flag,bg_end_flag,nonresponsive_flag,CO2_maxout_flag,CO_maxout_flag)
-      
+      meta_data <- as.data.table(meta_data)
       meta_data[, flag_total:=sum(bg_start_flag,bg_end_flag,nonresponsive_flag,CO2_maxout_flag,CO_maxout_flag), by=.SD]
       
       flags_str <- suppressWarnings(paste(melt(meta_data[,c(colnames(meta_data)[colnames(meta_data) %like% "flag"]), with=F])[value>0 & variable!="flag_total", gsub("_flag", "" , variable)] , collapse=", "))
       
       meta_data[, flags:=flags_str]
       
-      raw_data<-as.data.table(raw_data)
-      
-      
-      #Plot the CO and CO2 data and save it
-      tryCatch({ 
+      raw_data({ 
         #Prepare some text for looking at the ratios of high to low temps.
         plot_name = gsub(".xls",".png",basename(file))
         plot_name = paste0("QA Reports/Instrument Plots/TSI_",gsub(".XLS",".png",plot_name))
-        tsiplot <- ggplot(raw_data,aes(y = CO_ppm, x = datetime,color=emissions_tag)) +
+        tsiplot <- ggplot(raw_data,aes(y = CO_ppm, x = datetime,color=emission_tags)) +
           geom_line()+
           geom_point() +
           geom_line(data = raw_data, aes(y = CO2_ppm, x = datetime))+
-          geom_point(data = raw_data, aes(y = CO2_ppm, x = datetime,color=emissions_tag))+
+          geom_point(data = raw_data, aes(y = CO2_ppm, x = datetime,color=emission_tags))+
           ggtitle(paste0('TSI_',basename(file))) + 
           labs(x="", y="ppm")+
           theme_minimal() 
@@ -211,8 +213,8 @@ tsi_qa_fun <- function(file,meta_emissions,local_tz="Africa/Nairobi",output= 'me
   }
 }
 
-tsi_meta_data_fun <- function(file,output='raw_data',local_tz){
-  ingest <- tsi_ingest(file,local_tz, output=c('raw_data', 'meta_data'))
+tsi_meta_data_fun <- function(file,output='raw_data',local_tz,meta_emissions="meta_emissions"){
+  ingest <- tsi_ingest(file,local_tz, output=c('raw_data', 'meta_data'),meta="meta_emissions")
   
   if(is.null(ingest)){return(NULL)}else{
     
