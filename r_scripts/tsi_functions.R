@@ -189,7 +189,7 @@ tsi_qa_fun <- function(file,local_tz="Africa/Nairobi",output= 'meta_data',meta_e
       
       meta_data[, flags:=flags_str]
       
-      raw_data({ 
+      tryCatch({ 
         #Prepare some text for looking at the ratios of high to low temps.
         plot_name = gsub(".xls",".png",basename(file))
         plot_name = paste0("QA Reports/Instrument Plots/TSI_",gsub(".XLS",".png",plot_name))
