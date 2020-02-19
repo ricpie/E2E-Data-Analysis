@@ -1,2 +1,2 @@
-fullname,basename,qa_date,sampleID,filterID,sampletype,fieldworkerID,fieldworkernum,HHID,loggerID,samplerate_minutes,sampling_duration,datetime_start
-,,,,,,,,,,,,
+fullname,basename,qa_date,sampleID,filterID,sampletype,fieldworkerID,fieldworkernum,HHID,loggerID,samplerate_minutes,sampling_duration,datetime_start,qc
+,,,,,,,,,,,,,NA

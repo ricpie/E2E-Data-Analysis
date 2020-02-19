@@ -1,2 +1,2 @@
-fullname,basename,qa_date,sampleID,datestart,sampletype,fieldworkerID,fieldworkernum,HHID,loggerID,samplerate_minutes,sampling_duration,completeness_fl,time_interval_fl,beacon_presence_fl,beacon_time,startup_proc_fl,duration_fl,flag_total,datetime_start
-2019-09-19_KE152-KE004-K_1261.csv,Check filename,2019-12-04,,,,,,,,0,0,0,0,1,0,0,0,,
+fullname,basename,qa_date,sampleID,datestart,sampletype,fieldworkerID,fieldworkernum,HHID,loggerID,samplerate_minutes,sampling_duration,completeness_fl,time_interval_fl,beacon_presence_fl,beacon_time,startup_proc_fl,duration_fl,flag_total,datetime_start,qc
+2019-09-19_KE152-KE004-K_1261.csv,Check filename,2019-12-04,,,,,,,,0,0,0,0,1,0,0,0,,,bad
