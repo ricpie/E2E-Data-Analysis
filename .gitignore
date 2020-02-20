@@ -3,6 +3,7 @@
 .RData
 .Ruserdata
 .Processed Data
+.QA Reports
  *.png
  *.jpeg
  *.jpg
