@@ -2,14 +2,14 @@
 .DS_Store
 .AppleDouble
 .LSOverride
-r_scripts/Test Files UPAS
-r_scripts/www
-Background
-Geocene Studies Output
-Metadata
-Processed Data
-QA Reports
-SUMSARIZED
+r_scripts/Test Files UPAS/
+r_scripts/www/
+Background/
+Geocene Studies Output/
+Metadata/
+Processed Data/
+QA Reports/
+SUMSARIZED/
 
 # Icon must end with two \r
 Icon
