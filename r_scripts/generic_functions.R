@@ -21,8 +21,8 @@ parse_filename_fun <- function(file){
     filename$HHID =  as.numeric(matches)
     filename$flag = strsplit(filename$basename_sansext , "_")[[1]][5]
     if(is.na(filename$flag)) {filename$flag = c("good")}
-    if (3 != lengths(regmatches(filename$basename, gregexpr("_", filename$basename))) |
-        is.na(filename$filterID) | is.na(filename$HHID) | filename$fieldworkerID> 25 |
+    num_underscores <- lengths(regmatches(filename$basename, gregexpr("_", filename$basename)))
+    if ( num_underscores > 3 |  (is.na(filename$filterID) & num_underscores>3) | is.na(filename$HHID) | filename$fieldworkerID > 25 |
         filename$fieldworkerID < 0) {filename$filename_flag = 1}else{filename$filename_flag = 0}
     filename
     return(filename)
@@ -42,7 +42,7 @@ equipment_IDs_fun <- function(){
   # equipmentIDs <- equipment_IDs_fun(equipmentIDpath)  
   equipment_IDs <- read_excel(equipmentIDpath, sheet = "Equipment IDs")[,c(2:4)]
   setnames(equipment_IDs,c("loggerID","BAID","instrument"))
-  saveRDS(equipment_IDs,"Processed Data/equipment_IDs.R")
+  saveRDS(equipment_IDs,"Processed Data/equipment_IDs.rds")
   equipment_IDs
 }
 
@@ -70,10 +70,10 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
   postplacement <- read.table(postplacementpath, header=T,quote = "\"",sep=",",na.string=c("","null","NaN"),colClasses = "character")
   
   
-  saveRDS(mobenzi_indepth,"Processed Data/mobenzi_indepth.R")
-  saveRDS(mobenzi_rapid,"Processed Data/mobenzi_rapid.R")
-  saveRDS(preplacement,"Processed Data/preplacement.R")
-  saveRDS(postplacement,"Processed Data/postplacement.R")
+  saveRDS(mobenzi_indepth,"Processed Data/mobenzi_indepth.rds")
+  saveRDS(mobenzi_rapid,"Processed Data/mobenzi_rapid.rds")
+  saveRDS(preplacement,"Processed Data/preplacement.rds")
+  saveRDS(postplacement,"Processed Data/postplacement.rds")
   return(list(mobenzi_indepth=mobenzi_indepth, mobenzi_rapid=mobenzi_rapid,preplacement=preplacement,postplacement=postplacement))
 }
 
@@ -109,13 +109,13 @@ lascar_cali_import <- function(){
   lascar_cali_coefs <- dplyr::mutate(lascar_cali_coefs,loggerID = paste0('LAS',loggerID)) %>%
     dplyr::mutate(loggerID = gsub("LASCAA","CAA",loggerID))
   
-  saveRDS(lascar_cali_coefs,"Processed Data/lascar_calibration_coefs.R")
+  saveRDS(lascar_cali_coefs,"Processed Data/lascar_calibration_coefs.rds")
   lascar_cali_coefs
 }
 
 
 apply_lascar_calibration<- function(file,loggerIDval,raw_data) {
-  lascar_cali_coefs <- readRDS("Processed Data/lascar_calibration_coefs.R")
+  lascar_cali_coefs <- readRDS("Processed Data/lascar_calibration_coefs.rds")
   lascar_cali_coefs <- as.data.table(lascar_cali_coefs)
   logger_cali <- lascar_cali_coefs[loggerID=="loggerIDval",]
   if (!nrow(logger_cali)){
@@ -203,8 +203,8 @@ AER_fun <- function(file,meta_data,raw_data_AER,output = 'meta_data'){
     meta_data$AERr_squared <- summary(lmfit)$r.squared
     
     #Prepare some text for looking at the ratios of high to low temps.
-    plot_name = gsub(".xls",".png",basename(file))
-    plot_name = paste0("QA Reports/Instrument Plots/AER_",gsub(".XLS",".png",plot_name))
+    plot_name = gsub(".csv",".png",basename(file))
+    plot_name = paste0("QA Reports/Instrument Plots/AER_",gsub(".csv",".png",plot_name))
     aerplot <- ggplot(raw_data_AER,aes(y = time_hours, x = ln_CO2)) +
       geom_point()+
       ggtitle(paste0('AER ',basename(file))) + 
@@ -363,7 +363,7 @@ deployment_check_fun <-  function(preplacement,equipment_IDs,tz,local_tz,meta_em
 
 emailgroup <-  function(todays_date){
   sender <- "beaconnih@gmail.com"
-  recipients <- c("rpiedrahita@berkeleyair.com","M.Shupler@liverpool.ac.uk","mrossanese@berkeleyair.com","sdelapena@berkeleyair.com")
+  recipients <- c("rpiedrahita@berkeleyair.com","mrossanese@berkeleyair.com","sdelapena@berkeleyair.com")
   send.mail(from = sender,
             to = recipients,
             subject = paste0("UNOPS/CAA QA Report ",as.character(Sys.Date())),
@@ -420,6 +420,8 @@ tag_timeseries_emissions <- function(raw_data,meta_emissions,meta_data,filename)
     raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_sample_start,meta_matched$datetime_BGf_start)] ="cooking"
     raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_BGi_start,meta_matched$datetime_sample_start) ] ="BG_initial"
     raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_sample_end,meta_matched$datetime_BGf_start)] ="BG_final"
+    raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetimedecaystart,meta_matched$datetimedecayend)] ="Decay"
+
   } else if(raw_data$sampletype[1] %in% 'A'){
     print(paste('Ambient file found ', filename$basename))
   } else {

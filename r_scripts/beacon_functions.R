@@ -14,7 +14,7 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',timezon
    if(nchar(basename(file)) < 30){message('File name not correct, check the file')
       return(NULL)}
    
-   equipment_IDs <- readRDS("Processed Data/equipment_IDs.R")
+   equipment_IDs <- readRDS("Processed Data/equipment_IDs.rds")
    
    beacon_logger_data = fread(file,col.names = c('datetime',"MAC","RSSI"),skip = 1)
    

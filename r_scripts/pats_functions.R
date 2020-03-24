@@ -42,7 +42,6 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
     
     raw_data[, datetime:=ymd_hms(as.character(dateTime), tz=local_tz)]
     raw_data[,datetime := round_date(datetime, unit = "minutes")]
-
     
     #Sample rate. Time difference of samples, in minutes.
     sample_timediff = as.numeric(median(diff(raw_data$datetime)))/60
@@ -85,9 +84,9 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
   # }
 }
 
-pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",preplacement){
+pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",preplacement,pats_baseline_corrections='pats_baseline_corrections'){
   ingest = tryCatch({
-    ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz,preplacement))
+    ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz,preplacement,pats_baseline_corrections))
   }, error = function(e) {
     print('error ingesting')
     ingest = NULL
@@ -193,7 +192,7 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
   }
 }
 
-pats_import_fun <- function(file,output='raw_data',local_tz,preplacement,meta='meta_emissions'){
+pats_import_fun <- function(file,output='raw_data',local_tz,preplacement,meta='meta_emissions',pats_baseline_corrections='pats_baseline_corrections'){
   meta_emissions <- get(meta, envir=.GlobalEnv)
   
   ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz="Africa/Nairobi",preplacement=preplacement))

@@ -35,20 +35,18 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
     return(list(raw_data=NULL, meta_data=meta_data))
   }else{
     
-    
     raw_data$datetime <- paste(raw_data$Date,raw_data$Time)
     raw_data$datetime <- as.POSIXct(raw_data$datetime,tz=local_tz,tryFormats = c("%Y-%m-%d %H:%M:%OS","%m/%d/%Y %H:%M:%OS","%d/%m/%Y %H:%M:%OS"))
     if(raw_data$datetime[1]<1000){
       raw_data$datetime <- paste(raw_data$Date,raw_data$Time)
       raw_data$datetime <- as.POSIXct(raw_data$datetime,tz=local_tz,tryFormats = c("%m/%d/%y %H:%M:%OS","%d/%m/%Y %H:%M:%OS","%d/%m/%y %H:%M:%OS"))
     }
-    #Adjust time by 12 hours if the time was set up incorrectly.
+    #Shift forward time by 12 hours if the time was set up incorrectly.  Adjusting for one TSI in particular, model
     if(chron(times=raw_data$Time[1])<chron(times='07:00:00')){
       raw_data$datetime <- raw_data$datetime + 60*60*12
-    }else
-      if(chron(times=raw_data$Time[1])>chron(times='20:00:00')){
-        raw_data$datetime <- raw_data$datetime - 60*60*12
-      }
+    }else if(chron(times=raw_data$Time[1])>chron(times='20:00:00')){
+      raw_data$datetime <- raw_data$datetime - 60*60*12
+    }
     
     raw_data$CO2_ppm[raw_data$CO2_ppm %like% "Invalid"] = 5000
     raw_data$CO2_ppm <- as.numeric(raw_data$CO2_ppm)
@@ -77,14 +75,9 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
       samplerate_minutes = sample_timediff,
       sampling_duration = dur
     )
-    meta_data <- dplyr::left_join(as.data.frame(meta_data),meta_emissions,by="HHID") %>% #in case of repeated households, keep the nearest one
-      dplyr::filter(abs(difftime(datetime_start,datetimedecaystart,units='days'))<1)
     
-    raw_data$emission_tags <- 'cooking'
     raw_data <- as.data.table(raw_data)
-    raw_data[,'emission_tags'][raw_data$datetime<meta_data$datetime_sample_start] ="BG_initial"
-    raw_data[,'emission_tags'][raw_data$datetime>meta_data$datetime_BGf_start] ="BG_final"
-    raw_data[,'emission_tags'][raw_data$datetime>meta_data$datetimedecaystart & raw_data$datetime<meta_data$datetimedecayend] ="Decay"
+    raw_data <- tag_timeseries_emissions(raw_data,meta_emissions,meta_data,filename)
     
   }
   if(all(output=='meta_data')){return(meta_data)}else
@@ -191,8 +184,8 @@ tsi_qa_fun <- function(file,local_tz="Africa/Nairobi",output= 'meta_data',meta_e
       
       tryCatch({ 
         #Prepare some text for looking at the ratios of high to low temps.
-        plot_name = gsub(".xls",".png",basename(file))
-        plot_name = paste0("QA Reports/Instrument Plots/TSI_",gsub(".XLS",".png",plot_name))
+        plot_name = gsub(".csv",".png",basename(file))
+        plot_name = paste0("QA Reports/Instrument Plots/TSI_",gsub(".CSV",".png",plot_name))
         tsiplot <- ggplot(raw_data,aes(y = CO_ppm, x = datetime,color=emission_tags)) +
           geom_line()+
           geom_point() +

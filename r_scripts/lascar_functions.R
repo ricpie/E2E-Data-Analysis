@@ -222,8 +222,14 @@ lascar_qa_fun <- function(file, setShiny=TRUE,output= 'meta_data',local_tz="Afri
 
 
 lascar_cali_fun <- function(file,output='calibrated_data',local_tz="Africa/Nairobi",preplacement=preplacement){
-  ingest <- lascar_ingest(file, output=c('raw_data', 'meta_data'),local_tz="Africa/Nairobi",dummy='dummy_meta_data',preplacement=preplacement)
   
+  ingest = tryCatch({
+    ingest <- lascar_ingest(file, output=c('raw_data', 'meta_data'),local_tz="Africa/Nairobi",dummy='dummy_meta_data',preplacement=preplacement)
+  }, error = function(e) {
+    print('error ingesting')
+    ingest = NULL
+  })
+
   if(is.null(ingest)){return(NULL)}else{
     
     meta_data <- ingest$meta_data
