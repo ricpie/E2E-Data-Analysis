@@ -200,17 +200,30 @@ lascar_qa_fun <- function(file, setShiny=TRUE,output= 'meta_data',local_tz="Afri
         #Prepare some text for looking at the ratios of high to low temps.
         plot_name = gsub(".txt",".png",basename(file))
         plot_name = paste0("QA Reports/Instrument Plots/Lascar_",gsub(".csv",".png",plot_name))
+        plot_namez = paste0("QA Reports/Instrument Plots/Lascar_",gsub(".csv|.txt","_Zoom.png",basename(file)))
         percentiles <- quantile(calibrated_data$CO_ppm,c(.05,.95))
         cat_string <- paste("5th % CO (ppm) = ",as.character(percentiles[1]),
                             ", 95th % CO (ppm)  = ",as.character(percentiles[2]))
-        if(!file.exists(plot_name)){
+        if(!file.exists(plot_namez)){
           png(filename=plot_name,width = 550, height = 480, res = 100)
           plot(calibrated_data$datetime, calibrated_data$CO_ppm, main=plot_name,
                type = "p", xlab = cat_string, ylab="Calibrated CO (ppm)",prob=TRUE,cex.main = .6,cex = .5)
-          #axis(1, datas2$Date.Time, format(datas2$Date.Time, "%m/%d"), cex.axis = .7)
+          grid(nx = 5, ny = 10, col = "lightgray", lty = "dotted",
+               lwd = par("lwd"), equilogs = TRUE)
+          axis(3, calibrated_data$datetime, format(calibrated_data$datetime, "%b %d %y"), cex.axis = .7)
+          
+          dev.off()
+          
+          png(filename=plot_namez,width = 550, height = 480, res = 100)
+          cookingstart = as.numeric(match("cooking",calibrated_data$emission_tags))
+          datasubset = calibrated_data[cookingstart:(cookingstart+200),]
+          plot(datasubset$datetime, datasubset$CO_ppm, main=plot_name,
+               type = "p", xlab = cat_string, ylab="Calibrated CO (ppm)",prob=TRUE,cex.main = .6,cex = .5)
+          axis(3, datasubset$datetime, format(datasubset$datetime, "%b %d %y"), cex.axis = .7)
           grid(nx = 5, ny = 10, col = "lightgray", lty = "dotted",
                lwd = par("lwd"), equilogs = TRUE)
           dev.off()
+          
         }
       }, error = function(error_condition) {
       }, finally={})

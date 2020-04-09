@@ -14,134 +14,153 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 
 ## Analyze UNOPS E2E data
-source('r_scripts/load.R')
-source('r_scripts/load_data_functions_paths.R') #does this import the data??
+library(lubridate)
+library(plyr)
+library(dplyr)
+library(devtools)
+library(shiny)
+library(readxl)
+library(shinydashboard)
+library(DT)
+library(data.table)
+library(shinyjs)
+library(ggplot2)
 library(plotly)
 library(flexdashboard)
 library(rsconnect)
-
-
-#import parameter data
-read_logs <- function(x){
-  step1 <- as.data.table(read_xlsx(x, col_types = c("text", "text", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "text", "text", "text", "text", "text","text","text","text")))
-  step1 <- setnames(step1, c('Parameter','Unit','Mean','SD','CV','Min','Max','Sample Size','Reference','Region','Country','Location','Density','Stove','Ref','Notes'))
-}
-
-in_files <- list.files('WHO data', full.names=T, pattern='.xlsx')
-in_files <- in_files[ !grepl("~", in_files) ]
-in_data <- as.data.table(ldply(in_files, read_logs))
-in_data <- in_data[!(is.na(in_data$Parameter)),] #Remove NA rows.
-
-
-#Import emission rate data
-#import parameter data
-read_emission_rates <- function(x){
-  step1 <- as.data.table(read_xlsx(x, col_types = c("text", "text", "text", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "text", "text", "text", "text","text")))
-  step1 <- setnames(step1, c('Stove','Pollutant','Unit','Arithmetic Mean','Median','SD','Min','Max','Sample Size','Sample Type','Fuel','Reference','Notes','Short Ref'))
-}
-
-in_em_files <- list.files('Emissions Rate Data', full.names=T, pattern='.xlsx')
-in_em_files <- in_em_files[ !grepl("~", in_em_files ) ]
-in_em_data <- as.data.table(ldply(in_em_files, read_emission_rates))
-in_em_data <- in_em_data[!(is.na(in_em_data$Stove)),] #Remove NA rows.
-in_em_data$`Arithmetic Mean` <- round(in_em_data$`Arithmetic Mean`,1)
-in_em_data$`Median` <- round(in_em_data$`Median`,1)
-in_em_data$`SD` <- round(in_em_data$`SD`,1)
-in_em_data$`Min` <- round(in_em_data$`Min`,1)
-in_em_data$`Max` <- round(in_em_data$`Max`,1)
-
+source('r_scripts/load_data_functions_paths.R') #does this import the data??
+# preplacement <- as.data.table(readRDS("Processed Data/preplacement.R"))
 
 ```
 
 Inputs {.sidebar}
 =====================================
 ```{r}
-HTML("<br>")
-HTML("<p></p><p><strong>Overview</strong></p>Explore UNOPS/E2E data!</p>")
-HTML("<p>----</p>")
-selectInput('Deployment', HTML("<strong>Select a deployment</strong>"), choices = unique(preplacement[, HHID]), selected =NULL, multiple = FALSE, selectize = FALSE, width = NULL, size = NULL)
 
-HTML("<p><strong>About</strong></p>")
-HTML("<p>The website was designed by Berkeley Air Monitoring Group</p>")
+HTML("<p>Explore UNOPS/E2E data</p>")
+selectInput('HHID', HTML("<strong>Select a deployment</strong>"), choices = unique(preplacement[, "HHIDnumeric"][order(HHIDnumeric)]), 
+            selected =NULL, multiple = TRUE, selectize = FALSE, width = NULL, size = NULL)
+
 ```
 
 
 ```{r}
 # Reactive that returns the whole dataset if there is no selection
 # Sets data based on inputs, is for the plots
-selected_data <- reactive({
-  datar$preplacement <- preplacement[HHID %in% input$HHID]
-  # data <- dplyr::filter(in_data,grepl(paste0(input$Region,sep="|"),Region ))
-  datar$COppm <- CO_calibrated_timeseries[HHID %in% input$HHID]
-  datar$pats <- pats_data_timeseries[HHID %in% input$HHID]
-  datar$beacon <- beacon_logger_COmerged[HHID %in% input$HHID]
-  datar$tsi <- tsi_timeseries[HHID %in% input$HHID]
+selected_pre <- reactive({
+  preplacement <- preplacement[HHIDnumeric %in% input$HHID]
+  preplacement$maxdatetime <- CO_calibrated_timeseries[CO_ppm>-1 & HHID %in% input$HHID,lapply(.SD,max),.SDcols="datetime"]
+  preplacement$mindatetime <- CO_calibrated_timeseries[CO_ppm>-1 & HHID %in% input$HHID,lapply(.SD,min),.SDcols="datetime"]
+  return(preplacement)})
 
+selected_COppm <- reactive({
+  COppm <- CO_calibrated_timeseries[CO_ppm>-1 & HHID %in% input$HHID,c("CO_ppm","datetime","sampletype","emission_tags","qc")]
+  return(COppm)})
 
-  return(datar)
-})
+selected_pats <- reactive({
+  pats <- pats_data_timeseries[HHID %in% input$HHID,c("PM_Estimate","datetime","sampletype","emission_tags","qc")]
+  return(pats)})
 
-# Sets data based on inputs, is for the summary data tables/downloads
-selected_summary_data <- reactive({
-  dplyr::group_by(selected_data(),Parameter) %>%
-    summarise_all(funs(mean, max, sd), na.rm = TRUE) %>%
-      dplyr::rename(Unit = Unit_max,Mean = Mean_mean,SD = SD_mean,Min = Min_mean,Max = Max_mean) %>%
-      dplyr::mutate('Arithmetic Mean' = round(Mean,digits=2)) %>%
-      dplyr::mutate('Estimated Geometric Mean' = round(Mean/exp(0.5),digits=2)) %>% #Conversion from arithmetic to geometric mean assuming it follows a standard lognormal distribution.
-      dplyr::mutate(SD = round(SD,digits=2)) %>%
-      dplyr::mutate(Min = round(Min,digits=2)) %>%
-      dplyr::mutate(Max = round(Max,digits=2)) %>%
-      dplyr::select(Parameter,Unit,Min,Max,'Arithmetic Mean','Estimated Geometric Mean',SD)
+selected_ecm <- reactive({
+  ecm <- ecmdata[HHID %in% input$HHID,c("pm2.5ugm3","datetime","sampletype","emission_tags","qc")]
+  return(ecm)})
 
-})
+selected_beacon <- reactive({
+  beacon <- beacon_logger_COmerged[HHID %in% input$HHID,c("location_nearest","location_kitchen_threshold","datetime","nearest_RSSI")]
+  return(beacon)})
 
-##AER plot
-output$aer_plot = renderPlotly({
-    p <- ggplot(aes(y = Mean, x = seq(1, length(Mean))), data = selected_data()[Parameter == "Air exchange rate"] ) + 
-      geom_errorbar(aes(ymin=Min, ymax=Max), colour="black", width=.1) +
-      geom_point(aes(shape = Region, fill = Ref, group = Notes, label = SD, label2 = Stove), alpha=0.75, size=4) + 
-      theme_bw(10) +
-      theme(legend.title=element_blank()) +
-      xlab(" ") +
-      ylab("Mean ACH (air changes/hour)") +
-      scale_x_continuous(breaks=1:length(selected_data()[Parameter == "Air exchange rate"]$Mean), labels= selected_data()[Parameter == "Air exchange rate"]$Country) +
-      theme(axis.text.x = element_text(angle = 30, hjust = 1))
-    p = ggplotly(p,tooltip = c("SD","Country","Notes","Stove","Ref","Mean")) %>% 
-      layout(autosize = F, width = 1000, height = 400, margin = m)
-    p
-})
+selected_tsi <- reactive({
+  tsi_timeseries <- as.data.table(readRDS("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/tsi_timeseries.rds"))
+  tsi <- tsi_timeseries[HHID %in% input$HHID,c("datetime","loggerID","HHID","qc","emission_tags","CO_ppm","CO2_ppm")]
+  return(tsi)})
 
-##Kitchen volume plot
-output$kitchen_volume = renderPlotly({
-    p <- ggplot(aes(Mean,  x = seq(1, length(Mean))), data = selected_data()[Parameter == "Kitchen volume"]) + 
-    geom_errorbar(aes(ymin=Min, ymax=Max), colour="black", width=.1) +
-    geom_point(aes(shape = Region, fill = Ref, group = Notes, label = SD, label2 = Stove), alpha=0.75, size=4) + 
+#Figure border spacing
+m <- list(l = 0,r = 0,b = 0,t = 10,pad = 4)
+
+output$COppm = renderPlot({
+  p <- ggplot(aes(y = CO_ppm, x = datetime), data = selected_COppm()) + 
+    geom_point(aes(shape = emission_tags, colour = sampletype, group = qc), alpha=0.25) + 
     theme_bw(10) +
     theme(legend.title=element_blank()) +
     xlab(" ") +
-    ylab("Kitchen volume (m<sup>3</sup>)") +
-    scale_x_continuous(breaks=1:length(selected_data()[Parameter == "Kitchen volume"]$Mean), labels= selected_data()[Parameter == "Kitchen volume"]$Country) +
-    theme(axis.text.x = element_text(angle = 30, hjust = 1)) 
-    p = ggplotly(p,tooltip = c("SD","Country","Notes","Stove","Ref","Mean")) %>% 
-      layout(autosize = F, width = 1000, height = 400, margin = m)
-    p
+    coord_cartesian(xlim=c(selected_pre()$mindatetime,selected_pre()$maxdatetime)) + 
+    ylab("CO ppm") 
+  # theme(axis.text.x = element_text(angle = 30, hjust = 1))
+  # p = ggplotly(p,tooltip = c("emission_tags")) %>% layout(autosize = T, width = 1000, height = 300,margin=m)
+  p
 })
 
-##Stove burn time plot
-output$burn_time = renderPlotly({
-    p <- ggplot(aes(Mean, x = seq(1, length(Mean))), data = selected_data()[Parameter == "Stove burn time"]) +
-    geom_errorbar(aes(ymin=Min, ymax=Max), colour="black", width=.1) +
-    geom_point(aes(shape = Region, fill = Ref, group = Notes, label = SD, label2 = Stove), alpha=0.75, size=4) + 
+output$pats = renderPlot({
+  p <- ggplot(aes(y = PM_Estimate, x = datetime), data = selected_pats()) +
+    geom_point(aes(shape = emission_tags, colour = sampletype, group = qc), alpha=0.25) +
     theme_bw(10) +
     theme(legend.title=element_blank()) +
     xlab(" ") +
-    ylab("Cooking time (hours/day)") +
-    scale_x_continuous(breaks=1:length(selected_data()[Parameter == "Stove burn time"]$Mean), labels= selected_data()[Parameter == "Stove burn time"]$Country) +
-    theme(axis.text.x = element_text(angle = 30, hjust = 1,size = 6))
-    p = ggplotly(p,tooltip = c("SD","Country","Notes","Stove","Ref","Mean")) %>% 
-      layout(autosize = F, width = 1200, height = 400, margin = m)
-    p
+    coord_cartesian(xlim=c(selected_pre()$mindatetime,selected_pre()$maxdatetime)) +
+    ylab("PATS+ ugm-3")
+  # p = ggplotly(p,tooltip = c("emission_tags")) %>% layout(autosize = T, width = 1000, height = 300,margin=m)
+  p
 })
+
+output$ecm = renderPlot({
+  p <- ggplot(aes(y = PM_Estimate, x = datetime), data = selected_ecm()) +
+    geom_point(aes(shape = emission_tags, colour = sampletype, group = qc), alpha=0.25) +
+    theme_bw(10) +
+    theme(legend.title=element_blank()) +
+    xlab(" ") +
+    coord_cartesian(xlim=c(selected_pre()$mindatetime,selected_pre()$maxdatetime)) +
+    ylab("ECM/MicroPEM ugm-3")
+  p
+})
+
+output$beacon=renderPlot({
+  p <- ggplot(aes(y = nearest_RSSI, x = datetime), data = selected_beacon()) +
+    geom_point(aes(shape = location_kitchen_threshold, colour = location_nearest), alpha=0.25) +
+    theme_bw(10) +
+    theme(legend.title=element_blank()) +
+    xlab(" ") +
+    coord_cartesian(xlim=c(selected_pre()$mindatetime,selected_pre()$maxdatetime)) +
+    ylab("Beacon localization")
+  p
+})
+
+output$tsi= renderPlot({
+  p <- ggplot(data = selected_tsi(),aes(y = CO_ppm, x = datetime, shape = emission_tags, colour = emission_tags,group = qc), alpha=0.25) +
+    geom_point()+
+    geom_point(data = selected_tsi(),aes(y = CO2_ppm, x = datetime,shape = emission_tags, colour = emission_tags, group = qc), alpha=0.25) +
+    theme(legend.title=element_blank()) +
+    theme_bw(10) +
+    scale_y_log10() +
+    xlab(" ") +
+    ylab("TSI CO2 and CO (ppm)")
+  p
+})
+
+```
+
+Deployment
+===================================== 
+
+
+```{r}
+plotOutput("COppm")
 ```
 
 
+```{r}
+plotOutput("pats")
+
+
+```
+
+
+```{r}
+plotOutput("beacon")
+
+```
+
+### {data-height=100}
+```{r}
+
+plotOutput("tsi")
+```

@@ -83,10 +83,10 @@ UPAS_qa_fun <- function(file, tz){
       #mean flow rate, flows outside of range
       flow_mean <- round(raw_data[, mean(VolumetricFlowRate, na.rm=T)],3)
       flow_sd <- round(raw_data[, sd(VolumetricFlowRate, na.rm=T)], 3)
-      flow_min <- raw_data[, min(VolumetricFlowRate, na.rm=T)]
-      flow_max <- raw_data[, max(VolumetricFlowRate, na.rm=T)]
-      percent_flow_deviation <- round(raw_data[!(VolumetricFlowRate %between% flow_thresholds), length(VolumetricFlowRate)]/raw_data[VolumetricFlowRate %between% flow_thresholds, length(VolumetricFlowRate)],2)
-      flow_flag <- if(percent_flow_deviation>flow_cutoff_threshold | is.nan(percent_flow_deviation) | flow_min<flow_min_threshold | flow_max>flow_max_threshold){1}else{0}
+      flow_5th_percentile <- raw_data[, quantile(VolumetricFlowRate, 0.05,na.rm=T)]
+      flow_95th_percentile <- raw_data[, quantile(VolumetricFlowRate, 0.95,na.rm=T)]
+      percent_flow_deviation <- round(length(raw_data[!(VolumetricFlowRate %between% upas_flow_thresholds), VolumetricFlowRate])/dim(raw_data)[1],2)
+      flow_flag <- if(percent_flow_deviation>flow_cutoff_threshold | is.na(percent_flow_deviation) | flow_5th_percentile<upas_flow_thresholds[1] | flow_95th_percentile>upas_flow_thresholds[2]){1}else{0}
       filename_flag <- filename$filename_flag
       
       #sample duration
@@ -97,7 +97,7 @@ UPAS_qa_fun <- function(file, tz){
       gps_lon_med <- median(raw_data$GPSlon)
       if(meta_data$shutdown_reason=='1' | meta_data$shutdown_reason =='3'){shutdown_flag=0}else{shutdown_flag=1}
       
-      meta_data = cbind(meta_data,gps_lat_med,gps_lon_med,flow_mean,flow_sd,flow_min,flow_max,percent_flow_deviation,flow_flag,inletp_flag,temp_flag,rh_flag,shutdown_flag,filename_flag)
+      meta_data = cbind(meta_data,gps_lat_med,gps_lon_med,flow_mean,flow_sd,flow_5th_percentile,flow_95th_percentile,percent_flow_deviation,flow_flag,inletp_flag,temp_flag,rh_flag,shutdown_flag,filename_flag)
       
       meta_data[, flag_total:=sum(flow_flag,inletp_flag,temp_flag,rh_flag,shutdown_flag,filename_flag), by=.SD]
       meta_data[, c('smry', 'analysis') := TRUE]

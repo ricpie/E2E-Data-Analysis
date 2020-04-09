@@ -1,0 +1,331 @@
+---
+title: Database of input variables for the WHO HOMES (Household Multiple Emission Sources) and PT (Performance Target) Models
+resource_files:
+- data/model input parameters update 1.xlsx
+- WHO data/WHO Model Input 'All data'.xlsx
+- Emissions Rate Data/Emissions Rate Data 'Sheet1'.xlsx
+- Emissions Rate Data/Emissions Rate Data.xlsx
+runtime: shiny
+output:
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    source: embed
+    vertical_layout: scroll
+---
+
+
+```{r}
+# dev comments
+# x <- "data/model input parameters update 1.xlsx"
+```
+
+```{r global, include=FALSE}
+library(data.table)
+library(readxl)
+library(plyr)
+library(dplyr)
+library(DT)
+library(ggplot2)
+library(gridExtra)
+library(plotly)
+library(flexdashboard)
+library(rsconnect)
+library(lubridate)
+
+
+#import parameter data
+read_logs <- function(x){
+  step1 <- as.data.table(read_xlsx(x, col_types = c("text", "text", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "text", "text", "text", "text", "text","text","text","text")))
+  step1 <- setnames(step1, c('Parameter','Unit','Mean','SD','CV','Min','Max','Sample Size','Reference','Region','Country','Location','Density','Stove','Ref','Notes'))
+}
+
+in_files <- list.files('WHO data', full.names=T, pattern='.xlsx')
+in_files <- in_files[ !grepl("~", in_files) ]
+in_data <- as.data.table(ldply(in_files, read_logs))
+in_data <- in_data[!(is.na(in_data$Parameter)),] #Remove NA rows.
+
+# Set default minimum value for air exchange rates and kitchen volumes from.  Comment these out or redo them when enough actual min/max data is gathered.
+# in_data$Min[in_data$Parameter == "Air exchange rate"] = 4 
+# in_data$Max[in_data$Parameter == "Air exchange rate"] = 100
+# in_data$Min[in_data$Parameter == "Kitchen volume"] = 1
+# in_data$Max[in_data$Parameter == "Kitchen volume"] = 100
+# #Calculated from the data directly because not all of the values lie within the literature min/max range
+# in_data$Min[in_data$Parameter == "Stove burn time"] = min(in_data$Mean[in_data$Parameter == "Stove burn time"])
+# in_data$Max[in_data$Parameter == "Stove burn time"] = max(in_data$Mean[in_data$Parameter == "Stove burn time"])
+
+#Import emission rate data
+#import parameter data
+read_emission_rates <- function(x){
+  step1 <- as.data.table(read_xlsx(x, col_types = c("text", "text", "text", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "text", "text", "text", "text","text")))
+  step1 <- setnames(step1, c('Stove','Pollutant','Unit','Arithmetic Mean','Median','SD','Min','Max','Sample Size','Sample Type','Fuel','Reference','Notes','Short Ref'))
+}
+
+in_em_files <- list.files('Emissions Rate Data', full.names=T, pattern='.xlsx')
+in_em_files <- in_em_files[ !grepl("~", in_em_files ) ]
+in_em_data <- as.data.table(ldply(in_em_files, read_emission_rates))
+in_em_data <- in_em_data[!(is.na(in_em_data$Stove)),] #Remove NA rows.
+in_em_data$`Arithmetic Mean` <- round(in_em_data$`Arithmetic Mean`,1)
+in_em_data$`Median` <- round(in_em_data$`Median`,1)
+in_em_data$`SD` <- round(in_em_data$`SD`,1)
+in_em_data$`Min` <- round(in_em_data$`Min`,1)
+in_em_data$`Max` <- round(in_em_data$`Max`,1)
+
+
+```
+
+Inputs {.sidebar}
+=====================================
+```{r}
+HTML("<br>")
+
+HTML("<p></p><p><strong>Overview</strong></p>This website provides the model input data needed to run the WHO HOMES (Household Multiple Emission Sources) Model</p>")
+
+# checkboxInput(inputId, label, value = FALSE, width = NULL)
+# checkboxInput("outliers", HTML(
+  # paste("Show Outliers?", long_data[outlier=='Outlier', length(outlier)], "outliers detected in the entire dataset.", sep=" ")
+# ), FALSE)
+# checkboxInput('Region', HTML("<strong>Select a Sampling Region</strong><br><small>By default, all available selections are made.</small>"), value = unique(in_data[, Region]),width = NULL)
+HTML("<p>----</p>")
+
+selectInput('Region', HTML("<strong>Select a Sampling Region</strong> <br><small>Please use the tabs at the top to see available data for each variable. By default, all available selections are made. Select multiple by using control+click (PC) or option+click (Mac).</small>"), choices = unique(in_data[, Region]), selected = c("Africa", "Americas","South-East Asia","European","Eastern Mediterranean","Western Pacific"), multiple = TRUE, selectize = FALSE, width = NULL, size = NULL)
+
+
+HTML("<p></p><p><strong>Contact</strong></p>")
+HTML(paste("", tags$span(style="color:blue", "World Health Organization"), sep = ""))
+HTML("<p>Department of Public Health, Environmental and Social Determinants of Health
+Climate and other Determinants of Health Cluster
+<br>Geneva, Switzerland</br>
+Householdenergy@who.int")
+
+HTML("<p><strong>About</strong></p>")
+HTML("<p>The website was designed by Berkeley Air Monitoring Group with technical input from WHO. Please contact WHO to share any additional data sources or with any questions.</p>")
+HTML("<p><i>Database last updated: June, 2018</i></p>")
+HTML("<p><i>Site last updated: September, 2018</i></p>")
+
+```
+
+
+```{r}
+# Reactive that returns the whole dataset if there is no selection
+# Sets data based on inputs, is for the plots
+selected_data <- reactive({
+  data <- in_data[Region %in% input$Region]
+  # data <- dplyr::filter(in_data,grepl(paste0(input$Region,sep="|"),Region ))
+
+  if (nrow(data) == 0)
+    data <- in_data
+  data <- data[!is.na(Parameter)]
+  data$Mean <- round(data$Mean,2)
+  data$Max <- round(data$Max,2)
+  data$Min <- round(data$Min,2)
+  data$CV <- round(data$CV,2)
+  data$SD <- round(data$SD,2) 
+  data
+})
+
+# Sets data based on inputs, is for the summary data tables/downloads
+selected_summary_data <- reactive({
+  dplyr::group_by(selected_data(),Parameter) %>%
+    summarise_all(funs(mean, max, sd), na.rm = TRUE) %>%
+      dplyr::rename(Unit = Unit_max,Mean = Mean_mean,SD = SD_mean,Min = Min_mean,Max = Max_mean) %>%
+      dplyr::mutate('Arithmetic Mean' = round(Mean,digits=2)) %>%
+      dplyr::mutate('Estimated Geometric Mean' = round(Mean/exp(0.5),digits=2)) %>% #Conversion from arithmetic to geometric mean assuming it follows a standard lognormal distribution.
+      dplyr::mutate(SD = round(SD,digits=2)) %>%
+      dplyr::mutate(Min = round(Min,digits=2)) %>%
+      dplyr::mutate(Max = round(Max,digits=2)) %>%
+      dplyr::select(Parameter,Unit,Min,Max,'Arithmetic Mean','Estimated Geometric Mean',SD)
+
+})
+
+#Figure border spacing
+m <- list(
+  l = 75,
+  r = 0,
+  b = 120,
+  t = 10,
+  pad = 4
+)
+
+##AER plot
+output$aer_plot = renderPlotly({
+    p <- ggplot(aes(y = Mean, x = seq(1, length(Mean))), data = selected_data()[Parameter == "Air exchange rate"] ) + 
+      geom_errorbar(aes(ymin=Min, ymax=Max), colour="black", width=.1) +
+      geom_point(aes(shape = Region, fill = Ref, group = Notes, label = SD, label2 = Stove), alpha=0.75, size=4) + 
+      theme_bw(10) +
+      theme(legend.title=element_blank()) +
+      xlab(" ") +
+      ylab("Mean ACH (air changes/hour)") +
+      scale_x_continuous(breaks=1:length(selected_data()[Parameter == "Air exchange rate"]$Mean), labels= selected_data()[Parameter == "Air exchange rate"]$Country) +
+      theme(axis.text.x = element_text(angle = 30, hjust = 1))
+    p = ggplotly(p,tooltip = c("SD","Country","Notes","Stove","Ref","Mean")) %>% 
+      layout(autosize = F, width = 1000, height = 400, margin = m)
+    p
+})
+
+##Kitchen volume plot
+output$kitchen_volume = renderPlotly({
+    p <- ggplot(aes(Mean,  x = seq(1, length(Mean))), data = selected_data()[Parameter == "Kitchen volume"]) + 
+    geom_errorbar(aes(ymin=Min, ymax=Max), colour="black", width=.1) +
+    geom_point(aes(shape = Region, fill = Ref, group = Notes, label = SD, label2 = Stove), alpha=0.75, size=4) + 
+    theme_bw(10) +
+    theme(legend.title=element_blank()) +
+    xlab(" ") +
+    ylab("Kitchen volume (m<sup>3</sup>)") +
+    scale_x_continuous(breaks=1:length(selected_data()[Parameter == "Kitchen volume"]$Mean), labels= selected_data()[Parameter == "Kitchen volume"]$Country) +
+    theme(axis.text.x = element_text(angle = 30, hjust = 1)) 
+    p = ggplotly(p,tooltip = c("SD","Country","Notes","Stove","Ref","Mean")) %>% 
+      layout(autosize = F, width = 1000, height = 400, margin = m)
+    p
+})
+
+     
+    ##Stove burn time plot
+output$burn_time = renderPlotly({
+    p <- ggplot(aes(Mean, x = seq(1, length(Mean))), data = selected_data()[Parameter == "Stove burn time"]) +
+    geom_errorbar(aes(ymin=Min, ymax=Max), colour="black", width=.1) +
+    geom_point(aes(shape = Region, fill = Ref, group = Notes, label = SD, label2 = Stove), alpha=0.75, size=4) + 
+    theme_bw(10) +
+    theme(legend.title=element_blank()) +
+    xlab(" ") +
+    ylab("Cooking time (hours/day)") +
+    scale_x_continuous(breaks=1:length(selected_data()[Parameter == "Stove burn time"]$Mean), labels= selected_data()[Parameter == "Stove burn time"]$Country) +
+    theme(axis.text.x = element_text(angle = 30, hjust = 1,size = 6))
+    p = ggplotly(p,tooltip = c("SD","Country","Notes","Stove","Ref","Mean")) %>% 
+      layout(autosize = F, width = 1200, height = 400, margin = m)
+    p
+})
+```
+
+
+
+Air Exchange Rate Data
+=====================================  
+
+Row
+
+-----------------------------------------------------------------------
+### **Air Exchange Rate**{data-width=600}
+```{r}
+# downloadLink("plotDownload_aer","Plot download")
+HTML("Error bars represent the minimum and maximum from literature-derived ranges, dots represent arithmetic means")
+HTML("<br><small>Click on the camera icon above the figure to download an image of the data</small></br>")
+
+
+plotlyOutput("aer_plot")
+
+output$plotDownload_aer = downloadHandler(
+      filename = function() {
+      paste("Air Exchange Rate from household",input$Region, ".jpeg", sep="")
+      },
+      content = function(filename){
+          ggsave(filename, device = "jpeg",width = 9, height = 6, units = "in")
+    }
+)
+```
+
+Kitchen Volume Data
+===================================== 
+Row {data-width=600}
+
+-----------------------------------------------------------------------
+
+### **Kitchen Volume**{data-height=600}
+```{r}
+HTML("Error bars represent the minimum and maximum from literature-derived ranges, dots represent arithmetic means")
+HTML("<br><small>Click on the camera icon above the figure to download an image of the data</small></br>")
+plotlyOutput("kitchen_volume")
+```
+
+Stove Burn Time
+===================================== 
+
+Row {data-width=600}
+
+-----------------------------------------------------------------------
+### **Stove burn time** {data-height=600}
+```{r}
+HTML("Error bars represent the minimum and maximum of all available means, dots represent arithmetic means")
+HTML("<br><small>Click on the camera icon above the figure to download an image of the data</small></br>")
+plotlyOutput("burn_time")
+```
+
+Reference and summary data downloads
+===================================== 
+
+-----------------------------------------------------------------------
+### **Summary statistics from selected regions**{data-height=600}
+```{r}
+HTML("<br><small>Geometric means are estimated here using the assumption that the data are lognormally distributed. They are calculated from the arithmetic mean as Arithmetic_Mean/exp(0.5)</small></br>")
+
+downloadLink("dataDownload","Data download")
+HTML("<br></br>")
+
+DT::renderDataTable({DT::datatable(selected_summary_data(), rownames = FALSE)})
+
+ output$dataDownload <- downloadHandler(
+    filename = function(){paste0("WHO HOMES Model Input Data Summary_",paste(unique(in_data$Region),collapse='_'),".csv")}, 
+    content = function(fname){
+      write.csv(selected_summary_data(), fname)
+    }
+  )
+
+```
+
+Row 
+----------------------------------------
+### **Raw data from selected regions**{data-height=600}
+```{r}
+downloadLink("dataRawDownload","Data download")
+
+DT::renderDataTable({DT::datatable(selected_data(), rownames = FALSE)})
+
+ output$dataRawDownload <- downloadHandler(
+    filename = function(){paste0("WHO HOMES Model Input Data Raw_",paste(unique(in_data$Region),collapse='_'),".csv")}, 
+    content = function(fname){
+      write.csv(selected_data(), fname)
+    }
+  )
+
+```
+
+
+<i>Emissions Rate Data</i>
+=====================================  
+
+Row
+
+-----------------------------------------------------------------------
+```{r}
+
+HTML("<p><small>In addition to the kitchen volume, ventilation rate, and stove burn time, emissions rate data
+are needed to run the WHO HOMES model.  Ideally, emissions rate data for the specific scenario (e.g. stove
+type, fuel type, and region of interest) is used in modeling exercises.  However, if such data are not available, 
+other data sources may be used.  Examples of traditional stove emissions rates are presented in the table below, 
+along with their references.  These data provide relevant ranges that can be expected for similar stove types, 
+for use in the WHO HOMES model, but should be used with caution given the variability in results that can emerge 
+from different stove types, fuels, regions, and testing procedures (e.g. in-lab vs. in-field)</small>")
+
+HTML("<br></br>")
+downloadLink("em_dataDownload","Download All Data")
+HTML("<br></br>")
+HTML("<b>Laboratory emissions rates for traditional stoves</b>")
+DT::renderDataTable({DT::datatable(dplyr::filter(in_em_data, !grepl("Field",`Sample Type`)) %>% dplyr::select(-`Sample Type`,-Min,-Max,-Median,-Reference), rownames = FALSE)})
+
+ output$em_dataDownload <- downloadHandler(
+    filename = function(){paste0("WHO HOMES Model Emission Rate Data.csv")}, 
+    content = function(fname){
+      write.csv(in_em_data, fname)
+    }
+  )
+ 
+```
+
+
+```{r}
+
+
+HTML("<b>Field emissions rates for traditional stoves</b>")
+DT::renderDataTable({DT::datatable(dplyr::filter(in_em_data, !grepl("Lab",`Sample Type`)) %>% dplyr::select(-`Sample Type`,-Min,-Max,-Median,-Reference), rownames = FALSE)})
+ 
+```
+

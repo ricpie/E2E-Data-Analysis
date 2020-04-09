@@ -23,7 +23,7 @@ parse_filename_fun <- function(file){
     if(is.na(filename$flag)) {filename$flag = c("good")}
     num_underscores <- lengths(regmatches(filename$basename, gregexpr("_", filename$basename)))
     if ( num_underscores > 3 |  (is.na(filename$filterID) & num_underscores>3) | is.na(filename$HHID) | filename$fieldworkerID > 25 |
-        filename$fieldworkerID < 0) {filename$filename_flag = 1}else{filename$filename_flag = 0}
+         filename$fieldworkerID < 0) {filename$filename_flag = 1}else{filename$filename_flag = 0}
     filename
     return(filename)
   }, error = function(e) {
@@ -48,27 +48,222 @@ equipment_IDs_fun <- function(){
 
 
 mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','preplacement','postplacement')){
+  #Paths
   fileindepth <- "~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Mobenzi Data/In Depth/Responses.csv"
   filerapid <- "~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Mobenzi Data/Rapid/Responses.csv"
   preplacementpath <- "~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Mobenzi Data/Pre Placement/Responses.csv"
   postplacementpath <- "~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/Mobenzi Data/Post Placement/Responses.csv"
   
-  mobenzi_indepth <- read.table(fileindepth, header=T,quote = "\"" ,sep=",",na.string=c("","null","NaN"),colClasses = "character")
-  mobenzi_rapid <- read.table(filerapid, header=T,quote = "\"",sep=",",na.string=c("","null","NaN"),colClasses = "character")
   preplacement <- read.table(preplacementpath, header=T,quote = "\"",sep=",",na.string=c("","null","NaN"),colClasses = "character")[,1:89]
-  preplacement <- preplacement[("Yes" == preplacement$A10 & !is.na(preplacement$A10)), ]
   
+  #Import and clean up preplacement
   setnames(preplacement,c("Submission_Id","Fieldworker_Name","Fieldworker_Id","Handset_Asset_Code","Handset_Identifier","Received","Start","End","Duration__seconds_","Latitude","Longitude","Language","Survey_Version","Modified_By","Modified_On","Complete","Worker","UNOPS_Date","UNOPS_HH","Something","Age","Gender","Childrenunder5YN","HealthConditions","OKtoWearHealthConditions","AwayFromHomeMoreThan5Hours","WillingToWearAwayFromHome","MicropemID","LascarID","UNOPSworkerPresent","OKLivingRoom","OkEmissions","EmissionsTime","UNOPSWorker","BeaconID1","BeaconID2","WalkThrough1Start","WalkThrough1End","WalkThrough2Start","WalkThrough2End","WalkThrough3Start","WalkThrough3End","HHID","WalkTimetoMainRoad","NoManufacturedStove","HasChimney","TraditionalStoveFAfrica/Nairobiures","FanStoveFAfrica/Nairobiures","KitchenLocation","MicropemIDKitchen","LascarIDKitchen","UNOPSyn","BeaconLoggerIDKitchen","IntensiveEquipmentYN","IntensiveYN","PATSorECMYN","ECMIDKitchen","PATSIDKitchen","ElectricYN","KeroseneYN","LPGYN","TraditionalYN","ManufacturedYN","TSFYN","OtherYN","OtherStoveType","MicropemDistanceCM","MicropemHeightCM","PictureYN","Number_Of_Children","ChildAge","ChildGender","Child2Age","Child2Gender","Child3Age","Child3Gender","ECMIDChild1","ECMIDChild2","ECMIDChild3","unknown","LivingRoomMonitoringYN","RoomTypeSecondary","WallTypeSecondary","PATSIDSecondary","LascarIDSecondary","BeaconLoggerIDSecondary","PATSDistanceFloorSecondaryCM","PicsSecondaryYN","DevicesONTime"))
-  preplacement$HHIDstr = substring(preplacement$HHID, 
-                                   1, sapply(preplacement$HHID, function(x) unlist(gregexpr('-',x,perl=TRUE))[1])-1)
+  preplacement <- dplyr::filter(preplacement,!is.na(DevicesONTime)) %>%
+    dplyr::mutate(HHID = gsub('000','00',HHID),
+                  HHID = gsub(' ','',HHID),
+                  HHID = gsub('O','0',HHID,ignore.case = T),
+                  HHID = gsub('-0','-KE0',HHID),
+                  HHID = gsub('-KE00','-KE0',HHID),
+                  HHID = gsub('KR','KE',HHID),
+                  HHID = gsub('-KE012','-KE12',HHID),
+                  HHID = gsub('-KE010','-KE10',HHID),
+                  HHID = gsub('-KE011','-KE11',HHID),
+                  HHID = gsub('-KE013','-KE13',HHID),
+                  HHIDstr = substring(HHID, 
+                                      1, sapply(HHID, function(x) unlist(gregexpr('-',x,perl=TRUE))[1])-1),
+                  WorkerIDstr = substring(HHID, 
+                                          sapply(HHID, function(x) unlist(gregexpr('-',x,perl=TRUE))[1])+1,15),
+                  matches = regmatches(HHIDstr, gregexpr("[[:digit:]]+", HHIDstr)),
+                  HHIDnumeric =  as.numeric(matches),
+                  start_datetime = as.POSIXct(paste(UNOPS_Date,DevicesONTime,sep = " "),tz = "Africa/Nairobi",
+                                              tryFormats = c("%d-%m-%Y %H:%M","%d-%m-%Y %H:%M:%OS","%d-%m-%y %H:%M","%d/%m/%Y %H:%M:%OS"))) %>%
+    dplyr::filter("Yes" == UNOPS_HH,  !is.na(UNOPS_HH))
   
-  preplacement$start_datetime <- as.POSIXct(paste(preplacement$UNOPS_Date,preplacement$DevicesONTime,sep = " "),tz = "Africa/Nairobi",
-                                            tryFormats = c("%d-%m-%Y %H:%M","%d-%m-%Y %H:%M:%OS","%d-%m-%y %H:%M","%d/%m/%Y %H:%M:%OS"))
   
-  matches <- regmatches(preplacement$HHIDstr, gregexpr("[[:digit:]]+", preplacement$HHIDstr))
-  preplacement$HHIDnumeric =  as.numeric(matches)
-  postplacement <- read.table(postplacementpath, header=T,quote = "\"",sep=",",na.string=c("","null","NaN"),colClasses = "character")
   
+  #Clean up postplacement HHIDs
+  postplacement <- read.table(postplacementpath, header=T,quote = "\"",sep=",",na.string=c("","null","NaN"),colClasses = "character") %>%
+    dplyr::mutate( HHID = gsub('000','00',Household.Study.ID),
+                   HHID = gsub(' ','',HHID),
+                   HHID = gsub('O','0',HHID,ignore.case = T),
+                   HHID = gsub('-0','-KE0',HHID),
+                   HHID = gsub('-KE00','-KE0',HHID),
+                   HHID = gsub('KR','KE',HHID),
+                   HHID = gsub('-KE012','-KE12',HHID),
+                   HHID = gsub('-KE010','-KE10',HHID),
+                   HHID = gsub('-KE011','-KE11',HHID),
+                   HHID = gsub('-KE013','-KE13',HHID),
+                   HHID = gsub('025-KE05','KE025-KE05',HHID),
+                   HHID = gsub('KEKE','KE',HHID)) 
+  
+  
+  #Clean up rapid survey HHIDs
+  mobenzi_rapid <- read.table(filerapid, header=T,quote = "\"",sep=",",na.string=c("","null","NaN"),colClasses = "character") %>%
+    setnames(c('SubmissionId','FieldworkerName','FieldworkerId','HandsetAssetCode','HandsetIdentifier','Received','Start','End','Duration(seconds)','Latitude','Longitude','Language','SurveyVersion','ModifiedBy','ModifiedOn','Complete','Accept','HHID','SubCounty','Village','Date','StaffCode','Gender','Age','MaritalStatus','Eth','Other23','HeadofHousehold',
+               'AgeHeadofHousehold','EducationHeadofHousehold','Other19','RespondentEducation','Other1','MainCookYN','DecisionMakerFuel','Other2','PeopleinHousehold','PeopleEatinginHome','ChildrenUnder5','ChildAges','OwnorRent','Other3','HeadofHouseholdIncome','C3_Farmsownland(whetherthatlandisownedorrented)','C3_Daylabourer(farminganotherperson’sland,builder,dailyworkeretc.)',
+               'C3_Governmentemployee(doctor,nurse,police,teacheretc.)','C3_Employeeinabusiness(Factory/industrialworker,worksinashop,receptionist,securityguard,etc.)','C3_Hasownbusiness(businessman,ownsashop,traderetc.)','C3_Craftsperson(tailor,carpenter,seamstressetc.)','C3_Runthehousehold/Careforfamily','C3_Retired','C3_Othertypeofjob','C3_Currentlyunemployed/nothing','Other4',
+               'Income','SeasonalIncomeYN','C6_Animal(s)(cows,sheep,goatsetc.)','C6_Cellphone','C6_Smartphone','C6_Radio','C6_Hi-Fi/CD-player','C6_Solarconnection','C6_ElectricityConnection','C6_TV','C6_SatelliteTV','C6_Refrigerator/fridge/freezer','C6_Shower/bathwithinhouse','C6_Land','C6_Bicycle','C6_Moped/Motorcycle','C6_Pick-uptruck','C6_Car','C6_Computer','C6_Washingmachine',
+               'C6_Tractor','WaterAccessYN','WaterSource','Other5','SepticorFlushingToiletInside','LatrineinCompound','FoodConsumedMadeinHousehold','SourceofOutsideFood','MostUsedCookstove','Other20','MostUsedFuel','Other6','TimesFuelUnavailableLastYEar','D5_1.None','D5_2Adultburned','D5_3Childburned','D5_4Adultscalded','D5_5Childscalded','D5_6Fireinhouse',
+               'D5_7Poisoning','D5_8Death','D5_9Other,specify','Other18','D6_Electricity','D6_Kerosene','D6_Cookinggas/LPG','D6_Charcoalunprocessed','D6_Charcoalbriquettes/pellets','D6_Wood','D6_Agriculturalorcropresidue/grass/','D6_straw/shrubs/corncobs','D6_Processedbiomasspellets/briquettes','D6_Woodchips','D6_Sawdust','D6_Animalwaste/dung','D6_Garbage/plastic','D6_None',
+               'D6_Otherspecify','Other7','IsFuelFree','D8_Electricity','D8_Kerosene','D8_Cookinggas/LPG','D8_Charcoalunprocessed','D8_Charcoalbriquettes/pellets','D8_Wood','D8_Agriculturalorcropresidue/grass/','D8_straw/shrubs/corncobs','D8_Processedbiomasspellets/briquettes','D8_Woodchips','D8_Sawdust','D8_Animalwaste/dung','D8_Garbage/plastic','D8_Other,specify','DoYouPayForFuel',
+               'D12_Electricity','D12_Kerosene','D12_Cookinggas/LPG','D12_Charcoalunprocessed','D12_Charcoalbriquettes/pellets','D12_Wood','D12_Agriculturalorcropresidue/grass/','D12_straw/shrubs/corncobs','D12_Processedbiomasspellets/briquettes','D12_Woodchips','D12_Sawdust','D12_Animalwaste/dung','D12_Garbage/plastic','D12_Other,specify','Other16','WhereCook','Other8','SharedKitchenYN',
+               'HeatingDeviceEver','HeatingUseMonths','HeaterType','Other17','LightingSource','Other9','UseLPG','NumberCylindersAtHome','F3_3kg','F3_6kg','F3_13kg','F3_16kg','F3_Other,specify','Other10','LPGRefillCost','LPGRefillInterval','Other11','LPGRefillsPerYear','LPGWhenPurchased','LPGBurners','LPGStoveLastPurchase','LPGDaysUsedLastWeek','LPGHowTransported','Other12','LPGTransportDuration'
+               ,'LPGTravelCost','LPGTravelCostKSH','LPGDeliverCost','LPGHaveYouUsedIt','LPGWhyNotUsing','Other13','LPGWhoWouldDecideToUse','Other14','WhyNoInterview','Other15','CanWeContactYouAgain','Phone','GPS','Latitude2','Longitude2','AltitudeMeters','DateofGPS','Notes','FloorMaterial','Other21','RoofingMaterial','Other22','WallMaterial','Other24')) %>%
+    dplyr::filter(Complete == "Yes",
+                  Accept == "Yes",
+                  FoodConsumedMadeinHousehold == "Yes") %>%
+    dplyr::mutate(HHID = toupper(HHID)) %>%
+    dplyr::mutate(HHIDstr = substring(HHID, 
+                                      1, sapply(HHID, function(x) unlist(gregexpr('-',x,perl=TRUE))[1])-1),
+                  WorkerIDstr = substring(HHID, 
+                                          sapply(HHID, function(x) unlist(gregexpr('-',x,perl=TRUE))[1])+1,15),
+                  WorkerID_StaffCode = substring(StaffCode,1,4)) %>%
+    dplyr::mutate(HHID = gsub('000','00',HHID),
+                  HHID = gsub(' ','',HHID),
+                  HHID = gsub('O','0',HHID,ignore.case = T),
+                  HHID = gsub('KES','KE',HHID,ignore.case = T),
+                  HHID = gsub('-0','-KE0',HHID),
+                  HHID = gsub('-KE00','-KE0',HHID),
+                  HHID = gsub('KR','KE',HHID),
+                  HHID = gsub('-KE012','-KE12',HHID),
+                  HHID = gsub('-KE010','-KE10',HHID),
+                  HHID = gsub('-KE011','-KE11',HHID),
+                  HHID = gsub('-KE013','-KE13',HHID),
+                  HHID = gsub('025-KE05','KE025-KE05',HHID),
+                  HHID = gsub('KEKE','KE',HHID),
+                  HHID = gsub("'Ķ",'KE157-KE02	',HHID),
+                  HHID = gsub('LE','KE',HHID),
+                  HHID = gsub('KEKE','KE',HHID),
+                  HHID = case_when(
+                    HHID == '1' ~ 'KE001-KE03',
+                    HHID == '2' ~ 'KE002-KE03',
+                    HHID == '3' ~ 'KE003-KE03',
+                    HHID == '4' ~ 'KE004-KE03',
+                    HHID == '5' ~ 'KE005-KE03',
+                    HHID == '6' ~ 'KE006-KE03',
+                    HHID == '7' ~ 'KE007-KE03',
+                    HHID == '8' ~ 'KE008-KE03',
+                    HHID == '9' ~ 'KE009-KE03',
+                    HHID == '10' ~ 'KE010-KE03',
+                    HHID == '001' ~ 'KE001-KE03',
+                    HHID == '002' ~ 'KE002-KE03',
+                    HHID == '003' ~ 'KE003-KE03',
+                    HHID == '004' ~ 'KE004-KE03',
+                    HHID == '005' ~ 'KE005-KE03',
+                    HHID == '006' ~ 'KE006-KE03',
+                    HHID == '007' ~ 'KE007-KE03',
+                    HHID == '008' ~ 'KE008-KE03',
+                    HHID == '009' ~ 'KE009-KE03',
+                    HHID == '010' ~ 'KE010-KE03',
+                    HHID == 'KE026' ~ 'KE026-KE03',
+                    HHID == 'KE023' ~ 'KE023-KE04',
+                    HHID == 'KE033' ~ 'KE033-KE04',
+                    HHID == 'KE041' ~ 'KE041-KE04',
+                    HHID == 'KE042' ~ 'KE042-KE04',
+                    HHID == 'KE038' ~ 'KE038-KE02',
+                    HHID == 'KE039' ~ 'KE039-KE04',
+                    HHID == 'KE056' ~ 'KE056-KE04',
+                    HHID == 'KE057' ~ 'KE057-KE04',
+                    HHID == 'KE058' ~ 'KE057-KE04',
+                    HHID == 'KE061' ~ 'KE061-KE04',
+                    HHID == 'KE062' ~ 'KE062-KE04',
+                    HHID == 'KE110' ~ 'KE110-KE04',
+                    HHID == 'KE209KE04' ~ 'KE209-KE04',
+                    HHID == 'KE039' ~ 'KE039-KE04',
+                    HHID == 'KE01-KE024' ~ 'KE024-KE01', 	
+                    HHID == 'KE01-KE066' ~ 'KE066-KE01', 	
+                    HHID == 'KE01-KE068' ~ 'KE068-KE01', 	
+                    HHID == 'KE01-KE069' ~ 'KE069-KE01', 	
+                    HHID == 'KE01-KE076' ~ 'KE076-KE01', 	
+                    HHID == 'KE01-KE085' ~ 'KE085-KE01', 	
+                    HHID == 'KE01-KE086' ~ 'KE086-KE01', 	
+                    HHID == 'KE01-KE087' ~ 'KE087-KE01', 	
+                    HHID == 'KE01-KE088' ~ 'KE088-KE01', 	
+                    HHID == 'KE01-KE089' ~ 'KE089-KE01', 	
+                    HHID == 'KE01-KE090' ~ 'KE090-KE01', 	
+                    HHID == 'KE01-KE091' ~ 'KE091-KE01', 	
+                    HHID == 'KE01-KE092' ~ 'KE092-KE01', 	
+                    HHID == 'KE01-KE093' ~ 'KE093-KE01', 	
+                    HHID == 'KE01-KE094' ~ 'KE094-KE01', 	
+                    HHID == 'KE01-KE095' ~ 'KE095-KE01', 	
+                    HHID == 'KE01-KE096' ~ 'KE096-KE01', 	
+                    HHID == 'KE01-KE097' ~ 'KE097-KE01', 	
+                    HHID == 'KE01-KE098' ~ 'KE098-KE01', 	
+                    HHID == 'KE01-KE099' ~ 'KE099-KE01', 	
+                    HHID == 'KE01-KE100' ~ 'KE100-KE01', 	
+                    HHID == 'KE01-KE101' ~ 'KE101-KE01', 	
+                    HHID == 'KE01-KE102' ~ 'KE102-KE01', 	
+                    HHID == 'KE01-KE103' ~ 'KE103-KE01', 	
+                    HHID == 'KE01-KE104' ~ 'KE104-KE01', 	
+                    HHID == 'KE01-KE105' ~ 'KE105-KE01', 	
+                    HHID == 'KE01-KE106' ~ 'KE106-KE01', 	
+                    HHID == 'KE01-KE107' ~ 'KE107-KE01', 	
+                    HHID == 'KE01-KE108' ~ 'KE108-KE01', 	
+                    HHID == 'KE01-KE109' ~ 'KE109-KE01', 	
+                    HHID == 'KE01-KE110' ~ 'KE110-KE01', 	
+                    HHID == 'KE01-KE111' ~ 'KE111-KE01', 	
+                    HHID == 'KE01-KE112' ~ 'KE112-KE01', 	
+                    HHID == 'KE01-KE113' ~ 'KE113-KE01', 	
+                    HHID == 'KE01-KE114' ~ 'KE114-KE01', 	
+                    HHID == 'KE01-KE115' ~ 'KE115-KE01', 	
+                    HHID == 'KE01-KE116' ~ 'KE116-KE01', 	
+                    HHID == 'KE01-KE117' ~ 'KE117-KE01', 	
+                    HHID == 'KE01-KE118' ~ 'KE118-KE01', 	
+                    HHID == 'KE01-KE119' ~ 'KE119-KE01', 	
+                    HHID == 'KE01-KE120' ~ 'KE120-KE01', 	
+                    HHID == 'KE01-KE121' ~ 'KE121-KE01', 	
+                    HHID == 'KE01-KE122' ~ 'KE122-KE01', 	
+                    HHID == 'KE01-KE123' ~ 'KE123-KE01', 	
+                    HHID == 'KE01-KE124' ~ 'KE124-KE01', 	
+                    HHID == 'KE01-KE125' ~ 'KE125-KE01', 	
+                    HHID == 'KE01-KE126' ~ 'KE126-KE01', 	
+                    HHID == 'KE01-KE127' ~ 'KE127-KE01', 	
+                    HHID == 'KE01-KE128' ~ 'KE128-KE01', 	
+                    HHID == 'KE01-KE129' ~ 'KE129-KE01', 	
+                    HHID == 'KE01-KE130' ~ 'KE130-KE01', 	
+                    HHID == 'KE01-KE131' ~ 'KE131-KE01', 	
+                    HHID == 'KE01-KE132' ~ 'KE132-KE01', 	
+                    HHID == 'KE01-KE133' ~ 'KE133-KE01', 	
+                    HHID == 'KE01-KE134' ~ 'KE134-KE01', 	
+                    HHID == 'KE01-KE135' ~ 'KE135-KE01',
+                    HHID == 'KE01-KE136' ~ 'KE136-KE01',
+                    HHID == 'KE03-KE198' ~ 'KE198-KE03',
+                    HHID == 'KE05-KE014' ~ 'KE014-KE05',
+                    HHID == 'KE09-KE029' ~ 'KE029-KE09',
+                    HHID == 'KE05-KE08' ~ 'KE008-KE05',
+                    HHID == 'KE05-KE06' ~ 'KE006-KE05',
+                    HHID == 'KE05-KE13' ~ 'KE013-KE05',
+                    HHID == 'KE025' ~ 'KE025-KE04',
+                    HHID == 'KE05-KE016' ~ 'KE016-KE05',
+                    HHID == 'KE05-KE017' ~ 'KE017-KE05',
+                    HHID == 'KE05-KE018' ~ 'KE018-KE05',
+                    HHID == 'KE05-KE019' ~ 'KE019-KE05',
+                    HHID == 'KE05-KE02' ~ 'KE020-KE05',
+                    HHID == 'KE05-KE021' ~ 'KE021-KE05',
+                    HHID == '43' ~ 'KE043-KE07',
+                    HHID == 'KE026' ~ 'KE026-KE03',
+                    TRUE ~ as.character(HHID)
+                  )
+    )  %>%
+    dplyr::select(-Language,-SurveyVersion,-FieldworkerId,-Accept,-Complete) %>%
+    # dplyr::mutate(matches = regmatches(HHIDstr, gregexpr("[[:digit:]]+", HHIDstr)),
+    #               HHIDnumeric =  as.numeric(matches)) %>%
+    dplyr::arrange(Start)
+  
+  #Import and clean up indepth survey HHIDs
+  mobenzi_indepth <- read.table(fileindepth, header=T,quote = "\"" ,sep=",",na.string=c("","null","NaN"),colClasses = "character")%>%
+    dplyr::mutate( HHID = gsub('000','00',Household.Study.ID),
+                   HHID = gsub(' ','',HHID),
+                   HHID = gsub('O','0',HHID,ignore.case = T),
+                   HHID = gsub('-0','-KE0',HHID),
+                   HHID = gsub('-KE00','-KE0',HHID),
+                   HHID = gsub('KR','KE',HHID),
+                   HHID = gsub('-KE012','-KE12',HHID),
+                   HHID = gsub('-KE010','-KE10',HHID),
+                   HHID = gsub('-KE011','-KE11',HHID),
+                   HHID = gsub('-KE013','-KE13',HHID),
+                   HHID = gsub('KE01-KE118','KE118-KE01',HHID),
+                   HHID = gsub('KEKE','KE',HHID)) 
   
   saveRDS(mobenzi_indepth,"Processed Data/mobenzi_indepth.rds")
   saveRDS(mobenzi_rapid,"Processed Data/mobenzi_rapid.rds")
@@ -77,6 +272,21 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
   return(list(mobenzi_indepth=mobenzi_indepth, mobenzi_rapid=mobenzi_rapid,preplacement=preplacement,postplacement=postplacement))
 }
 
+ses_function <- function(mobenzi_rapid){
+  rapid_ses<-select(mobenzi_rapid,c('HHID','MaritalStatus','EducationHeadofHousehold','RespondentEducation','OwnorRent',#'HeadofHouseholdIncome',
+                                    # 'C3_Farmsownland(whetherthatlandisownedorrented)','C3_Daylabourer(farminganotherperson’sland,builder,dailyworkeretc.)',
+                                    # 'C3_Governmentemployee(doctor,nurse,police,teacheretc.)','C3_Employeeinabusiness(Factory/industrialworker,worksinashop,receptionist,securityguard,etc.)','C3_Hasownbusiness(businessman,ownsashop,traderetc.)','C3_Craftsperson(tailor,carpenter,seamstressetc.)','C3_Runthehousehold/Careforfamily','C3_Retired','C3_Othertypeofjob','C3_Currentlyunemployed/nothing',
+                                    'Income','SeasonalIncomeYN','C6_Animal(s)(cows,sheep,goatsetc.)','C6_Cellphone','C6_Smartphone','C6_Radio','C6_Hi-Fi/CD-player','C6_Solarconnection','C6_ElectricityConnection','C6_TV','C6_SatelliteTV','C6_Refrigerator/fridge/freezer','C6_Shower/bathwithinhouse','C6_Land','C6_Bicycle','C6_Moped/Motorcycle','C6_Pick-uptruck','C6_Car','C6_Computer','C6_Washingmachine',
+                                    'C6_Tractor','WaterAccessYN','WaterSource','SepticorFlushingToiletInside','LatrineinCompound','MostUsedCookstove','MostUsedFuel','D6_Electricity','D6_Kerosene','D6_Cookinggas/LPG','D6_Charcoalunprocessed','D6_Charcoalbriquettes/pellets','D6_Wood','D6_Agriculturalorcropresidue/grass/',
+                                    'D6_straw/shrubs/corncobs','D6_Processedbiomasspellets/briquettes','D6_Woodchips','D6_Sawdust','D6_Animalwaste/dung','D6_Garbage/plastic','D6_None',
+                                    # 'D8_Electricity','D8_Kerosene','D8_Cookinggas/LPG','D8_Charcoalunprocessed','D8_Charcoalbriquettes/pellets','D8_Wood','D8_Agriculturalorcropresidue/grass/','D8_straw/shrubs/corncobs','D8_Processedbiomasspellets/briquettes','D8_Woodchips','D8_Sawdust','D8_Animalwaste/dung','D8_Garbage/plastic','DoYouPayForFuel',
+                                    'D12_Electricity','D12_Kerosene','D12_Cookinggas/LPG','D12_Charcoalunprocessed','D12_Charcoalbriquettes/pellets','D12_Wood','D12_Agriculturalorcropresidue/grass/','D12_straw/shrubs/corncobs','D12_Processedbiomasspellets/briquettes','D12_Woodchips','D12_Sawdust','D12_Animalwaste/dung','D12_Garbage/plastic',
+                                    'WhereCook','SharedKitchenYN',
+                                    'HeatingDeviceEver','HeaterType','LightingSource','UseLPG','NumberCylindersAtHome','LPGRefillsPerYear',
+                                    'FloorMaterial','RoofingMaterial','WallMaterial'))
+  
+  return(ses)
+}
 
 # parse_mobenzi_fun <- function(preplacement,output = preplacement_meta){
 #   preplacement_meta = list()
@@ -159,6 +369,13 @@ emissions_import_fun <- function(path_emissions,sheetname,local_tz){
   meta_emissions$datetimedecaystart<-as.POSIXct(paste(meta_emissions$Date,datetimedecaystart,sep = " "),tz = local_tz)
   datetimedecayend <- strftime(as.character(meta_emissions$datetimedecayend), format="%H:%M:%S",tz="UTC")
   meta_emissions$datetimedecayend <- as.POSIXct(paste(meta_emissions$Date,datetimedecayend,sep = " "),tz = local_tz)
+  meta_emissions$roomvolume <- meta_emissions$`Room length (longest) (m)`*meta_emissions$`Room height (m)`*meta_emissions$`Room width (shortest) (m)`
+  meta_emissions$`# walls with open eaves`[is.na(meta_emissions$`# walls with open eaves`)] = 0
+  meta_emissions$`# walls with open eaves` <- as.factor(meta_emissions$`# walls with open eaves`)
+  meta_emissions$stovetype <- meta_emissions$`Stove Type...7`
+  meta_emissions$stovetype <- gsub('TSF','Trad Biomass',meta_emissions$`Stove Type...7`)
+  meta_emissions$stovetype <- gsub('Chipkube','Trad Biomass',meta_emissions$stovetype)
+  meta_emissions$eventduration <- difftime(meta_emissions$datetime_sample_end,meta_emissions$datetime_sample_start,units='mins')
   
   matches <- regmatches(meta_emissions$HH_ID, gregexpr("[[:digit:]]+", meta_emissions$HH_ID))
   meta_emissions$HHID =  as.numeric(matches)
@@ -223,7 +440,7 @@ AER_fun <- function(file,meta_data,raw_data_AER,output = 'meta_data'){
 }
 
 
-ShiftTimeStamp_unops <- function(beacon_logger_data, newstartdatetime,TimeZone){
+ShiftTimeStamp_unops <- function(beacon_logger_data, newstartdatetime,timezone){
   
   #Number of seconds to shift the timestamps
   TimeShiftSeconds <- as.numeric(difftime(newstartdatetime, beacon_logger_data$datetime[1],units='secs'))
@@ -234,6 +451,21 @@ ShiftTimeStamp_unops <- function(beacon_logger_data, newstartdatetime,TimeZone){
   #Get the timestamps in the right format.
   # beacon_logger_data[,datetime:=strftime(beacon_logger_data$datetime, "%Y-%m-%dT%H:%M:%S%Z", tz="GMT")]
   
+}
+
+baseline_correction_pats <- function(raw_data){
+  #Get 10th percentile of first and last 20 points
+  zeroprctile_initial <- quantile(raw_data$PM_Estimate[1:20],c(0.1))
+  zero_initial_time <- raw_data[1:20][PM_Estimate==zeroprctile_initial,datetime][1]
+  zeroprctile_final <- quantile(tail(raw_data$PM_Estimate,20),c(0.1))
+  zero_final_time <- tail(raw_data,20)[PM_Estimate==zeroprctile_final,datetime][1]
+  
+  slope <- (zeroprctile_final - zeroprctile_initial)/as.numeric(difftime(zero_final_time,zero_initial_time,units='mins'))
+  
+  raw_data$minutecounter = as.numeric(difftime(raw_data$datetime,raw_data$datetime[1],units='mins'))
+  raw_data$PM_Estimate <- raw_data$PM_Estimate - slope*raw_data$minutecounter
+  raw_data$minutecounter = NULL
+  return(raw_data)
 }
 
 ambient_timeseries <- function(CO_calibrated_timeseries,pats_data_timeseries){
@@ -359,11 +591,123 @@ deployment_check_fun <-  function(preplacement,equipment_IDs,tz,local_tz,meta_em
     deployment})
 }
 
+sampletype_fix_function <- function(raw_data){
+  raw_data <- dplyr::mutate(as.data.frame(raw_data),
+                            sampletype =    case_when(
+                              sampletype == "A"~"Ambient",
+                              sampletype == "A2"~"Ambient Dup",
+                              sampletype == "K"~"Kitchen",
+                              sampletype == "L"~"Living Room",
+                              sampletype == "C"~"Cook",
+                              sampletype == "1"~"1m",
+                              sampletype == "2"~"2m",
+                              sampletype == "L2"~"Living Room Dup",
+                              sampletype == "K2"~"Kitchen Dup",
+                              TRUE ~ sampletype)) %>% as.data.table()
+  return(raw_data)
+}
+
+
+plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_timeseries,CO_calibrated_timeseries,tsi_timeseries){
+  
+  tryCatch({
+    # selected_preplacement <- preplacement[i,]
+    HHIDselected <- selected_preplacement$HHIDnumeric
+    mindatetime <- selected_preplacement$start_datetime
+    maxdatetime <- mindatetime + 24*60*60
+    
+    maxdatetimeCO <- CO_calibrated_timeseries[CO_ppm>-1 & HHID %in% HHIDselected,lapply(.SD,max),.SDcols="datetime"]
+    
+    #Change the maxdatetime if there is extended data.
+    if(difftime(maxdatetimeCO$datetime,mindatetime)>2){
+      maxdatetime = maxdatetime + 60*60*72
+    }
+    
+    selected_COppm <- CO_calibrated_timeseries[CO_ppm>-1 & HHID %in% HHIDselected,c("CO_ppm","datetime","sampletype","emission_tags","qc")]
+    selected_COppm<-sampletype_fix_function(selected_COppm)
+    
+    selected_pats <- pats_data_timeseries[HHID %in% HHIDselected,c("PM_Estimate","datetime","sampletype","emission_tags","qc")]
+    selected_pats<-sampletype_fix_function(selected_pats)
+    
+    # selected_ecm <- ecm_data_timeseries[HHID %in% HHIDselected,c("pm2.5ugm3","datetime","sampletype","emission_tags","qc")]
+    # selected_pats<-sampletype_fix_function(selected_pats)
+    
+    selected_beacon <- beacon_logger_data[HHID %in% HHIDselected,c("location_nearest","location_kitchen_threshold","datetime","nearest_RSSI")]
+    # selected_beacon<-sampletype_fix_function(selected_beacon)
+    
+    selected_tsi <- tsi_timeseries[HHID %in% HHIDselected,c("datetime","loggerID","HHID","qc","emission_tags","CO_ppm","CO2_ppm")]
+    
+    p1 <- ggplot(aes(y = CO_ppm, x = datetime), data = selected_COppm) + 
+      geom_point(aes(colour = sampletype, shape = qc), alpha=0.25) + 
+      theme_bw(10) +
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
+      scale_y_continuous(limits = c(0,300))   +
+      ggtitle(paste0("HHID KE",HHIDselected)) + 
+      ylab("CO ppm") 
+    
+    p2 <- ggplot(aes(y = PM_Estimate, x = datetime), data = selected_pats) +
+      geom_point(aes(colour = sampletype, shape = qc), alpha=0.25) +
+      theme_bw(10) +
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
+      scale_y_continuous(limits = c(0,3000)) +
+      ylab("PATS+ ugm-3")
+    
+    # p3 <- ggplot(aes(y = PM_Estimate, x = datetime), data = selected_ecm) +
+    #   geom_point(aes(colour = sampletype, shape = qc), alpha=0.25) +
+    #   theme_bw(10) +
+    # scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
+    # theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+    # scale_y_continuous(limits = c(0,1000)) +
+    # ylab("ECM/MicroPEM ugm-3")
+    
+    p4 <- ggplot(aes(y = nearest_RSSI, x = datetime), data = selected_beacon) +
+      geom_point(aes(colour = location_nearest), alpha=0.25)+
+      theme_bw(10) +
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
+      # scale_y_continuous(limits = c(0,3000)) +
+      ylab("Localization")
+    
+    p5 <- ggplot(data = selected_tsi,aes(y = CO_ppm, x = datetime, shape = emission_tags, colour = emission_tags,group = qc), alpha=0.25) +
+      geom_point()+
+      theme_bw(10) +
+      scale_y_log10() +
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
+      ylab("TSI CO2 and CO ppm")
+    
+    plot_name = paste0("QA Reports/Instrument Plots/Combo_",HHIDselected,".png")
+    
+    # if(!file.exists(plot_name)){
+    png(plot_name,width = 1000, height = 800, units = "px")
+    
+    # p1 <- ggplotGrob(p1)
+    # p2 <- ggplotGrob(p2)
+    # # p3 <- ggplotGrob(p3)
+    # p4 <- ggplotGrob(p4)
+    # p5 <- ggplotGrob(p5)
+    
+    # grid::grid.newpage()
+    # grid::grid.draw(rbind(p1,p2,p4,p5, size = "last"))
+    
+    egg::ggarrange(p1, p2,p4,p5, heights = c(0.25, 0.25,.25,.25))
+    
+    dev.off()
+    
+    # }
+  }, error = function(error_condition) {
+    print(paste0('Errore in HHID ', HHIDselected,', index ',i))
+  }
+  , finally={})
+}
+
 
 
 emailgroup <-  function(todays_date){
   sender <- "beaconnih@gmail.com"
-  recipients <- c("rpiedrahita@berkeleyair.com","mrossanese@berkeleyair.com","sdelapena@berkeleyair.com")
+  recipients <- c("rpiedrahita@berkeleyair.com","mrossanese@berkeleyair.com")
   send.mail(from = sender,
             to = recipients,
             subject = paste0("UNOPS/CAA QA Report ",as.character(Sys.Date())),
@@ -394,7 +738,7 @@ tag_timeseries_mobenzi <- function(raw_data,preplacement,filename){
     preplacement_matched <- merge(raw_data[1,],preplacement, by="HHID") %>%
       dplyr::filter(datetime-start_datetime<1)
     ECM_end = preplacement_matched$start_datetime+86400
-      
+    
     if(dim(preplacement_matched)[1]>0){ #If there is a match
       raw_data[,ecm_tags := ifelse(datetime>preplacement_matched$start_datetime & datetime<ECM_end,'deployed',ecm_tags)]
       if(abs(raw_data$datetime[1]-max(raw_data$datetime))>2){      
@@ -402,7 +746,7 @@ tag_timeseries_mobenzi <- function(raw_data,preplacement,filename){
       }
     } else {
       print(paste('Error mobenzi-tagging ', filename$basename))
-      }
+    }
   }
   raw_data
 }
@@ -421,7 +765,7 @@ tag_timeseries_emissions <- function(raw_data,meta_emissions,meta_data,filename)
     raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_BGi_start,meta_matched$datetime_sample_start) ] ="BG_initial"
     raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_sample_end,meta_matched$datetime_BGf_start)] ="BG_final"
     raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetimedecaystart,meta_matched$datetimedecayend)] ="Decay"
-
+    
   } else if(raw_data$sampletype[1] %in% 'A'){
     print(paste('Ambient file found ', filename$basename))
   } else {

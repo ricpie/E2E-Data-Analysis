@@ -48,6 +48,11 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
       raw_data$datetime <- raw_data$datetime - 60*60*12
     }
     
+    #How many samples are invalid? If more than 10%, filename$flag = 'bad'
+    fraction_invalid_CO2 = sum(raw_data$CO2_ppm %like% "Invalid")/length(raw_data$CO2_ppm)
+    fraction_invalid_CO = sum(raw_data$CO_ppm %like% "Invalid")/length(raw_data$CO_ppm)
+    if(fraction_invalid_CO2>0.1 | fraction_invalid_CO>0.1){filename$flag = 'bad'}
+    
     raw_data$CO2_ppm[raw_data$CO2_ppm %like% "Invalid"] = 5000
     raw_data$CO2_ppm <- as.numeric(raw_data$CO2_ppm)
     raw_data$CO_ppm[raw_data$CO_ppm %like% "Invalid"] = 500
@@ -59,6 +64,9 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
     #Sampling duration
     dur = difftime(max(raw_data$datetime),min(raw_data$datetime),units='hours')
     
+    meta_matched <- dplyr::left_join(filename,meta_emissions,by="HHID") %>% #in case of repeated households, keep the nearest one
+      dplyr::filter(min(abs(difftime(datestart,datetimedecaystart,units='days')))==abs(difftime(datestart,datetimedecaystart,units='days')))
+    
     meta_data <- data.table(
       fullname=filename$fullname,
       basename=filename$basename,
@@ -67,16 +75,18 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
       sampleID=filename$sampleID ,
       filterID=filename$filterID,
       sampletype=filename$sampletype, 
+      stovetype=meta_matched$stovetype, 
       fieldworkerID=filename$fieldworkerID, 
       fieldworkernum=filename$fieldworkernum,
       HHID=filename$HHID,
       loggerID=filename$loggerID,
       qc = filename$flag,
       samplerate_minutes = sample_timediff,
-      sampling_duration = dur
+      sampling_duration_hrs = dur
     )
     
     raw_data <- as.data.table(raw_data)
+    raw_data[,stovetype := meta_data$stovetype]
     raw_data <- tag_timeseries_emissions(raw_data,meta_emissions,meta_data,filename)
     
   }
@@ -103,48 +113,53 @@ tsi_qa_fun <- function(file,local_tz="Africa/Nairobi",output= 'meta_data',meta_e
       
       raw_data <- ingest$raw_data
       
-      raw_data <- truncate_timeseries(raw_data,meta_data$datetime_BGi_start,max(raw_data$datetime))
+      #Separate chunks of the time series into the pre and post-sample background data, and the sample data.
+      meta_data <- merge(meta_data,meta_emissions,by='HHID')   %>%
+        dplyr::filter(min(abs(difftime(datetime_start,datetimedecaystart,units='days')))==abs(difftime(datetime_start,datetimedecaystart,units='days')))
+
       sampleperiod <-  subset(raw_data,datetime>meta_data$datetime_sample_start & datetime<meta_data$datetime_sample_end) #Emissions sample period
       BGi<- subset(raw_data,datetime<meta_data$datetime_sample_start) #initial background period
-      
-      BGf<- subset(raw_data,datetime>=meta_data$datetimedecayend)#final background period. Playing it safer.
+      BGf<- subset(raw_data,datetime>meta_data$datetimedecayend)#final background period. Playing it safer.
       # BGf<- subset(raw_data,datetime>meta_data$datetime_BGf_start)#final background period
       
       
-      #check the initial and final background concentrations
+      #check the initial and final background concentrations, based on start and stop times in the emissions database
       first_minutes_bl_CO2 <-  mean(BGi$CO2_ppm,na.rm = TRUE)
       last_minutes_bl_CO2 <- mean(BGf$CO2_ppm,na.rm = TRUE)
       first_minutes_bl_CO <- mean(BGi$CO_ppm,na.rm = TRUE)
       last_minutes_bl_CO <-  mean(BGf$CO_ppm,na.rm = TRUE)
-      if(first_minutes_bl_CO>10 | is.na(first_minutes_bl_CO)){bg_start_flag=1}else{bg_start_flag=0}
-      if(last_minutes_bl_CO>10 | is.na(last_minutes_bl_CO)){bg_end_flag=1}else{bg_end_flag=0}
+      if(first_minutes_bl_CO>10 | is.na(first_minutes_bl_CO)){bg_start_flag=1}else{bg_start_flag=0} #Flag the initial background conc if the level is higher than 10ppm
+      if(last_minutes_bl_CO>10 | is.na(last_minutes_bl_CO)){bg_end_flag=1}else{bg_end_flag=0} #Flag the final background conc if the level is higher than 10ppm
       
-      #Raise flag if stdev of values is zero.
+      #Raise flag that he instrument is non-responsive if stdev of values is zero.
       nonresponsive_flag <- if(sd(sampleperiod$CO_ppm,na.rm = TRUE) %in% 0 || sum(is.na(sampleperiod$CO_ppm)) > 0){1}else{0}
       
-      #Raise flag if CO or CO2 max out
-      CO_maxout_flag <- if(sum(sampleperiod$CO_ppm==500)>2){1}else{0}
-      CO2_maxout_flag <- if(sum(sampleperiod$CO2_ppm==5000)>2){1}else{0}
+      #Raise flag if CO or CO2 max out.  Removed, since we are setting qc = 'bad' if more than 10% of values are invalid.
+      # CO_maxout_flag <- if(sum(sampleperiod$CO_ppm==500)>2){1}else{0}
+      # CO2_maxout_flag <- if(sum(sampleperiod$CO2_ppm==5000)>2){1}else{0}
       
-      #Calculate run average concentration flag
+      #Calculate background-subtracted average concentrations for the cooking event.
       Run_avg_CO <- mean(sampleperiod$CO_ppm,na.rm = TRUE)
-      meta_data$Run_avg_CO_BGS <-  Run_avg_CO-(mean(c(last_minutes_bl_CO,first_minutes_bl_CO),na.rm = TRUE))
+      # meta_data$Run_avg_CO_BGS <-  Run_avg_CO-(mean(c(last_minutes_bl_CO,first_minutes_bl_CO),na.rm = TRUE))
+      meta_data$Run_avg_CO_BGS <-  Run_avg_CO-first_minutes_bl_CO
       Run_sd_CO <- sd(sampleperiod$CO_ppm,na.rm = TRUE)
       Run_avg_CO2 <- mean(sampleperiod$CO2_ppm,na.rm = TRUE)
-      meta_data$Run_avg_CO2_BGS <- Run_avg_CO2-(mean(c(last_minutes_bl_CO2,first_minutes_bl_CO2),na.rm = TRUE))
+      # meta_data$Run_avg_CO2_BGS <- Run_avg_CO2-(mean(c(last_minutes_bl_CO2,first_minutes_bl_CO2),na.rm = TRUE))
+      meta_data$Run_avg_CO2_BGS <- Run_avg_CO2-first_minutes_bl_CO2
       Run_sd_CO2 <- sd(sampleperiod$CO2_ppm,na.rm = TRUE)
       
       #Calculate emissions factors: g/kg fuel
       C_per_M3 <- 1/0.4905 # 1m3CO2/0.4905kg_C
       MM_CO2 <- 44.01 #g/mol
       MM_CO <- 28 #g/mol
+      
       Mass_Conv <- 10^3 #mg/g
       R <- 0.08206 #Ideal gas constant: (𝑳. 𝒂𝒕𝒎)/(𝒎𝒐𝒍.𝑲)
       pressure_atm <- meta_data$`Pressure (hPa)`/1013.25
-      ambient_temp_K <- meta_data$`Ambient Temp (C)`+273
-      # Fuel_C_Content <- meta_data$fuel1
-      Burn_Time <- meta_data$`Sample END time`-meta_data$`Sample START [hh:mm:ss]`
-      # meta_data$Mass_Wood <-   #Wood consumed,excluding remaining charcoal, dry mass basis
+      ambient_temp_K <- meta_data$`Ambient Temp (C)` + 273
+      Ultimate_Carbon_g <- meta_data$`Ultimate Carbon emissions (g)`
+      Burn_Time <- as.numeric(difftime(meta_data$`Sample END time`,meta_data$`Sample START [hh:mm:ss]`,units = 'mins'))
+      Ultimate_dryfuel_used_g <- meta_data$`Ultimate dry fuel used (g)`
       
       ppm_to_mgm3_function <- function(Conc_PPM_BGS,MolarMass,ambient_temp_K,pressure_atm,R,Mass_Conv){
         Vol_Conv <- 10^3 #L/m^3
@@ -153,19 +168,22 @@ tsi_qa_fun <- function(file,local_tz="Africa/Nairobi",output= 'meta_data',meta_e
         Mass_Conc <-Mass_Conc_num/Mass_Conc_denom
       }
       
+      #Calculate the average CO concentration during the test on a mass basis
       meta_data$CO_mgm3 <- ppm_to_mgm3_function(meta_data$Run_avg_CO_BGS,MM_CO,ambient_temp_K,pressure_atm,R,Mass_Conv)
       
-      # meta_data$EF_CO <- meta_data$CO_mgm3*(1/(meta_data$Run_avg_CO_BGS+meta_data$Run_avg_CO2_BGS))*C_per_M3*Mass_Conv #[g_CO/kg_wood]
+      #Kg wood on dry basis
+      #ultimate? Try with the different assumptions. Will compare with MJ's Excel version.
+      meta_data$EF_CO <- meta_data$CO_mgm3 * (1/(meta_data$Run_avg_CO_BGS+meta_data$Run_avg_CO2_BGS)) * C_per_M3*Mass_Conv *Ultimate_Carbon_g / Ultimate_dryfuel_used_g #[g_CO/kg_fuel]
       
-      # meta_data$ER_CO <- meta_data$EF_CO*meta_data$Mass_Wood/Burn_Time #[g_CO/minute]
+      meta_data$ER_CO <- meta_data$EF_CO*Ultimate_dryfuel_used_g/Burn_Time/Mass_Conv #[g_CO/minute]
       
       meta_data$MCE <- meta_data$Run_avg_CO2_BGS/(meta_data$Run_avg_CO2_BGS+meta_data$Run_avg_CO_BGS)
       
       #Get the PM2.5 and PM2.5 mass concentrations in mg/m3 into the emissions spreadsheet to get these values
       # PM25_mgm3 <- meta_data$PM25_mgm3
       # PM25_BC_mgm3 <- meta_data$PM25_BC_mgm3
-      # EF_PM25 <- PM25_mgm3*(1/(meta_data$Run_avg_CO_BGS+meta_data$Run_avg_CO2_BGS))*C_per_M3*Wood_C_content*Mass_Conv
-      # EF_PM25_BC <- PM25_BC_mgm3*(1/(meta_data$Run_avg_CO_BGS+meta_data$Run_avg_CO2_BGS))*C_per_M3*Wood_C_content*Mass_Conv
+      # meta_data$EF_PM25 <- PM25_mgm3*(1/(meta_data$Run_avg_CO_BGS+meta_data$Run_avg_CO2_BGS))*C_per_M3*Mass_Conv *Ultimate_Carbon_g / Ultimate_dryfuel_used_g
+      # meta_data$EF_PM25_BC <- PM25_BC_mgm3*(1/(meta_data$Run_avg_CO_BGS+meta_data$Run_avg_CO2_BGS))*C_per_M3*Mass_Conv *Ultimate_Carbon_g / Ultimate_dryfuel_used_g
       
       #Air exchange rate calculated from CO decay.
       raw_data_AER <- raw_data[raw_data$datetime<meta_data$datetimedecayend & raw_data$datetime>meta_data$datetimedecaystart,]
@@ -174,9 +192,9 @@ tsi_qa_fun <- function(file,local_tz="Africa/Nairobi",output= 'meta_data',meta_e
       raw_data$BGdecay[raw_data$datetime<meta_data$datetimedecayend & raw_data$datetime>meta_data$datetimedecaystart] = 1 #Points that come after the decay start
       
       meta_data = cbind(meta_data, first_minutes_bl_CO,first_minutes_bl_CO2,last_minutes_bl_CO,last_minutes_bl_CO2,Run_avg_CO,Run_sd_CO,Run_avg_CO2,Run_sd_CO2, 
-                        bg_start_flag,bg_end_flag,nonresponsive_flag,CO2_maxout_flag,CO_maxout_flag)
-      meta_data <- as.data.table(meta_data)
-      meta_data[, flag_total:=sum(bg_start_flag,bg_end_flag,nonresponsive_flag,CO2_maxout_flag,CO_maxout_flag), by=.SD]
+                        bg_start_flag,bg_end_flag,nonresponsive_flag) %>% as.data.table()
+      
+      meta_data[, flag_total:=sum(bg_start_flag,bg_end_flag,nonresponsive_flag), by=.SD]
       
       flags_str <- suppressWarnings(paste(melt(meta_data[,c(colnames(meta_data)[colnames(meta_data) %like% "flag"]), with=F])[value>0 & variable!="flag_total", gsub("_flag", "" , variable)] , collapse=", "))
       

@@ -74,6 +74,7 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
     raw_data[,qc := meta_data$qc]
     raw_data <- tag_timeseries_mobenzi(raw_data,preplacement,filename)
     raw_data <- tag_timeseries_emissions(raw_data,meta_emissions,meta_data,filename)
+    raw_data <- baseline_correction_pats(raw_data)
     
     if(all(output=='meta_data')){return(meta_data)}else
       if(all(output=='raw_data')){return(raw_data)}else
@@ -84,9 +85,9 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
   # }
 }
 
-pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",preplacement,pats_baseline_corrections='pats_baseline_corrections'){
+pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",preplacement){
   ingest = tryCatch({
-    ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz,preplacement,pats_baseline_corrections))
+    ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz,preplacement))
   }, error = function(e) {
     print('error ingesting')
     ingest = NULL
@@ -164,6 +165,8 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
                type = "p", xlab = cat_string, ylab="Calibrated PM (ugm3)",prob=TRUE,cex.main = .6,cex = .5)
           grid(nx = 5, ny = 10, col = "lightgray", lty = "dotted",
                lwd = par("lwd"), equilogs = TRUE)
+          axis(3, raw_data$datetime, format(raw_data$datetime, "%b %d %y"), cex.axis = .7)
+          
           dev.off()
         }
       }, error = function(error_condition) {
@@ -192,7 +195,7 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
   }
 }
 
-pats_import_fun <- function(file,output='raw_data',local_tz,preplacement,meta='meta_emissions',pats_baseline_corrections='pats_baseline_corrections'){
+pats_import_fun <- function(file,output='raw_data',local_tz,preplacement,meta='meta_emissions'){
   meta_emissions <- get(meta, envir=.GlobalEnv)
   
   ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz="Africa/Nairobi",preplacement=preplacement))
@@ -213,6 +216,7 @@ pats_import_fun <- function(file,output='raw_data',local_tz,preplacement,meta='m
       raw_data[,degC_sys:=NULL]
       raw_data[,CO_mV:=NULL]
       raw_data[,degC_CO:=NULL]
+      
       return(raw_data)
     }
   }

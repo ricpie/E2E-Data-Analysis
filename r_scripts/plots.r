@@ -22,15 +22,19 @@ timeseries_plot <- function(df, y_var, x_var, facet_var="HHID",color_var="qc", m
 #________________________________________________________
 # plot timeseries data by a fill color
 # takes a data frame and a column name of variable to plot
-box_plot <- function(df, y_var, fill_var = "qc", x_var = "HHID", y_units = "units") {
+box_plot <- function(df, y_var, fill_var = "qc", x_var = "HHID", y_units = "units",title) {
 
-  ggplot(df, aes_string(y = y_var, x = x_var, fill = fill_var)) +
-    geom_boxplot() +
+  ggplot(df, aes_string(y = y_var, x = x_var)) + #, fill = fill_var)) +
+    geom_boxplot(alpha = 0.25) +
+    geom_jitter(height = 0,width = 0.2,alpha = 0.05) +
     scale_fill_discrete(drop = FALSE) +
     theme_minimal() +
+    theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+    theme(axis.text.x = element_text(angle = 30)) +
     theme(legend.position = "top") +
-    ylab(paste0(y_var, " (", df[[1, y_units]], ")")) +
-    xlab(x_var)
+    ylab(paste0(y_units)) +
+    xlab(x_var) + 
+    ggtitle(title)
 
 }
 #________________________________________________________

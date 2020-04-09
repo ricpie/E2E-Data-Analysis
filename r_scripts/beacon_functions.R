@@ -37,7 +37,7 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',timezon
       keep <-names(tail(sort(table(beacon_logger_data$MAC)),2)) 
       beacon_logger_data_plot <- subset(beacon_logger_data, MAC %in% keep)
       
-      completeness_fl = 1;time_interval_fl = 1;beacon_presence_fl=1;beacon_time=1;startup_proc_fl=1;duration_fl=1
+      completeness_fl = 1;time_interval_fl = 1;beacon_presence_fl=0;beacon_time=1;startup_proc_fl=1;duration_fl=1
       #create a new data by each beacon emitter, specifying time interval of data logging, RSSI mean and logging time for each emitter
       beacon_logger_data_emitter = beacon_logger_data[,.(diff_time = as.numeric(names(sort(table(diff(datetime)),decreasing = T)[1])), sample_length = .N,
                                                          RSSI_mean = mean(RSSI))
@@ -103,7 +103,7 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',timezon
 }
 
 
-beacon_import_fun <- function(file,TimeZone="UTC",preplacement=preplacement,beacon_time_corrections){
+beacon_import_fun <- function(file,timezone="UTC",preplacement=preplacement,beacon_time_corrections){
    base::message(file)
    beacon_logger_data = fread(file,col.names = c('datetime',"MAC","RSSI"),skip = 1)
    filename <- parse_filename_fun(file)
@@ -111,16 +111,16 @@ beacon_import_fun <- function(file,TimeZone="UTC",preplacement=preplacement,beac
    if(all(is.na(filename$sampleID)) | dim(beacon_logger_data)[1]<5){return(NULL)}else{
       
       beacon_logger_data[,MAC := toupper(MAC)] 
-      beacon_logger_data[,datetime := ymd_hms(datetime,tz=TimeZone)]
+      beacon_logger_data[,datetime := ymd_hms(datetime,tz=timezone)]
 
       #Fix time stamps if they are bad.
       if(beacon_logger_data$datetime[1]<as.POSIXct('2019-1-1')){
          newstartdatetime<-beacon_time_corrections$newstartdatetime[grepl(filename$basename,beacon_time_corrections$filename)]
-         beacon_logger_data <- ShiftTimeStamp_unops(beacon_logger_data, newstartdatetime,TimeZone="UTC")
+         beacon_logger_data <- ShiftTimeStamp_unops(beacon_logger_data, newstartdatetime,timezone="UTC")
       }
       
       #Add some meta_data into the mix
-      beacon_logger_data[,datetime := ymd_hms(datetime,tz=TimeZone)]
+      beacon_logger_data[,datetime := ymd_hms(datetime,tz=timezone)]
       beacon_logger_data[,datetime := round_date(datetime, unit = "minutes")]
       beacon_logger_data[,sampleID := filename$sampleID]
       beacon_logger_data[,loggerID := filename$loggerID]

@@ -6,8 +6,8 @@
 #Use Mobenzi to figure out which deployment it is from.  
 #Correct time stamps if there are issues with them
 #Save timeseries of locations with meta_data.
-beacon_deployment_fun = function(preplacement,equipment_IDs,local_tz,beacon_data_timeseries,
-                                 CO_calibrated_timeseries,pats_data_timeseries){
+beacon_deployment_fun = function(preplacement,equipment_IDs,beacon_data_timeseries,
+                                 CO_calibrated_timeseries,pats_data_timeseries,output=c('beacon_logger_data', 'beacon_logger_COmerged')){
   # preplacement<-mobenzilist[[11]]
   base::message(preplacement$HHID)
   #Prep instrument IDs... take this part out to functionalize more generally later
@@ -18,12 +18,12 @@ beacon_deployment_fun = function(preplacement,equipment_IDs,local_tz,beacon_data
                         location = c('Kitchen',preplacement$RoomTypeSecondary),
                         HHID = c(preplacement$HHIDnumeric,preplacement$HHIDnumeric))
   Loggers = merge(Loggers,equipment_IDs,by='loggerID')
-  start_time <- as.POSIXct(strftime(paste(as.Date(preplacement$Start,format = "%d-%m-%Y"),preplacement$DevicesONTime),tz=local_tz),tz=local_tz)
+  
   otherroom <- setdiff(Loggers$location,"Kitchen")
   #Get beacon data from loggers and beacons of interest
   beacon_logger_data <- beacon_data_timeseries[grepl(paste(unique(Loggers$loggerID),collapse="|"),loggerID),]
   beacon_logger_data <- beacon_logger_data[grepl(paste(toupper(unique(Beacons$MAC)),collapse="|"),MAC),]
-  beacon_logger_data <- beacon_logger_data[datetime>start_time & datetime<start_time+86400,]
+  beacon_logger_data <- beacon_logger_data[datetime>preplacement$start_datetime & datetime<preplacement$start_datetime+86400,]
   beacon_logger_data[,nearest_RSSI := round(max(RSSI)), by = c("loggerID","datetime")] 
   beacon_logger_data[,RSSI_minute_min := round(min(RSSI)), by = c("loggerID","datetime")] 
   beacon_logger_data <- unique(beacon_logger_data, by = c('datetime', 'loggerID'))
@@ -52,16 +52,28 @@ beacon_deployment_fun = function(preplacement,equipment_IDs,local_tz,beacon_data
   beacon_logger_data <- as.data.table(beacon_logger_data)
   
   if(nrow(beacon_logger_data)==0){
-    base::message('No Beacon data found, various possible issue!  May check the Mobenzi start date/time or Beacon file timestamps or IDs.  Also possible that no Beacon emitter found, please check Beacon inventory and Beacon logger file, Check ID_missing_beacons for more information')
+    base::message('No Beacon data found, various possible issue!  May check the Mobenzi start date/time or Beacon file timestamps or IDs.  
+                  Also possible that no Beacon emitter found, please check Beacon inventory and Beacon logger file, Check ID_missing_beacons for more information')
     base::message(paste('Beacon IDs found: ', paste(Beacons_mobenzi$loggerID,collapse = ' ')))
     base::message(paste('Mobenzi Start Date: ', preplacement$Start))
+    return(list(beacon_logger_data=NULL, beacon_logger_COmerged=NULL))
+    
   }else { #Calculate exposure estimates
-    lascar_calibrated_subset <- lascar_calibrated_timeseries[datetime>start_time & datetime<start_time+86400,]
-    beacon_logger_COmerged = merge(beacon_logger_data,lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
+    lascar_calibrated_subset <- CO_calibrated_timeseries[datetime>preplacement$start_datetime & datetime<preplacement$start_datetime+86400,]
+    beacon_logger_COmerged = merge(beacon_logger_data,lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),
+                                   by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
     beacon_logger_COmerged[,sampletype := "C"] 
-    beacon_logger_COmerged = merge(beacon_logger_COmerged, lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
+    beacon_logger_COmerged = merge(beacon_logger_COmerged, lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),
+                                   by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
     setnames(beacon_logger_COmerged, old=c("CO_ppm.x","CO_ppm.y"), new=c("CO_ppm_indirect", "CO_ppm_direct"))
     
+    lascar_calibrated_subset <- CO_calibrated_timeseries[datetime>preplacement$start_datetime & datetime<preplacement$start_datetime+86400,]
+    beacon_logger_COmerged = merge(beacon_logger_data,lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),
+                                   by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
+    beacon_logger_COmerged[,sampletype := "C"] 
+    beacon_logger_COmerged = merge(beacon_logger_COmerged, lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),
+                                   by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
+    setnames(beacon_logger_COmerged, old=c("CO_ppm.x","CO_ppm.y"), new=c("CO_ppm_indirect", "CO_ppm_direct"))
   }
   
   tryCatch({ 
@@ -82,11 +94,16 @@ beacon_deployment_fun = function(preplacement,equipment_IDs,local_tz,beacon_data
   }, error = function(e) {
   }, finally={})
   
-  return(beacon_logger_data)    
+  if(all(output=='beacon_logger_COmerged')){return(beacon_logger_COmerged)}else
+    if(all(output=='beacon_logger_data')){return(beacon_logger_data)}else
+      if(all(output==c('beacon_logger_data', 'beacon_logger_COmerged'))){
+        return(list( beacon_logger_data=beacon_logger_data,beacon_logger_COmerged=beacon_logger_COmerged))
+      }
 }
-
-
-
-
-
-
+  
+  
+  
+  
+  
+  
+  
