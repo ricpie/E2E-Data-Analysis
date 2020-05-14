@@ -2,13 +2,16 @@
 .Rhistory
 .RData
 .Ruserdata
-.Processed Data
-.QA Reports
-.Beacon_QAQC-master
+Processed Data/
+Results/
+QA Reports/
+Beacon_QAQC-master/
  *.png
  *.jpeg
  *.jpg
  *.csv
+ *.docx*
+ *.doc*
  *.xls
  *.xlsx
  *.pptx
