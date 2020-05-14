@@ -27,7 +27,12 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
   #   badfileflag <- 1; slashpresence <- 1
   #   return(list(raw_data=NULL, meta_data=meta_data))
   # } else{
-  raw_data <- fread(file, skip = 30,sep=",",fill=TRUE)
+  raw_data <- na.omit(fread(file, skip = 30,sep=",",fill=TRUE))
+  
+  if(dim(raw_data)[1]==0){
+    raw_data <-fread(file, skip = 36,sep=",",fill=TRUE)[,(c(4,5,13,14,15)):=NULL]
+    setnames(raw_data,c('dateTime','V_power','degC_air',	'%RH_air',	'CO_PPM',	'status',	'ref_sigDel',	'low20avg',	'high320avg',	'motion','PM_Estimate'),skip_absent=TRUE)
+  }
   
   if(badfileflag==1){
     base::message(basename(file), " has no parseable date.")
@@ -40,7 +45,27 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
     return(list(raw_data=NULL, meta_data=meta_data))
   }else{
     
-    raw_data[, datetime:=ymd_hms(as.character(dateTime), tz=local_tz)]
+    date_formats <- suppressWarnings(melt(data.table(
+      dmys = raw_data[, as.numeric(difftime(max(dmy_hms(dateTime)), min(dmy_hms(dateTime)),units = "days"))],
+      ymds = raw_data[, as.numeric(difftime(max(ymd_hms(dateTime)), min(ymd_hms(dateTime)),units = "days"))],
+      mdys = raw_data[, as.numeric(difftime(max(mdy_hms(dateTime)), min(mdy_hms(dateTime)),units = "days"))],
+      dmy = raw_data[, as.numeric(difftime(max(dmy_hm(dateTime)), min(dmy_hm(dateTime)),units = "days"))],
+      ymd = raw_data[, as.numeric(difftime(max(ymd_hm(dateTime)), min(ymd_hm(dateTime)),units = "days"))],
+      mdy = raw_data[, as.numeric(difftime(max(mdy_hm(dateTime)), min(mdy_hm(dateTime)),units = "days"))]
+    )))
+    
+    date_format <- as.character(date_formats[value==date_formats[!is.na(value),min(value)], variable])
+    
+    if(date_format=="mdys"){raw_data[, datetime:=mdy_hms(as.character(dateTime), tz=local_tz)]} else
+      if(date_format=="ymds"){raw_data[, datetime:=ymd_hms(as.character(dateTime), tz=local_tz)]} else
+        if(date_format=="dmys"){raw_data[, datetime:=dmy_hms(as.character(dateTime), tz=local_tz)]} else
+          if(date_format=="mdy"){raw_data[, datetime:=mdy_hm(as.character(dateTime), tz=local_tz)]} else
+            if(date_format=="ymd"){raw_data[, datetime:=ymd_hm(as.character(dateTime), tz=local_tz)]} else
+              if(date_format=="dmy"){raw_data[, datetime:=dmy_hm(as.character(dateTime), tz=local_tz)]}
+    
+    
+    # raw_data[, datetime:= parse_date_time(as.character(raw_data$dateTime), orders = c("Y-m-d HMS","y-m-d HM", "m/d/y HM", "m/d/y HMS"),tz=local_tz)]#,"d/m/y HM","d-m-y HM"))
+    
     raw_data[,datetime := round_date(datetime, unit = "minutes")]
     
     #Sample rate. Time difference of samples, in minutes.
@@ -74,7 +99,7 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
     raw_data[,qc := meta_data$qc]
     raw_data <- tag_timeseries_mobenzi(raw_data,preplacement,filename)
     raw_data <- tag_timeseries_emissions(raw_data,meta_emissions,meta_data,filename)
-    raw_data <- baseline_correction_pats(raw_data)
+    # raw_data <- baseline_correction_pats(raw_data)
     
     if(all(output=='meta_data')){return(meta_data)}else
       if(all(output=='raw_data')){return(raw_data)}else
@@ -102,7 +127,7 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
       raw_data <- ingest$raw_data
       
       #create a rounded dt variable
-      raw_data[, round_time:=round_date(datetime, 'hour')]
+      raw_data[, round_time:=floor_date(datetime, 'hour')]
       
       #Filter the data based on actual start and stop times - once I get them!
       # raw_data <- raw_data[ecm_tags=='deployed']
@@ -185,6 +210,8 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
                type = "p", xlab = cat_string, ylab="Calibrated CO (ppm)",prob=TRUE,cex.main = .6,cex = .5)
           grid(nx = 5, ny = 10, col = "lightgray", lty = "dotted",
                lwd = par("lwd"), equilogs = TRUE)
+          axis(3, calibrated_data$datetime, format(calibrated_data$datetime, "%b %d %y"), cex.axis = .7)
+          
           dev.off()
         }
       }, error = function(error_condition) {

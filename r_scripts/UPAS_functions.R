@@ -97,7 +97,10 @@ UPAS_qa_fun <- function(file, tz){
       gps_lon_med <- median(raw_data$GPSlon)
       if(meta_data$shutdown_reason=='1' | meta_data$shutdown_reason =='3'){shutdown_flag=0}else{shutdown_flag=1}
       
-      meta_data = cbind(meta_data,gps_lat_med,gps_lon_med,flow_mean,flow_sd,flow_5th_percentile,flow_95th_percentile,percent_flow_deviation,flow_flag,inletp_flag,temp_flag,rh_flag,shutdown_flag,filename_flag)
+      #overall flag
+      if(shutdown_flag==1 | flow_flag == 1 | filename_flag ==1){qc='bad'}else{qc='good'}
+      
+      meta_data = cbind(meta_data,gps_lat_med,gps_lon_med,flow_mean,flow_sd,flow_5th_percentile,flow_95th_percentile,percent_flow_deviation,flow_flag,inletp_flag,temp_flag,rh_flag,shutdown_flag,filename_flag,qc)
       
       meta_data[, flag_total:=sum(flow_flag,inletp_flag,temp_flag,rh_flag,shutdown_flag,filename_flag), by=.SD]
       meta_data[, c('smry', 'analysis') := TRUE]

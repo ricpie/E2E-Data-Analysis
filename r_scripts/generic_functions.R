@@ -38,7 +38,7 @@ equipment_IDs_fun <- function(){
   # Import equipment ID info
   
   #separate out raw, meta, and sensor data
-  equipmentIDpath<- "~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Metadata/E2E_BA equipment matrix_vF.xlsx"
+  equipmentIDpath<- "~/Dropbox/UNOPS emissions exposure/Equipment/E2E_BA equipment matrix_vF.xlsx"
   # equipmentIDs <- equipment_IDs_fun(equipmentIDpath)  
   equipment_IDs <- read_excel(equipmentIDpath, sheet = "Equipment IDs")[,c(2:4)]
   setnames(equipment_IDs,c("loggerID","BAID","instrument"))
@@ -76,8 +76,8 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
                   matches = regmatches(HHIDstr, gregexpr("[[:digit:]]+", HHIDstr)),
                   HHIDnumeric =  as.numeric(matches),
                   start_datetime = as.POSIXct(paste(UNOPS_Date,DevicesONTime,sep = " "),tz = "Africa/Nairobi",
-                                              tryFormats = c("%d-%m-%Y %H:%M","%d-%m-%Y %H:%M:%OS","%d-%m-%y %H:%M","%d/%m/%Y %H:%M:%OS"))) %>%
-    dplyr::filter("Yes" == UNOPS_HH,  !is.na(UNOPS_HH))
+                                              tryFormats = c("%d-%m-%Y %H:%M","%d-%m-%Y %H:%M:%OS","%d-%m-%y %H:%M","%d/%m/%Y %H:%M:%OS"))) #%>%
+  # dplyr::filter("Yes" == UNOPSyn,  !is.na(UNOPS_HH))
   
   
   
@@ -100,7 +100,7 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
   #Clean up rapid survey HHIDs
   mobenzi_rapid <- read.table(filerapid, header=T,quote = "\"",sep=",",na.string=c("","null","NaN"),colClasses = "character") %>%
     setnames(c('SubmissionId','FieldworkerName','FieldworkerId','HandsetAssetCode','HandsetIdentifier','Received','Start','End','Duration(seconds)','Latitude','Longitude','Language','SurveyVersion','ModifiedBy','ModifiedOn','Complete','Accept','HHID','SubCounty','Village','Date','StaffCode','Gender','Age','MaritalStatus','Eth','Other23','HeadofHousehold',
-               'AgeHeadofHousehold','EducationHeadofHousehold','Other19','RespondentEducation','Other1','MainCookYN','DecisionMakerFuel','Other2','PeopleinHousehold','PeopleEatinginHome','ChildrenUnder5','ChildAges','OwnorRent','Other3','HeadofHouseholdIncome','C3_Farmsownland(whetherthatlandisownedorrented)','C3_Daylabourer(farminganotherperson’sland,builder,dailyworkeretc.)',
+               'AgeHeadofHousehold','EducationHeadofHousehold','Other19','RespondentEducation','Other1','University Student','Relocation','Holidays','MainCookYN','DecisionMakerFuel','Other2','PeopleinHousehold','PeopleEatinginHome','ChildrenUnder5','ChildAges','OwnorRent','Other3','HeadofHouseholdIncome','C3_Farmsownland(whetherthatlandisownedorrented)','C3_Daylabourer(farminganotherperson’sland,builder,dailyworkeretc.)',
                'C3_Governmentemployee(doctor,nurse,police,teacheretc.)','C3_Employeeinabusiness(Factory/industrialworker,worksinashop,receptionist,securityguard,etc.)','C3_Hasownbusiness(businessman,ownsashop,traderetc.)','C3_Craftsperson(tailor,carpenter,seamstressetc.)','C3_Runthehousehold/Careforfamily','C3_Retired','C3_Othertypeofjob','C3_Currentlyunemployed/nothing','Other4',
                'Income','SeasonalIncomeYN','C6_Animal(s)(cows,sheep,goatsetc.)','C6_Cellphone','C6_Smartphone','C6_Radio','C6_Hi-Fi/CD-player','C6_Solarconnection','C6_ElectricityConnection','C6_TV','C6_SatelliteTV','C6_Refrigerator/fridge/freezer','C6_Shower/bathwithinhouse','C6_Land','C6_Bicycle','C6_Moped/Motorcycle','C6_Pick-uptruck','C6_Car','C6_Computer','C6_Washingmachine',
                'C6_Tractor','WaterAccessYN','WaterSource','Other5','SepticorFlushingToiletInside','LatrineinCompound','FoodConsumedMadeinHousehold','SourceofOutsideFood','MostUsedCookstove','Other20','MostUsedFuel','Other6','TimesFuelUnavailableLastYEar','D5_1.None','D5_2Adultburned','D5_3Childburned','D5_4Adultscalded','D5_5Childscalded','D5_6Fireinhouse',
@@ -110,16 +110,14 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
                'HeatingDeviceEver','HeatingUseMonths','HeaterType','Other17','LightingSource','Other9','UseLPG','NumberCylindersAtHome','F3_3kg','F3_6kg','F3_13kg','F3_16kg','F3_Other,specify','Other10','LPGRefillCost','LPGRefillInterval','Other11','LPGRefillsPerYear','LPGWhenPurchased','LPGBurners','LPGStoveLastPurchase','LPGDaysUsedLastWeek','LPGHowTransported','Other12','LPGTransportDuration'
                ,'LPGTravelCost','LPGTravelCostKSH','LPGDeliverCost','LPGHaveYouUsedIt','LPGWhyNotUsing','Other13','LPGWhoWouldDecideToUse','Other14','WhyNoInterview','Other15','CanWeContactYouAgain','Phone','GPS','Latitude2','Longitude2','AltitudeMeters','DateofGPS','Notes','FloorMaterial','Other21','RoofingMaterial','Other22','WallMaterial','Other24')) %>%
     dplyr::filter(Complete == "Yes",
-                  Accept == "Yes",
-                  FoodConsumedMadeinHousehold == "Yes") %>%
+                  Accept == "Yes") %>% #,
+    # FoodConsumedMadeinHousehold == "Yes") %>%
     dplyr::mutate(HHID = toupper(HHID)) %>%
-    dplyr::mutate(HHIDstr = substring(HHID, 
-                                      1, sapply(HHID, function(x) unlist(gregexpr('-',x,perl=TRUE))[1])-1),
-                  WorkerIDstr = substring(HHID, 
-                                          sapply(HHID, function(x) unlist(gregexpr('-',x,perl=TRUE))[1])+1,15),
-                  WorkerID_StaffCode = substring(StaffCode,1,4)) %>%
-    dplyr::mutate(HHID = gsub('000','00',HHID),
+    dplyr::mutate(HHID = gsub('KE0004-KE01','KE001-KE10',HHID),
+                  HHID = gsub('KE05-KE02','KE001-KE08',HHID),
+                  HHID = gsub('000','00',HHID),
                   HHID = gsub(' ','',HHID),
+                  HHID = gsub('_','-',HHID),
                   HHID = gsub('O','0',HHID,ignore.case = T),
                   HHID = gsub('KES','KE',HHID,ignore.case = T),
                   HHID = gsub('-0','-KE0',HHID),
@@ -130,6 +128,7 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
                   HHID = gsub('-KE011','-KE11',HHID),
                   HHID = gsub('-KE013','-KE13',HHID),
                   HHID = gsub('025-KE05','KE025-KE05',HHID),
+                  HHID = gsub('KE-KE','KE',HHID),
                   HHID = gsub('KEKE','KE',HHID),
                   HHID = gsub("'Ķ",'KE157-KE02	',HHID),
                   HHID = gsub('LE','KE',HHID),
@@ -239,16 +238,75 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
                     HHID == 'KE05-KE018' ~ 'KE018-KE05',
                     HHID == 'KE05-KE019' ~ 'KE019-KE05',
                     HHID == 'KE05-KE02' ~ 'KE020-KE05',
+                    HHID == 'KE28-KE05'	~ 'KE028-KE05',
                     HHID == 'KE05-KE021' ~ 'KE021-KE05',
+                    HHID == 'KE225' ~ 'KE225-KE08',
                     HHID == '43' ~ 'KE043-KE07',
                     HHID == 'KE026' ~ 'KE026-KE03',
+                    HHID == 'KE210-KE04' ~ 'KE210-KE02',
+                    HHID == 'KE003-KE01' ~ 'KE001-KE07',
+                    HHID == 'KE152-KE04'	~ 'KE154-KE04',
+                    HHID == 'KE507-KE09' ~ 'KE507-KE03',
                     TRUE ~ as.character(HHID)
                   )
     )  %>%
     dplyr::select(-Language,-SurveyVersion,-FieldworkerId,-Accept,-Complete) %>%
     # dplyr::mutate(matches = regmatches(HHIDstr, gregexpr("[[:digit:]]+", HHIDstr)),
     #               HHIDnumeric =  as.numeric(matches)) %>%
-    dplyr::arrange(Start)
+    dplyr::arrange(Start) %>%
+    dplyr::mutate(HHIDstr = substring(HHID, 
+                                      1, sapply(HHID, function(x) unlist(gregexpr('-',x,perl=TRUE))[1])-1),
+                  WorkerIDstr = substring(HHID, 
+                                          sapply(HHID, function(x) unlist(gregexpr('-',x,perl=TRUE))[1])+1,15),
+                  WorkerID_StaffCode = substring(StaffCode,1,4)) %>%
+    dplyr::mutate(EducationHeadofHousehold = as.numeric(factor(EducationHeadofHousehold,c("No formal education","Other, specify","Primary","Secondary/High school",
+                                                                                          "University (Under graduate, Post graduate)")))) %>%
+    dplyr::mutate(RespondentEducation = as.numeric(factor(RespondentEducation,c("No formal education","Other, specify","Primary","Secondary/High school",
+                                                                                "University (Under graduate, Post graduate)")))) %>%
+    dplyr::mutate(EducationHighest = 
+                    case_when(
+                      is.na(EducationHeadofHousehold) ~ RespondentEducation,
+                      EducationHeadofHousehold >= RespondentEducation ~ EducationHeadofHousehold,
+                      is.na(RespondentEducation) ~ 1,
+                      TRUE ~ EducationHeadofHousehold
+                    )) %>%
+    dplyr::mutate(EducationHighest = as.factor(EducationHighest),
+                  EducationHighest  = mapvalues(EducationHighest,from = c("1","2","3","4","5"), 
+                                                to =c("No formal education","Other, specify","Primary","Secondary/High school",
+                                                      "University (Under graduate, Post graduate)"))) %>%
+    dplyr::mutate(OwnorRent = gsub('Other arrangement \\(please specify\\)','Rent',OwnorRent),
+                  FloorMaterial = paste0('floor_',FloorMaterial),
+                  RoofingMaterial = paste0('roofing_',RoofingMaterial),
+                  WallMaterial = paste0('wall_',WallMaterial)) %>%
+    dplyr::mutate(namelength = str_length(WorkerIDstr)) %>%
+    dplyr::mutate(HHID = case_when(namelength>4 ~ paste0(WorkerIDstr,'-',HHIDstr),
+                                   TRUE ~ as.character(HHID))) %>%
+    dplyr::mutate(HHID = case_when(HHID == 'KE02	-KE157' ~ 'KE157-KE02',
+                                   HHID == 'KE069KE09-' ~ 'KE069-KE09',
+                                   HHID == 'KE210-' ~ 'KE210-KE08',
+                                   HHID == 'KE018-' ~ 'KE018-KE06',
+                                   HHID == '0' ~ 'KE068-KE10',
+                                   HHID == '-KE10-KE068' ~ 'KE068-KE10',
+                                   HHID == 'KE0103-KE06' ~ 'KE103-KE06',
+                                   HHID == 'KE019-' ~ 'KE019-KE06',
+                                   HHID == 'KE2019-KE07' ~ 'KE219-KE07',
+                                   TRUE ~ as.character(HHID))) %>%
+    dplyr::mutate(HHID = case_when(SubmissionId == 'ef03a2b1-c343-4d31-a08b-9266cd6545a0' ~ 'KE502-KE01',
+                                   SubmissionId == 'a772a091-f97a-409d-ae08-6eadb8c12c6e' ~ 'KE507-KE06',
+                                   SubmissionId == '996b457f-3b0f-4ccc-bbc3-a6df7d67f067' ~ 'KE510-KE09',
+                                   TRUE ~ as.character(HHID)))
+  
+  
+  #This data set is very messy - many cases of duplicated HHIDs, for different households. Retain all for analyses.
+  # uniqueHHIDs <- mobenzi_rapid[duplicated(mobenzi_rapid$HHID) | duplicated(mobenzi_rapid$HHID,fromLast=TRUE),] %>%
+  # dplyr::arrange(HHID)
+  
+  # badHHIDs <- dplyr::mutate(mobenzi_rapid,namelength = str_length(WorkerIDstr)) %>%
+  #   dplyr::filter(namelength>4 | str_length(HHID)< 8)
+  # goodHHIDs <- dplyr::mutate(mobenzi_rapid,namelength = str_length(WorkerIDstr)) %>%
+  #   dplyr::filter(namelength<=4)
+  # write.xlsx(badHHIDs,'badfileHHIDs.xlsx')
+  
   
   #Import and clean up indepth survey HHIDs
   mobenzi_indepth <- read.table(fileindepth, header=T,quote = "\"" ,sep=",",na.string=c("","null","NaN"),colClasses = "character")%>%
@@ -269,24 +327,11 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
   saveRDS(mobenzi_rapid,"Processed Data/mobenzi_rapid.rds")
   saveRDS(preplacement,"Processed Data/preplacement.rds")
   saveRDS(postplacement,"Processed Data/postplacement.rds")
+  write.xlsx(mobenzi_rapid,'Processed Data/mobenzi_rapid.xlsx')
+  
   return(list(mobenzi_indepth=mobenzi_indepth, mobenzi_rapid=mobenzi_rapid,preplacement=preplacement,postplacement=postplacement))
 }
 
-ses_function <- function(mobenzi_rapid){
-  rapid_ses<-select(mobenzi_rapid,c('HHID','MaritalStatus','EducationHeadofHousehold','RespondentEducation','OwnorRent',#'HeadofHouseholdIncome',
-                                    # 'C3_Farmsownland(whetherthatlandisownedorrented)','C3_Daylabourer(farminganotherperson’sland,builder,dailyworkeretc.)',
-                                    # 'C3_Governmentemployee(doctor,nurse,police,teacheretc.)','C3_Employeeinabusiness(Factory/industrialworker,worksinashop,receptionist,securityguard,etc.)','C3_Hasownbusiness(businessman,ownsashop,traderetc.)','C3_Craftsperson(tailor,carpenter,seamstressetc.)','C3_Runthehousehold/Careforfamily','C3_Retired','C3_Othertypeofjob','C3_Currentlyunemployed/nothing',
-                                    'Income','SeasonalIncomeYN','C6_Animal(s)(cows,sheep,goatsetc.)','C6_Cellphone','C6_Smartphone','C6_Radio','C6_Hi-Fi/CD-player','C6_Solarconnection','C6_ElectricityConnection','C6_TV','C6_SatelliteTV','C6_Refrigerator/fridge/freezer','C6_Shower/bathwithinhouse','C6_Land','C6_Bicycle','C6_Moped/Motorcycle','C6_Pick-uptruck','C6_Car','C6_Computer','C6_Washingmachine',
-                                    'C6_Tractor','WaterAccessYN','WaterSource','SepticorFlushingToiletInside','LatrineinCompound','MostUsedCookstove','MostUsedFuel','D6_Electricity','D6_Kerosene','D6_Cookinggas/LPG','D6_Charcoalunprocessed','D6_Charcoalbriquettes/pellets','D6_Wood','D6_Agriculturalorcropresidue/grass/',
-                                    'D6_straw/shrubs/corncobs','D6_Processedbiomasspellets/briquettes','D6_Woodchips','D6_Sawdust','D6_Animalwaste/dung','D6_Garbage/plastic','D6_None',
-                                    # 'D8_Electricity','D8_Kerosene','D8_Cookinggas/LPG','D8_Charcoalunprocessed','D8_Charcoalbriquettes/pellets','D8_Wood','D8_Agriculturalorcropresidue/grass/','D8_straw/shrubs/corncobs','D8_Processedbiomasspellets/briquettes','D8_Woodchips','D8_Sawdust','D8_Animalwaste/dung','D8_Garbage/plastic','DoYouPayForFuel',
-                                    'D12_Electricity','D12_Kerosene','D12_Cookinggas/LPG','D12_Charcoalunprocessed','D12_Charcoalbriquettes/pellets','D12_Wood','D12_Agriculturalorcropresidue/grass/','D12_straw/shrubs/corncobs','D12_Processedbiomasspellets/briquettes','D12_Woodchips','D12_Sawdust','D12_Animalwaste/dung','D12_Garbage/plastic',
-                                    'WhereCook','SharedKitchenYN',
-                                    'HeatingDeviceEver','HeaterType','LightingSource','UseLPG','NumberCylindersAtHome','LPGRefillsPerYear',
-                                    'FloorMaterial','RoofingMaterial','WallMaterial'))
-  
-  return(ses)
-}
 
 # parse_mobenzi_fun <- function(preplacement,output = preplacement_meta){
 #   preplacement_meta = list()
@@ -353,7 +398,7 @@ ambient_import_fun <- function(path_other,sheetname){
 }
 
 emissions_import_fun <- function(path_emissions,sheetname,local_tz){
-  meta_emissions <- read_excel(path_emissions,sheet = 'Data',skip=2)#[,c(1:12)]
+  meta_emissions <- read_excel(path_emissions,sheet = sheetname,skip=2)#[,c(1:12)]
   meta_emissions <- meta_emissions[!is.na(meta_emissions$`Date [m/d/y]`) & !is.na(meta_emissions$HH_ID)
                                    & !is.na(meta_emissions$`Sample START [hh:mm:ss]`),]
   meta_emissions$Date <- as.POSIXct(meta_emissions$`Date [m/d/y]`,tz=local_tz,tryFormats = c("%Y-%m-%d","%d-%m-%Y"))
@@ -372,21 +417,41 @@ emissions_import_fun <- function(path_emissions,sheetname,local_tz){
   meta_emissions$roomvolume <- meta_emissions$`Room length (longest) (m)`*meta_emissions$`Room height (m)`*meta_emissions$`Room width (shortest) (m)`
   meta_emissions$`# walls with open eaves`[is.na(meta_emissions$`# walls with open eaves`)] = 0
   meta_emissions$`# walls with open eaves` <- as.factor(meta_emissions$`# walls with open eaves`)
-  meta_emissions$stovetype <- meta_emissions$`Stove Type...7`
-  meta_emissions$stovetype <- gsub('TSF','Trad Biomass',meta_emissions$`Stove Type...7`)
+  meta_emissions$stovetype <- meta_emissions$`Stove Type...14`
+  meta_emissions$stovetype <- gsub('TSF','Trad Biomass',meta_emissions$stovetype)
   meta_emissions$stovetype <- gsub('Chipkube','Trad Biomass',meta_emissions$stovetype)
   meta_emissions$eventduration <- difftime(meta_emissions$datetime_sample_end,meta_emissions$datetime_sample_start,units='mins')
   
-  matches <- regmatches(meta_emissions$HH_ID, gregexpr("[[:digit:]]+", meta_emissions$HH_ID))
+  matches <- regmatches(meta_emissions$HHID_full, gregexpr("[[:digit:]]+", meta_emissions$HH_ID))
   meta_emissions$HHID =  as.numeric(matches)
   meta_emissions
 }
 
-upas_record_import_fun <- function(path_other,sheetname){
-  meta_filter <- read_excel(path_other,sheet = sheetname,skip=1)[,c(1:9)]
-  setnames(meta_filter,c('upasID','HHID','fieldworkerID','upas_filterID','data_loaded','cartridgeID','sampletype','location_notes','notes'))
-  meta_filter$data_loaded <- as.POSIXct(meta_filter$data_loaded,tz = "Africa/Nairobi")
-  meta_filter
+
+grav_import_fun <- function(gravimetric_path){
+  
+  gravimetric_data <- read_excel(gravimetric_path,sheet = 'GRAVI',skip=0)
+  setnames(gravimetric_data,c("filterID","BCµg2","BCµg3","BCµg4","BCµg5","Pre 1 (ug)","Pre 2 (ug)","Pre 3 (ug)","Range (max-min)...9","Average (ug)...10",
+                              "...11","...12", "Post 1 (ug)",  "Post 2 (ug)",  "Post 3 (ug)", 
+                              "Range (max-min)...16","Average (ug)...17","BC (µg)...18", "Adjusted_PM_dep_ug", "Adjusted_BC_dep_ug", 
+                              "qc","...22","...23","...24","Filter ID...25",
+                              "instrument","HHID", "Researcher ID","Date loaded into UPAS","Cartridge ID",
+                              "A or E","...32", "...33", "...34", "Ambient location",
+                              "PM_dep_ug", "BC_dep_ug", "...38", "...39", "Notes",
+                              "...41", "grav Bs",      "BC Bs", "...44", "...45",
+                              "...46", "...47", "...48", "...49", "...50",
+                              "...51", "...52", "...53", "...54", "...55"))
+  
+  
+  gravimetric_data <-
+    dplyr::mutate(gravimetric_data,filterID = as.numeric(substr(filterID,3,5))) %>%
+    dplyr::mutate(qc = gsub('y','good', qc, ignore.case = TRUE),
+                  qc = gsub('n','bad', qc, ignore.case = TRUE)) %>%
+    dplyr::filter(!is.na(filterID)) %>%
+    dplyr::filter(!is.na(qc))
+  
+  
+  return(gravimetric_data)
 }
 
 #a function to slice 5 digit of Beacon id, will add 0 in in front if less than n (n = 5) digits
@@ -468,15 +533,52 @@ baseline_correction_pats <- function(raw_data){
   return(raw_data)
 }
 
-ambient_timeseries <- function(CO_calibrated_timeseries,pats_data_timeseries){
+
+#ambient analysis (pats, Lascar, UPAS)
+ambient_analysis <- function(CO_calibrated_timeseries,pats_data_timeseries,upasmeta,gravimetric_data){
   ambient_pats_data_timeseries <- pats_data_timeseries["A"==substr(sampletype,1,1),]
-  ambient_data <- CO_calibrated_timeseries["A"==substr(sampletype,1,1),]
+  ambient_pats_data_timeseries$instrument <- 'PATS'
+  ambient_data_realtime <- CO_calibrated_timeseries["A"==substr(sampletype,1,1),]
+  ambient_data_realtime$instrument <- 'Lascar'
   # beacon_logger_COmerged = merge(beacon_logger_data,lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
   
-  # ambient_data <- merge(ambient_data,ambient_pats_data_timeseries,by=c("datetime"),all.x = T, all.y = F)
-  ambient_data <- melt(ambient_data, id.vars = c('datetime', 'sampletype','qc'), measure.vars = 'CO_ppm')
-  meltedpats <- melt(pats_data_timeseries, id.vars = c('datetime', 'sampletype','qc'), measure.vars = c('PM_Estimate','degC_air','%RH_air','status'))
-  ambient_data <- rbind(ambient_data,meltedpats)
+  # ambient_data_realtime <- merge(ambient_data_realtime,ambient_pats_data_timeseries,by=c("datetime"),all.x = T, all.y = F)
+  ambient_data_realtime <- melt(ambient_data_realtime, id.vars = c('datetime','instrument', 'sampletype','qc'), measure.vars = 'CO_ppm')
+  meltedpats <- melt(ambient_pats_data_timeseries, id.vars = c('datetime','instrument', 'sampletype','qc'), measure.vars = c('PM_Estimate')) %>%
+    dplyr::mutate(variable = gsub('PM_Estimate','PM µgm-3',variable))
+  meltedpats_tempRH <- melt(ambient_pats_data_timeseries, id.vars = c('datetime','instrument', 'sampletype','qc'), measure.vars = c('degC_air','%RH_air')) %>%
+    dplyr::mutate(class='met') %>%
+    dplyr::mutate(instrument='PATS T/RH')
+  ambient_data_realtime <- rbind(ambient_data_realtime,meltedpats)
+  
+  upasmeta$qc <- NULL
+  ambient_grav <- merge(dplyr::filter(upasmeta,sampletype == "A"),gravimetric_data,by="filterID")
+  ambient_grav$sampletype <- 'Ambient'
+  ambient_grav$instrument <- 'UPAS'
+  ambient_grav$flow_m3 <- ambient_grav$AverageVolumetricFlowRate/1000 * ambient_grav$RunTimeHrs*60 #flow rate in l/min*1m3/1000l, runtime h*60min/h
+  ambient_grav$`PM µgm-3` <-  as.numeric(ambient_grav$PM_dep_ug)*1000000 / ambient_grav$flow_m3
+  ambient_grav$`BC µgm-3` <-  as.numeric(ambient_grav$BC_dep_ug)*1000000 / ambient_grav$flow_m3
+  ambient_grav$datetime <-  ambient_grav$datetime_start + ambient_grav$RunTimeHrs*60*60/2 #posixct is in seconds, so multiply hours by 3600 to get correct end date.
+  meltedgrav <- melt(ambient_grav, id.vars = c('datetime','instrument', 'sampletype','qc'), measure.vars = c('PM µgm-3','BC_ugm3'))
+  
+  ambient_data <- rbind(ambient_data_realtime,meltedgrav) %>%
+    dplyr::mutate(class = 'ambient')
+  ambient_data <- rbind(ambient_data,meltedpats_tempRH)
+  
+  ggplot(ambient_data %>% filter(qc=='good'), aes_string(y = 'value', x = 'datetime', color = 'variable')) +
+    geom_point(alpha = 0.4) +
+    facet_wrap('instrument', ncol = 1, scales = "free") +
+    theme_minimal() +
+    theme(legend.position = "top") +
+    ggtitle('Eldoret Kenya Background Ambient Data') +
+    labs(y='',x='') +
+    # scale_x_datetime(date_breaks = "2 day",date_labels = "%e-%b") +
+    theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))
+  
+  ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/ambient_data.png",plot=last_plot(),dpi=200,device=NULL)
+  saveRDS(ambient_data,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/ambient_data.rds")
+  saveRDS(ambient_grav,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/ambient_grav.rds")
+  writexl::write_xlsx(ambient_grav,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/ambient_grav.xlsx")
   
 }
 
@@ -608,7 +710,7 @@ sampletype_fix_function <- function(raw_data){
 }
 
 
-plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_timeseries,CO_calibrated_timeseries,tsi_timeseries){
+plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_timeseries,CO_calibrated_timeseries,tsi_timeseries,ecm_dot_data){
   
   tryCatch({
     # selected_preplacement <- preplacement[i,]
@@ -616,12 +718,8 @@ plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_t
     mindatetime <- selected_preplacement$start_datetime
     maxdatetime <- mindatetime + 24*60*60
     
+    #Use ECM start and stop time to truncate the data.
     maxdatetimeCO <- CO_calibrated_timeseries[CO_ppm>-1 & HHID %in% HHIDselected,lapply(.SD,max),.SDcols="datetime"]
-    
-    #Change the maxdatetime if there is extended data.
-    if(difftime(maxdatetimeCO$datetime,mindatetime)>2){
-      maxdatetime = maxdatetime + 60*60*72
-    }
     
     selected_COppm <- CO_calibrated_timeseries[CO_ppm>-1 & HHID %in% HHIDselected,c("CO_ppm","datetime","sampletype","emission_tags","qc")]
     selected_COppm<-sampletype_fix_function(selected_COppm)
@@ -741,7 +839,7 @@ tag_timeseries_mobenzi <- function(raw_data,preplacement,filename){
     
     if(dim(preplacement_matched)[1]>0){ #If there is a match
       raw_data[,ecm_tags := ifelse(datetime>preplacement_matched$start_datetime & datetime<ECM_end,'deployed',ecm_tags)]
-      if(abs(raw_data$datetime[1]-max(raw_data$datetime))>2){      
+      if(abs(raw_data$datetime[1]-max(raw_data$datetime,na.rm=TRUE))>2){      
         raw_data[,ecm_tags := ifelse(datetime > ECM_end,'intensive',ecm_tags)]
       }
     } else {

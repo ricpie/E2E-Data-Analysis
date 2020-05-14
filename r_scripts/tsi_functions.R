@@ -47,6 +47,8 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
     }else if(chron(times=raw_data$Time[1])>chron(times='20:00:00')){
       raw_data$datetime <- raw_data$datetime - 60*60*12
     }
+
+    raw_data[,datetime := floor_date(datetime, unit = "minutes")]
     
     #How many samples are invalid? If more than 10%, filename$flag = 'bad'
     fraction_invalid_CO2 = sum(raw_data$CO2_ppm %like% "Invalid")/length(raw_data$CO2_ppm)
@@ -224,7 +226,9 @@ tsi_qa_fun <- function(file,local_tz="Africa/Nairobi",output= 'meta_data',meta_e
   }
 }
 
+
 tsi_meta_data_fun <- function(file,output='raw_data',local_tz,meta_emissions="meta_emissions"){
+  print(file)
   ingest <- tsi_ingest(file,local_tz, output=c('raw_data', 'meta_data'),meta="meta_emissions")
   
   if(is.null(ingest)){return(NULL)}else{
@@ -246,6 +250,4 @@ tsi_meta_data_fun <- function(file,output='raw_data',local_tz,meta_emissions="me
     }
   }
 }
-
-
 

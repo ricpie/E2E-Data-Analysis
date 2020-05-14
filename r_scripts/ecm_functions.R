@@ -1,97 +1,69 @@
 
-ecm_ingest <- function(file, output=c('raw_data', 'meta_data','preplacement'), local_tz,preplacement){
+
+ecm_process_metadata <- function(ecm_dot_data, output=c('raw_data', 'meta_data','preplacement'), local_tz,preplacement){
   # preplacement<-mobenzilist[[11]]
   
-  base::message(file, " QA-QC checking in progress")
-  filename = tryCatch({
-    filename <- parse_filename_fun(file)
-  }, error = function(e) {
-    print('error ingesting filename for ',file)
-    filename$flag  = 'bad'
-  })
-  
-  #separate out raw, meta, and sensor data
-  raw_data <- fread(file, skip = 0,sep=",",fill=TRUE)
-  setnames(raw_data, c("date", "time", "pm2.5ugm3","TempC","RH","vectorcompGs"))
-  
-  raw_data[, datetime:=mdy_hms(as.character(paste(raw_data$date,raw_data$time,sep = " ")),tz =local_tz)]
-  
-  #Sample rate. Time difference of samples, in minutes.
-  sample_timediff = as.numeric(median(diff(raw_data$datetime)))/60
-  
-  #Sampling duration
-  dur = difftime(max(raw_data$datetime),min(raw_data$datetime),units = 'days')
-  
-  raw_data[,datetime := round_date(datetime, unit = "minutes")]
-  raw_data[,date:=NULL]
-  raw_data[,time:=NULL]
-  raw_data[,TempC:=as.numeric(TempC)]
-  
-  #Wearing compliance
-  active.minute.average = ddply(raw_data, .(datetime), summarise,vectorcompGs_SD = round(sd(vectorcompGs, na.rm=TRUE), digits = 3))
-  active.minute.average$sd_composite_above_threshold = ifelse(active.minute.average$vectorcompGs_SD > accel_compliance_threshold, 1, 0) 
-  raw_data<-raw_data[,list(vectorcompGs_min=mean(vectorcompGs,na.rm=TRUE),pm2.5ugm3=mean(pm2.5ugm3,na.rm=TRUE),
-                 TempC=mean(TempC,na.rm=TRUE),RH=mean(RH,na.rm=TRUE)),by=datetime] #dataset averaged by minute
-  
-  raw_data$sd_composite_rollmean <- as.numeric(rollapply(active.minute.average$sd_composite_above_threshold, width=window_width,  FUN = mean, align = "center", na.rm = TRUE, fill = NA))  ## **** NOTE **** To change the width of the rolling mean window for compliance, change the parameter for "width" w.
-  raw_data$compliant <- ifelse(raw_data$sd_composite_rollmean > 0, 1, 0) #Compliant samples
+  #For each deployment, get the averages and start/stop times.  Check CAA code to make sure we are only considering unique values/not duplicating as there are repeats of the exposure data by stove type.
+  ecm_meta_data_og <- ecm_dot_data %>%
+    dplyr::group_by(pm_location,pm_hhid_numeric,HHID,mission_name,stove_type) %>%
+    dplyr::summarise(datetime_start = min(datetime,na.rm=TRUE), 
+                     datetime_end = max(datetime,na.rm=TRUE), 
+                     sampling_duration = difftime(datetime_end,datetime_start,unit='mins'),
+                     samplerate_minutes = as.numeric(median(difftime(datetime,lag(datetime,1),unit='mins'),na.rm=TRUE)),
+                     `PM µgm-3` = mean(pm25_conc,na.rm=TRUE),
+                     cooking_time = sum(cooking==TRUE)*samplerate_minutes) %>%
+    dplyr::mutate(qc = case_when(sampling_duration > 1440*.9  ~ 'good',
+                                 TRUE ~ 'bad')) %>%
+    dplyr::ungroup()
   
   
-  meta_data <- data.table(
-    fullname=filename$fullname,
-    basename=filename$basename,
-    qa_date = as.Date(Sys.Date()),
-    datetime_start = raw_data$datetime[1],
-    sampleID=filename$sampleID ,
-    sampletype=filename$sampletype,
-    fieldworkerID=filename$fieldworkerID, 
-    fieldworkernum=filename$fieldworkernum, 
-    HHID=filename$HHID,
-    loggerID=filename$loggerID,
-    filterID=filename$filterID,
-    qc = filename$flag,
-    samplerate_minutes = sample_timediff/60,
-    sampling_duration = dur
-  )
+  ecm_meta_data2 <- ecm_dot_data %>%
+    dplyr::group_by(pm_location,pm_hhid_numeric,HHID,mission_name,stove_type) %>%
+    dplyr::summarise(datetime_start = min(datetime,na.rm=TRUE), 
+                     datetime_end = max(datetime,na.rm=TRUE), 
+                     sampling_duration = difftime(datetime_end,datetime_start,unit='mins'),
+                     samplerate_minutes = as.numeric(median(difftime(datetime,lag(datetime,1),unit='mins'),na.rm=TRUE)),
+                     `PM µgm-3` = mean(pm25_conc,na.rm=TRUE),
+                     cooking_time = sum(cooking==TRUE)*samplerate_minutes) %>%
+    dplyr::mutate(qc = case_when(sampling_duration > 1440*.9  ~ 'good',
+                                 TRUE ~ 'bad')) %>%
+    dplyr::filter(qc == 'good') %>%
+    dplyr::group_by(pm_location,pm_hhid_numeric,HHID, stove_type)  %>% #regroup so we can combine cooking time from multiple stoves
+    dplyr::summarise(datetime_start = min(datetime_start,na.rm=TRUE), 
+                     datetime_end = max(datetime_end,na.rm=TRUE), 
+                     sampling_duration = max(sampling_duration),
+                     samplerate_minutes = max(samplerate_minutes),
+                     `PM µgm-3` = max(`PM µgm-3`) ,
+                     cooking_time = sum(cooking_time),
+                     # lpg_percent = cooking_time[stove_type=="lpg"]/cooking_time[stove_type!="lpg"]
+    ) 
   
-  #Add some meta_data into the mix
-  raw_data[,sampleID := meta_data$sampleID]
-  raw_data[,loggerID := meta_data$loggerID]
-  raw_data[,HHID := meta_data$HHID]
-  raw_data[,sampletype := meta_data$sampletype]
-  raw_data[,qc := meta_data$qc]
-  
-  #Add tags to the data streams
-  raw_data <- tag_timeseries_emissions(raw_data,meta_emissions,meta_data,filename)
-  #Update this preplacement function when we have the ECM data!
-  # preplacement <- update_preplacement(preplacement,raw_data)
-  raw_data <- tag_timeseries_mobenzi(raw_data,preplacement,filename)
-  
-  #Filter the data based on actual start and stop times - once I get them!
-  # raw_data <- raw_data[ecm_tags=='deployed']
+  ecm_meta_data <- ecm_meta_data2 %>%
+    dplyr::mutate(lpg_cooking = case_when(stove_type=="lpg" ~ cooking_time,
+                                          stove_type!="lpg" ~ 0)) %>%
+    dplyr::mutate(non_lpg_cooking = case_when(stove_type!="lpg" ~ cooking_time,
+                                           stove_type=="lpg" ~ 0)) %>%
+    dplyr::group_by(pm_location,pm_hhid_numeric,HHID) %>%
 
-  if(all(output=='meta_data')){return(meta_data)}else
-    if(all(output=='raw_data')){return(raw_data)}else
-      if(all(output == c('raw_data', 'meta_data','preplacement'))){
-        return(list(meta_data=meta_data, raw_data=raw_data, preplacement=preplacement))
-      }
+    dplyr::mutate(lpg_cooking = sum(lpg_cooking),
+                  non_lpg_cooking = sum(non_lpg_cooking),
+                  lpg_percent = 100*lpg_cooking/(lpg_cooking+non_lpg_cooking)) %>%
+                  # lpg_percent = case_when(is.infinite(lpg_percent)==TRUE ~ 1,
+                                        # TRUE ~ lpg_percent)) %>%
+    dplyr::mutate(primary_stove  = case_when(lpg_cooking>non_lpg_cooking ~ 'lpg',
+                                             lpg_cooking<non_lpg_cooking ~ 'non-lpg'),
+                  secondary_stove  = case_when(lpg_cooking>non_lpg_cooking ~ 'non-lpg',
+                                               lpg_cooking<non_lpg_cooking ~ 'lpg'),
+                  qc = case_when(sampling_duration > 1440*.9  ~ 'good',
+                                 TRUE ~ 'bad')
+                  ) %>%
+    
+    dplyr::arrange(pm_location,HHID) %>%
+    dplyr::select(-cooking_time) %>%
+    dplyr::filter(row_number()==1)
+    
+
+  return(ecm_meta_data)
 }  
 
 
-ecm_import_fun <- function(file,output='raw_data',local_tz,preplacement){
-  ingest <- ecm_ingest(file, output=c('raw_data', 'meta_data','preplacement'),local_tz,preplacement)
-  
-  if(is.null(ingest)){return(NULL)}else{
-    
-    meta_data <- ingest$meta_data
-    if('flags' %in% colnames(meta_data)){
-      return(meta_data)
-    }else{
-      raw_data <- ingest$raw_data
-      
-      return(raw_data)
-    }
-  }
-}
-
-  

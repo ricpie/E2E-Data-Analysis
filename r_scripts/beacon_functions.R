@@ -14,8 +14,6 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',timezon
    if(nchar(basename(file)) < 30){message('File name not correct, check the file')
       return(NULL)}
    
-   equipment_IDs <- readRDS("Processed Data/equipment_IDs.rds")
-   
    beacon_logger_data = fread(file,col.names = c('datetime',"MAC","RSSI"),skip = 1)
    
    #meta data
@@ -34,8 +32,9 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',timezon
    }else{
       beacon_logger_data[,MAC := toupper(MAC)] 
       beacon_logger_data[,datetime := ymd_hms(datetime,tz=timezone)]
-      keep <-names(tail(sort(table(beacon_logger_data$MAC)),2)) 
+      keep <-names(tail(sort(table(beacon_logger_data[!is.na(RSSI)]$MAC)),3)) #Keep non-NA MAC addresses 
       beacon_logger_data_plot <- subset(beacon_logger_data, MAC %in% keep)
+      keep = data.frame(BAID = keep)
       
       completeness_fl = 1;time_interval_fl = 1;beacon_presence_fl=0;beacon_time=1;startup_proc_fl=1;duration_fl=1
       #create a new data by each beacon emitter, specifying time interval of data logging, RSSI mean and logging time for each emitter
@@ -80,7 +79,7 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',timezon
          sampling_duration = sample_duration
       )
       meta_data = cbind(meta_data,completeness_fl,time_interval_fl,beacon_presence_fl,beacon_time,startup_proc_fl,duration_fl)
-      
+
       meta_data[, flag_total:=sum(completeness_fl,time_interval_fl,beacon_presence_fl,beacon_time,startup_proc_fl,duration_fl), by=.SD]
       
       # as.data.frame(beacon_logger_data)
@@ -88,15 +87,25 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',timezon
       #Plot the Beacon data and save it
       tryCatch({ 
          #Prepare some text for looking at the ratios of high to low temps.
+         equipment_IDs$MAC <- equipment_IDs$BAID
+         beacon_logger_data_plot <- merge(beacon_logger_data_plot,equipment_IDs,by='MAC',all.x = TRUE)
+         beacon_logger_data_plot$MACloggerid <- paste0(beacon_logger_data_plot$MAC,'; ',beacon_logger_data_plot$loggerID)
          plot_name = gsub(".txt",".png",basename(file))
          plot_name = paste0("QA Reports/Instrument Plots/BL_",gsub(".csv",".png",plot_name))
-         png(filename=plot_name,width = 550, height = 480, res = 100)
-         plot(beacon_logger_data_plot$datetime, beacon_logger_data_plot$RSSI, main=plot_name,
-              type = "p", ylab="RSSI",prob=TRUE,cex.main = .6,cex = .5)
-         grid(nx = 5, ny = 10, col = "lightgray", lty = "dotted",
-              lwd = par("lwd"), equilogs = TRUE)
-         dev.off()
-      }, error = function(error_condition) {
+
+         ggg<- ggplot(beacon_logger_data_plot, aes(y = RSSI, x = datetime, colour=str_wrap(MACloggerid,18))) +
+            geom_point(alpha = 0.15) +
+            theme_minimal() +
+            theme(legend.position = "right") +
+            scale_x_datetime(date_labels = "%e-%b %H:%m") +
+            theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10)) +
+            ggtitle(plot_name) +
+            theme(legend.title=element_blank(),axis.title.x = element_blank())
+            # geom_smooth(method = 'loess',span = 60/(sample_duration*1440))
+            
+         ggsave(filename=plot_name, plot=ggg,width = 8, height = 5,dpi=200)
+         
+         }, error = function(error_condition) {
       }, finally={})
    }
    return(meta_data)    
@@ -121,7 +130,7 @@ beacon_import_fun <- function(file,timezone="UTC",preplacement=preplacement,beac
       
       #Add some meta_data into the mix
       beacon_logger_data[,datetime := ymd_hms(datetime,tz=timezone)]
-      beacon_logger_data[,datetime := round_date(datetime, unit = "minutes")]
+      beacon_logger_data[,datetime := floor_date(datetime, unit = "minutes")]
       beacon_logger_data[,sampleID := filename$sampleID]
       beacon_logger_data[,loggerID := filename$loggerID]
       beacon_logger_data[,HHID := filename$HHID]

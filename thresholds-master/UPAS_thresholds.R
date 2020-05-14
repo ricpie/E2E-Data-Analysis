@@ -1,5 +1,5 @@
 # #set QA-QC parameters
-flow_thresholds <- c(0.9, 1.1)
+upas_flow_thresholds <- c(0.9, 1.1)
 flow_cutoff_threshold <- 0.10
 flow_rolling_sd_threshold <-  0.2
 flow_min_threshold <- 0.8
