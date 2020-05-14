@@ -32,30 +32,40 @@
 "E1","31","SECTION E: Cook Monitoring ","1514678","Did you notice any problems with the air monitors you were wearing?","Select One"
 "E2","32","SECTION E: Cook Monitoring ","1514679","What problems did you experience with the air monitor you were wearing?","Select Many"
 "E2a","33","SECTION E: Cook Monitoring ","1514681","Other, specify","Single Line"
-"E3","34","SECTION E: Cook Monitoring ","1514680","While you were wearing the monitor, how many hours did you spend in the cooking area, near the stove?","Time"
-"E3-1","35","SECTION E: Cook Monitoring ","1514682","When you were wearing the monitor, were you in the kitchen near your stove the same amount of time as in a typical day?","Select One"
-"E4","36","SECTION E: Cook Monitoring ","1514683","During the monitoring period, how often did you smoke tobacco products?","Select One"
-"E5","37","SECTION E: Cook Monitoring ","1514684","During the monitoring period, how often did you breathe others peoples tobacco smoke, both inside and outside the house, at work or in public places?","Select One"
-"E6","38","SECTION E: Cook Monitoring ","1514685","During the monitoring period, how many times did you leave your house?","Select One"
-"E7","39","SECTION E: Cook Monitoring ","1514843","During the monitoring period, how many times were you exposed to fires, industrial plants, traffic or other potential sources of air pollution?","Select One"
-"F1","40","SECTION F: Child Monitoring ","1514844","Did you or the child notice any problems with the air monitor your child was wearing?","Select One"
-"F2","41","SECTION F: Child Monitoring ","1514846","What problems did you experience with the air monitor your child was wearing?","Select Many"
-"F3","42","SECTION F: Child Monitoring ","1514847","While your child was wearing the monitor, how many hours did he/she spend in the cooking area with you, near the stove?","Time"
-"F4","43","SECTION F: Child Monitoring ","1514848","While your child was wearing the monitor, was he or she in the kitchen near the stove the same amount of time as in a typical day?","Select One"
-"F5","44","SECTION F: Child Monitoring ","1514849","Does your child (the one that was wearing the monitor) usually remain near you in the kitchen while you are cooking on a typical day?","Select One"
-"F6","45","SECTION F: Child Monitoring ","1514850","During the monitoring period, how many times do you think your child was exposed to other potential sources of smoke such as road traffic, trash burning, open fires from neighbours, etc.?","Select One"
-"H1","46","SECTION H. HAP Equipment Takedown","1514853","We are now going to remove some equipment from your home. We would like to keep the (Geocene dot) monitors on your stove for a longer period (2 months from the time we placed the dots). Is it okay if we leave the monitors on your stove?","Select One"
-"H2","47","SECTION H. HAP Equipment Takedown","1514854","[Download data from all Geocene dots. Click the pencil icon and make sure the Household ID is filled in on each dot. Then remove the dot(s).]                          
+"Unable to Wear","34","SECTION E: Cook Monitoring ","1535513","Were there specific places/moments during 24 hours that you were unable to wear the monitor in the apron/harness (other than sleeping/showering)?","Select One"
+"UnwearableLocation","35","SECTION E: Cook Monitoring ","1535514","Where were you unable to wear the monitor (select all that apply)?","Select Many"
+"E2b","36","SECTION E: Cook Monitoring ","1535515","Please specify where you were unable to where the monitor.","Free Text"
+"WhyUnable","37","SECTION E: Cook Monitoring ","1535516","Why were you unable to wear the monitor in this location(s) (Select all that apply)?","Select Many"
+"SpecifyWhy","38","SECTION E: Cook Monitoring ","1535517","Please specify why you were unable to wear the monitor in this location(s).","Free Text"
+"E3","39","SECTION E: Cook Monitoring ","1514680","While you were wearing the monitor, how many hours did you spend in the cooking area, near the stove?","Time"
+"E3-1","40","SECTION E: Cook Monitoring ","1514682","When you were wearing the monitor, were you in the kitchen near your stove the same amount of time as in a typical day?","Select One"
+"E4","41","SECTION E: Cook Monitoring ","1514683","During the monitoring period, how often did you smoke tobacco products?","Select One"
+"E5","42","SECTION E: Cook Monitoring ","1514684","During the monitoring period, how often did you breathe others peoples tobacco smoke, both inside and outside the house, at work or in public places?","Select One"
+"E6","43","SECTION E: Cook Monitoring ","1514685","During the monitoring period, how many times did you leave your house?","Select One"
+"E7","44","SECTION E: Cook Monitoring ","1514843","During the monitoring period, how many times were you exposed to fires, industrial plants, traffic or other potential sources of air pollution?","Select One"
+"F1","45","SECTION F: Child Monitoring ","1514844","Did you or the child notice any problems with the air monitor your child was wearing?","Select One"
+"F2","46","SECTION F: Child Monitoring ","1514846","What problems did you experience with the air monitor your child was wearing?","Select Many"
+"ChildCompliance","47","SECTION F: Child Monitoring ","1535518","Were there specific places/moments during 24 hours that your child was unable to wear the monitor in the apron (other than sleeping/showering)?","Select One"
+"WhereUnable","48","SECTION F: Child Monitoring ","1535519","Where was your child not able to wear the monitor (select all that apply)?","Select Many"
+"SpecifyWhere","49","SECTION F: Child Monitoring ","1535520","Please specify where your child was unable to where the monitor.","Free Text"
+"WhyChildUnable","50","SECTION F: Child Monitoring ","1535521","Why did your child not want to wear the monitor in this location(s) (Select all that apply)?","Select Many"
+"SpecifyWhyChild","51","SECTION F: Child Monitoring ","1535522","Please specify why the child was unable to wear the monitor in this location(s).","Free Text"
+"F3","52","SECTION F: Child Monitoring ","1514847","While your child was wearing the monitor, how many hours did he/she spend in the cooking area with you, near the stove?","Time"
+"F4","53","SECTION F: Child Monitoring ","1514848","While your child was wearing the monitor, was he or she in the kitchen near the stove the same amount of time as in a typical day?","Select One"
+"F5","54","SECTION F: Child Monitoring ","1514849","Does your child (the one that was wearing the monitor) usually remain near you in the kitchen while you are cooking on a typical day?","Select One"
+"F6","55","SECTION F: Child Monitoring ","1514850","During the monitoring period, how many times do you think your child was exposed to other potential sources of smoke such as road traffic, trash burning, open fires from neighbours, etc.?","Select One"
+"H1","56","SECTION H. HAP Equipment Takedown","1514853","We are now going to remove some equipment from your home. We would like to keep the (Geocene dot) monitors on your stove for a longer period (2 months from the time we placed the dots). Is it okay if we leave the monitors on your stove?","Select One"
+"H2","57","SECTION H. HAP Equipment Takedown","1514854","[Download data from all Geocene dots. Click the pencil icon and make sure the Household ID is filled in on each dot. Then remove the dot(s).]                          
  Why do you want the monitor(s) removed from your stove(s)?","Select One"
-"H3","48","SECTION H. HAP Equipment Takedown","1514855","[Do not read this question out loud, this is just for you to answer]
+"H3","58","SECTION H. HAP Equipment Takedown","1514855","[Do not read this question out loud, this is just for you to answer]
 
 Is this home participating in the non-intensive UNOPS study (24-hour monitoring only)?","Select One"
-"H3-1","49","SECTION H. HAP Equipment Takedown","1514856","[Do not read this question out loud, this is just for you to answer]
+"H3-1","59","SECTION H. HAP Equipment Takedown","1514856","[Do not read this question out loud, this is just for you to answer]
 
 Is this household participating in the intensive UNOPS study (monitors to be left for 4 days)?","Select One"
-"H5","50","SECTION H. HAP Equipment Takedown","1514858","Is it okay if I return in 3 days to collect the remaining equipment?","Select One"
-"H6","51","SECTION H. HAP Equipment Takedown","1514860","Why do you want the equipment removed from your kitchen/home now?","Select One"
-"H7","52","SECTION H. HAP Equipment Takedown","1514861","As you remove monitors please check for visible damage and answer the question below:
+"H5","60","SECTION H. HAP Equipment Takedown","1514858","Is it okay if I return in 3 days to collect the remaining equipment?","Select One"
+"H6","61","SECTION H. HAP Equipment Takedown","1514860","Why do you want the equipment removed from your kitchen/home now?","Select One"
+"H7","62","SECTION H. HAP Equipment Takedown","1514861","As you remove monitors please check for visible damage and answer the question below:
 
 [Do not read this question out loud, this is just for you to answer]
 

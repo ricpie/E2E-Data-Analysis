@@ -1,0 +1,885 @@
+mission_id,mission_name,meter_name,meter_id,sample_interval,notes,campaign,creator_username
+5dee2862-0000-0000-0000-CC78AB77FFA5,Dot-FFA5 | 2019-12-09 13:55,Dot-FFA5,CC:78:AB:77:FF:A5,300,,CAA-Kenya,caakenya
+5bf56721-0000-0000-0000-CC78AB77EA80,3-7-05-01,Dot-EA80,CC:78:AB:77:EA:80,300,OHC,MINEM test campaign,olguita
+5bf59267-0000-0000-0000-CC78AB6E0346,3-7-05-05,Dot-0346,CC:78:AB:6E:03:46,300,OHC,MINEM test campaign,olguita
+5bfbdd0e-0000-0000-0000-CC78AB77FCE0,3-2-05-07,Dot-FCE0,CC:78:AB:77:FC:E0,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5bfbdd33-0000-0000-0000-CC78AB6E026E,3-7-05-07,Dot-026E,CC:78:AB:6E:02:6E,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5bfbe3b1-0000-0000-0000-CC78AB781FBD,3-7-05-02,Dot-1FBD,CC:78:AB:78:1F:BD,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5bfbeac9-0000-0000-0000-CC78AB77E324,3-2-05-09,Dot-E324,CC:78:AB:77:E3:24,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5d8c8121-0000-0000-0000-CC78AB77F24F,Dot-F24F | 2019-09-26 12:12,Dot-F24F,CC:78:AB:77:F2:4F,300,,CAA-Kenya,caakenya
+5bfbe370-0000-0000-0000-CC78AB6DFC74,3-2-05-08,Dot-FC74,CC:78:AB:6D:FC:74,300,,MINEM test campaign,galinka29@hotmail.com
+5d8c81dd-0000-0000-0000-CC78AB6E05D9,Dot-05D9 | 2019-09-26 12:15,Dot-05D9,CC:78:AB:6E:05:D9,300,,CAA-Kenya,caakenya
+5d8223ef-0000-0000-0000-CC78AB77FFBC,Dot-FFBC | 2019-09-18 15:31,Dot-FFBC,CC:78:AB:77:FF:BC,300,,CAA-Kenya,caakenya
+5da44402-0000-0000-0000-CC78AB6E059F,Dot-059F | 2019-10-14 12:45,Dot-059F,CC:78:AB:6E:05:9F,300,,CAA-Kenya,caakenya
+5da44552-0000-0000-0000-CC78AB6DFEB1,Dot-FEB1 | 2019-10-14 12:51,Dot-FEB1,CC:78:AB:6D:FE:B1,300,,CAA-Kenya,caakenya
+5da436b4-0000-0000-0000-CC78AB77FE72,Dot-FE72 | 2019-10-14 11:48,Dot-FE72,CC:78:AB:77:FE:72,300,,CAA-Kenya,caakenya
+5d373da8-0000-0000-0000-CC78AB77E9F1,Dot-E9F1 | 2019-07-23 12:00,Dot-E9F1,CC:78:AB:77:E9:F1,300,cocina villa el salvador,NAMA Piloto Solar y Ventilador,namas
+5d373de7-0000-0000-0000-CC78AB77E9F1,Dot-E9F1 | 2019-07-23 12:03,Dot-E9F1,CC:78:AB:77:E9:F1,300,hdkdbsn,NAMA Piloto Solar y Ventilador,namas
+5d5991ed-0000-0000-0000-CC78AB77E9EC,Dot-E9EC | 2019-08-18 12:56,Dot-E9EC,CC:78:AB:77:E9:EC,300,"Caylloma
+Sonia Malcoacha Nina
+control cocina solar
+Codigo Dot-E9EC",NAMA Piloto Solar y Ventilador,namas
+5d62d802-0000-0000-0000-CC78AB77EA80,Dot-EA80 | 2019-08-25 13:47,Dot-EA80,CC:78:AB:77:EA:80,300,"Aurora Villalta, Localidad de Cahualla, Puno, sensor cocina solar",NAMA Piloto Solar y Ventilador,namas
+bbac77b8-0340-49eb-89d3-8668f7b61e83,SLV_011_TS_6,,780000000462C053,480,,Smokeless Village,bamg-01
+555abb06-a47e-409b-9c04-a4728db6ed20,SLV_024_TS_6,,520000000459D753,480,,Smokeless Village,bamg-01
+31e6ee79-4f83-4468-8601-a34172552a32,SLV_008_TS_6,,2600000004237C53,480,,Smokeless Village,bamg-01
+5d7a4727-0000-0000-0000-CC78AB77FAEE,Dot-FAEE | 2019-09-12 16:24,Dot-FAEE,CC:78:AB:77:FA:EE,300,,CAA-Kenya,caakenya
+43d1d5b6-e61d-499e-b703-239a6a567f5a,SLV_003_TS_6,,1F0000000457F453,480,,Smokeless Village,bamg-01
+6746ae45-0232-4ce4-847c-6c92aedda319,SLV_012_TS_6,,C600000004123853,480,,Smokeless Village,bamg-01
+c8d026a3-7735-4f18-bf32-6f2bee79d108,SLV_002_TS_6,,B80000000457C953,480,,Smokeless Village,bamg-01
+4f2bc5d0-aed2-401c-9774-4ef84cb38a1c,SLV_005_TS_6,,5700000004212853,480,,Smokeless Village,bamg-01
+5d89d3aa-0000-0000-0000-CC78AB6E05AF,Dot-05AF | 2019-09-24 11:27,Dot-05AF,CC:78:AB:6E:05:AF,300,,CAA-Kenya,caakenya
+5d89d40b-0000-0000-0000-CC78AB77E32D,Dot-E32D | 2019-09-24 11:29,Dot-E32D,CC:78:AB:77:E3:2D,300,,CAA-Kenya,caakenya
+5d89d098-0000-0000-0000-CC78AB77F9F8,Dot-F9F8 | 2019-09-24 11:13,Dot-F9F8,CC:78:AB:77:F9:F8,300,,CAA-Kenya,caakenya
+4a8f3d55-2f24-40d8-bc1f-f865312dce12,SLV_016_TS_6,,240000000431D453,480,,Smokeless Village,bamg-01
+587de86c-1fd8-480c-ad4f-32facc218a46,SLV_007_TS_6,,5D00000004624A53,480,,Smokeless Village,bamg-01
+5795919a-7127-4cf4-a5ea-b2e0b11143e1,SLV_006_TS_6,,840000000440D453,480,,Smokeless Village,bamg-01
+6429a391-1bf4-493f-b18f-4099d26ac6ae,SLV_015_TS_6,,B7000000041B8F53,480,,Smokeless Village,bamg-01
+934acb7b-6305-4580-8b75-dcd31a41a1db,SLV_010_TS_6,,1E0000000418E053,480,,Smokeless Village,bamg-01
+5594be7c-aebc-462b-9ad1-a16fd55d3fb4,SLV_014_TS_6,,67000000043CA553,480,,Smokeless Village,bamg-01
+ee9f1720-7286-4445-bfb9-7d8f255b1a99,SLV_009_TS_6,,7D0000000452E153,480,,Smokeless Village,bamg-01
+22d8a6ef-46c0-4502-b251-104ca71a5417,SLV_025_TS_6,,EF0000000409B253,480,,Smokeless Village,bamg-01
+668bbe87-4af5-4c40-bc4d-23ec5b1ab121,SLV_020_TS_6,,CF00000004088253,480,,Smokeless Village,bamg-01
+5113c35d-7e66-40c9-9188-cb30ab981acb,SLV_018_TS_6,,3500000004190A53,480,,Smokeless Village,bamg-01
+97322b26-c907-445c-b38c-16f34735c067,SLV_019_TS_6,,54000000041EBB53,480,,Smokeless Village,bamg-01
+1e3f885e-4e07-4cb2-803b-6d8cadb6b5ae,SLV_021_TS_6,,A900000004401253,480,,Smokeless Village,bamg-01
+5d35f096-0000-0000-0000-CC78AB77E9F1,Dot-E9F1 | 2019-07-22 12:20,Dot-E9F1,CC:78:AB:77:E9:F1,300,,NAMA Piloto Solar y Ventilador,namas
+c060a296-ef2f-43f6-a5fe-495be1982944,SLV_013_TS_6,,71000000040C8A53,480,,Smokeless Village,bamg-01
+c6990a4c-1c42-47ac-9678-06c1fe15c1f5,SLV_004_TS_6,,8B00000004597053,480,,Smokeless Village,bamg-01
+1092f0c4-4a48-4520-8160-82b607b60ab3,SLV_017_TS_6,,46000000041B4D53,480,,Smokeless Village,bamg-01
+4d0c4216-332f-4496-a187-c0fc1e01cf5f,SLV_024_TS_5,,520000000459D753,480,,Smokeless Village,bamg-01
+510a5f77-1e10-4e40-84f4-bdcf640901b9,SLV_003_TS_5,,1F0000000457F453,480,,Smokeless Village,bamg-01
+015ee116-b42e-40cb-9605-de6f70a11116,SLV_004_TS_5,,8B00000004597053,480,,Smokeless Village,bamg-01
+4b9359b0-0398-4dd4-97be-6e73c91b3a17,SLV_005_TS_5,,5700000004212853,480,,Smokeless Village,bamg-01
+f822a57d-9f3f-4a96-9b27-b2682d5493cd,SLV_007_TS_5,,5D00000004624A53,480,,Smokeless Village,bamg-01
+0f64d945-5bec-4a71-9c06-cd8c5b86079d,SLV_008_TS_5,,2600000004237C53,480,,Smokeless Village,bamg-01
+5d3a445f-0000-0000-0000-CC78AB77E9F1,Dot-E9F1 | 2019-07-25 19:06,Dot-E9F1,CC:78:AB:77:E9:F1,300,,NAMA Piloto Solar y Ventilador,namas
+5d3d8b8e-0000-0000-0000-CC78AB6E12AD,Dot-12AD | 2019-07-28 06:47,Dot-12AD,CC:78:AB:6E:12:AD,300,"sensor en la casa del señor odelon santos verde para una cocina tradicional, en el cp de yacumali distrito de jivia en la provincia de lauricocha en huanuco",NAMA Piloto Solar y Ventilador,namas
+163f17dc-f6ce-4808-844f-bf4b23b35ba5,SLV_013_TS_5,,71000000040C8A53,480,,Smokeless Village,bamg-01
+5d3dd2e5-0000-0000-0000-CC78AB77F9D8,Dot-F9D8 | 2019-07-28 11:51,Dot-F9D8,CC:78:AB:77:F9:D8,300,el sensor ubicado en la casa de la señora timotea verde lorenzo para la cocina tipo ventilador en el cp de yacumali del distrito de jivia de la provincia de lauricocha en la region huanuco,NAMA Piloto Solar y Ventilador,namas
+5d3dd3fb-0000-0000-0000-CC78AB6E098B,Dot-098B | 2019-07-28 11:53,Dot-098B,CC:78:AB:6E:09:8B,300,sensor instalado en la cocina tradicional en la casa de la señora Tomitea Verde Santos en el CP Yacumali en el Distrito de Jivia Provincia Lauricocha Region Huanuco,NAMA Piloto Solar y Ventilador,namas
+1da8f565-5a0c-48e9-a59d-3d45405692df,SLV_015_TS_5,,B7000000041B8F53,480,,Smokeless Village,bamg-01
+5d441ea6-0000-0000-0000-CC78AB6E0DDC,Dot-0DDC | 2019-08-02 06:28,Dot-0DDC,CC:78:AB:6E:0D:DC,300,sensor instalado en la casa del señor eduardo paucar en la cocina tradicional en el cp chuamba en el distrito de cullhuas en la provincia de huancayo en la region junin,NAMA Piloto Solar y Ventilador,namas
+5f43efed-e4f1-4913-95db-5002268dd4c1,SLV_016_TS_5,,240000000431D453,480,,Smokeless Village,bamg-01
+5c067788-0000-0000-0000-CC78AB77E9EC,3-7-05-02,Dot-E9EC,CC:78:AB:77:E9:EC,300,OHC,MINEM test campaign,galinka29@hotmail.com
+5d442072-0000-0000-0000-CC78AB77FFA9,Dot-FFA9 | 2019-08-02 06:35,Dot-FFA9,CC:78:AB:77:FF:A9,300,"En la casa del sr. Eduardo Simeon, paucar se instala un sensor para la cocina tipo GLP en el anexo chuamba, Distrito Cullhuas, Provincia Huancayo, Region Junin",NAMA Piloto Solar y Ventilador,namas
+5be0724b-0000-0000-0000-CC78AB77FFC7,001-09-mgp,Dot-FFC7,CC:78:AB:77:FF:C7,300,,MINEM test campaign,galinka29@hotmail.com
+5d442ce7-0000-0000-0000-CC78AB6E1090,Dot-1090 | 2019-08-02 07:27,Dot-1090,CC:78:AB:6E:10:90,300,"En la casa de la señora Yulincia canchanya vasquez se instala un sensor en la cocina tipo tradicional en el anexo Chuambas, Distrito Cullhuas,  Provincia Huancayo, Region Junin.",NAMA Piloto Solar y Ventilador,namas
+5d52ef99-0000-0000-0000-CC78AB77E9F1,Dot-E9F1 | 2019-08-13 12:11,Dot-E9F1,CC:78:AB:77:E9:F1,300,sensor instalado en la cocina solar del señor daniel matamet quispe en el cp tantamaco en el distriro de macusani en la provincia de carabaya en la region de puno,NAMA Piloto Solar y Ventilador,namas
+8e94af9f-2ad8-4573-ac10-64fdd6c22779,SLV_020_TS_5,,CF00000004088253,480,,Smokeless Village,bamg-01
+a082491e-1b62-4262-9c6d-51e4f99ffcf9,SLV_009_TS_5,,7D0000000452E153,480,,Smokeless Village,bamg-01
+5d5aa62e-0000-0000-0000-CC78AB77FE60,Dot-FE60 | 2019-08-19 08:36,Dot-FE60,CC:78:AB:77:FE:60,300,"sensor instalado en la casa de la señora victoria maura quico coaguila cp san pedro de camata, distrito de ubinas region moquegua",NAMA Piloto Solar y Ventilador,namas
+5d5aaaef-0000-0000-0000-CC78AB6E0377,Dot-0377 | 2019-08-19 08:57,Dot-0377,CC:78:AB:6E:03:77,300,sensor en cocina solar en la casa de la señora victoria quico coaguila cp camata distrito ubinas region moquegua,NAMA Piloto Solar y Ventilador,namas
+5d5aa71b-0000-0000-0000-CC78AB6E0377,Dot-0377 | 2019-08-19 08:41,Dot-0377,CC:78:AB:6E:03:77,300,sensor instalado en la casa de la señora victoria maura quico coaguila en cp camata distrito ubinas region moquegua,NAMA Piloto Solar y Ventilador,namas
+5d5aa88a-0000-0000-0000-CC78AB77FE4D,Dot-FE4D | 2019-08-19 08:46,Dot-FE4D,CC:78:AB:77:FE:4D,300,sensor instalado en la casa de la señora juana coaguila benegas en la cocina tradicional del cp camata distrito de ubinas region moquegua,NAMA Piloto Solar y Ventilador,namas
+2ebac755-3266-43e4-860f-cf6414ff448f,SLV_014_TS_5,,67000000043CA553,480,,Smokeless Village,bamg-01
+5be1ae93-0000-0000-0000-CC78AB6E0DDC,01-mgp /06/11/18,Dot-0DDC,CC:78:AB:6E:0D:DC,300,,MINEM test campaign,galinka29@hotmail.com
+5be1bbe6-0000-0000-0000-CC78AB6E0377,002 ohc,Dot-0377,CC:78:AB:6E:03:77,300,OHC,MINEM test campaign,olguita
+5be1b1cb-0000-0000-0000-CC78AB6DFD75,01-mgp cocina a gas 06/11/18,Dot-FD75,CC:78:AB:6D:FD:75,300,,MINEM test campaign,galinka29@hotmail.com
+5be1c690-0000-0000-0000-CC78AB6E0DCD,02 MGP cocina tradicional 06 /11/2018,Dot-0DCD,CC:78:AB:6E:0D:CD,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5be2ecba-0000-0000-0000-CC78AB77F23B,03 mgp 07/11/18 kpt mejorada,Dot-F23B,CC:78:AB:77:F2:3B,300,,MINEM test campaign,galinka29@hotmail.com
+5be337b2-0000-0000-0000-CC78AB6E0CE9,06 mgp kpt mejorada 07/11/18,Dot-0CE9,CC:78:AB:6E:0C:E9,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5be339f4-0000-0000-0000-CC78AB77FAE1,06 mgp 07/11/18,,CC:78:AB:77:FA:E1,300,,MINEM test campaign,galinka29@hotmail.com
+5be974fa-0000-0000-0000-CC78AB77FFCC,02-07-mgp,Dot-FFCC,CC:78:AB:77:FF:CC,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5be2ffe7-0000-0000-0000-CC78AB77FE60,04 mgp kpt mejorada 07/11/18,Dot-FE60,CC:78:AB:77:FE:60,300,,MINEM test campaign,galinka29@hotmail.com
+5be33a6e-0000-0000-0000-CC78AB77FAE1,06 mgp 07/11/18,Dot-FAE1,CC:78:AB:77:FA:E1,300,mgp 07/11/18,MINEM test campaign,galinka29@hotmail.com
+5be9a786-0000-0000-0000-CC78AB781FF4,06 04 mgp,Dot-1FF4,CC:78:AB:78:1F:F4,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5be9a7ce-0000-0000-0000-CC78AB77E9B2,06 07 mgp,Dot-E9B2,CC:78:AB:77:E9:B2,300,,MINEM test campaign,galinka29@hotmail.com
+5be31299-0000-0000-0000-CC78AB6E0FF2,03 ohc,Dot-0FF2,CC:78:AB:6E:0F:F2,300,OHC,MINEM test campaign,olguita
+5be98b1a-0000-0000-0000-CC78AB6E1090,02 7 ohc,Dot-1090,CC:78:AB:6E:10:90,300,OHC,MINEM test campaign,olguita
+5beac81d-0000-0000-0000-CC78AB77FFC4,03 mgp,Dot-FFC4,CC:78:AB:77:FF:C4,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5be3058e-0000-0000-0000-CC78AB77E9F1,05 ohc,Dot-E9F1,CC:78:AB:77:E9:F1,300,OHC,MINEM test campaign,olguita
+5be32d81-0000-0000-0000-CC78AB6E050A,05 ohc,Dot-050A,CC:78:AB:6E:05:0A,300,OHC,MINEM test campaign,olguita
+5be99f62-0000-0000-0000-CC78AB6E0551,03 07 ohc,Dot-0551,CC:78:AB:6E:05:51,300,OHC,MINEM test campaign,olguita
+5be2e90e-0000-0000-0000-CC78AB6E12AD,370401,Dot-12AD,CC:78:AB:6E:12:AD,300,,MINEM test campaign,olguita
+82a0b5c4-ed9c-4ab1-92b4-b2649c2e4dde,SLV_018_TS_5,,3500000004190A53,480,,Smokeless Village,bamg-01
+2d401b77-6473-46cf-ab65-39c5d3c5c2d8,SLV_019_TS_5,,54000000041EBB53,480,,Smokeless Village,bamg-01
+5bd33ef0-0000-0000-0000-CC78AB6E0346,minem test biolite,Dot-0346,CC:78:AB:6E:03:46,300,se instalo en la parte interior de la camera,MINEM test campaign,ricpie@gmail.com
+80f6c1d4-7adc-4e7d-8fd7-b7c6353dd948,SLV_025_TS_5,,EF0000000409B253,480,,Smokeless Village,bamg-01
+623ece07-d859-4301-9344-0385d82914f0,SVL_002_TS_5,,B80000000457C953,480,,Smokeless Village,bamg-01
+ca0a48e0-49d2-4858-a713-a9d994d5abad,SLV_006_TS_5,,840000000440D453,480,,Smokeless Village,bamg-01
+d01bb330-87f4-4677-91ac-b7e3fffa25ff,SLV_010-TS_5,,1E0000000418E053,480,,Smokeless Village,bamg-01
+5bf58f46-0000-0000-0000-CC78AB6E0578,3-2-05-05,Dot-0578,CC:78:AB:6E:05:78,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5bf421fd-0000-0000-0000-CC78AB6E1566,3-2-05-02,Dot-1566,CC:78:AB:6E:15:66,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5bf55cd1-0000-0000-0000-CC78AB6DFC50,03-02-05-03,Dot-FC50,CC:78:AB:6D:FC:50,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5bf41a4a-0000-0000-0000-CC78AB77F22C,3-2-05-01,Dot-F22C,CC:78:AB:77:F2:2C,300,,MINEM test campaign,galinka29@hotmail.com
+5bf56a24-0000-0000-0000-CC78AB77FE1F,3-2-05-04,Dot-FE1F,CC:78:AB:77:FE:1F,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5bf55c5a-0000-0000-0000-CC78AB77EA8D,3-7-5-3,Dot-EA8D,CC:78:AB:77:EA:8D,300,,MINEM test campaign,galinka29@hotmail.com
+5bf54425-0000-0000-0000-CC78AB77FCF1,3-7-04-02,Dot-FCF1,CC:78:AB:77:FC:F1,300,,MINEM test campaign,galinka29@hotmail.com
+5bf574b5-0000-0000-0000-CC78AB77F9D8,3-7-5-1,Dot-F9D8,CC:78:AB:77:F9:D8,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5bf58f1c-0000-0000-0000-CC78AB6E0578,3-2-05-05,Dot-0578,CC:78:AB:6E:05:78,300,,MINEM test campaign,galinka29@hotmail.com
+5bf59eb0-0000-0000-0000-CC78AB77FCD5,3-7-05-01,Dot-FCD5,CC:78:AB:77:FC:D5,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5bf58f75-0000-0000-0000-CC78AB6E0FA2,3-7-05-05,Dot-0FA2,CC:78:AB:6E:0F:A2,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5bf55bb4-0000-0000-0000-CC78AB77FE5C,3-2-05-03,Dot-FE5C,CC:78:AB:77:FE:5C,300,OHC,MINEM test campaign,olguita
+5c067616-0000-0000-0000-CC78AB77FAF5,3-7-05-01,Dot-FAF5,CC:78:AB:77:FA:F5,300,OHC,MINEM test campaign,galinka29@hotmail.com
+ca5004cf-3507-4c40-ade6-8d52db713998,SLV_012_TS_5,,C600000004123853,480,,Smokeless Village,bamg-01
+5bd71d20-0000-0000-0000-CC78AB77FFC4,115  3,Dot-FFC4,CC:78:AB:77:FF:C4,300,,MINEM test campaign,galinka29@hotmail.com
+5bf4186c-0000-0000-0000-CC78AB77FE4D,3-2-05-01,Dot-FE4D,CC:78:AB:77:FE:4D,300,OHC,MINEM test campaign,olguita
+5bf566ed-0000-0000-0000-CC78AB6E0526,3-7-05-01,Dot-0526,CC:78:AB:6E:05:26,300,ohc,MINEM test campaign,olguita
+5bf591e8-0000-0000-0000-CC78AB6DF880,3-2-05-05,Dot-F880,CC:78:AB:6D:F8:80,300,OHC,MINEM test campaign,olguita
+5bf572c0-0000-0000-0000-CC78AB6E098B,3-2-05-04,Dot-098B,CC:78:AB:6E:09:8B,300,OHC,MINEM test campaign,olguita
+5bfbe3f7-0000-0000-0000-CC78AB6DFC74,3-2-05-08,Dot-FC74,CC:78:AB:6D:FC:74,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5be98edb-0000-0000-0000-CC78AB77FCBB,05-04 -mgp,Dot-FCBB,CC:78:AB:77:FC:BB,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5be2f869-0000-0000-0000-CC78AB77F59F,04 ohc,Dot-F59F,CC:78:AB:77:F5:9F,300,OHC,MINEM test campaign,olguita
+5bf56bf7-0000-0000-0000-CC78AB77FE58,3-2-05-04,Dot-FE58,CC:78:AB:77:FE:58,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5be07361-0000-0000-0000-CC78AB77FFC7,001-09-mgp,Dot-FFC7,CC:78:AB:77:FF:C7,300,MGP,MINEM test campaign,galinka29@hotmail.com
+5c361b1c-0000-0000-0000-CC78ABADA34F,rp,Dot_A34F,CC:78:AB:AD:A3:4F,300,,,ricpie@gmail.com
+5bf429e0-0000-0000-0000-CC78AB77FCCC,3-2-05-02,Dot-FCCC,CC:78:AB:77:FC:CC,300,OHC,MINEM test campaign,olguita
+270ab270-b64b-41e9-88ed-6f61aca26cce,SLV_017_TS_5,,46000000041B4D53,480,,Smokeless Village,bamg-01
+2e8e5f50-b90c-4c6b-bc3f-3fd8cd1c6d47,SLV_021_TS_5,,A900000004401253,480,,Smokeless Village,bamg-01
+8b97e473-d7c5-49f8-9c70-1bb4508a7354,SLV_011_TS_5,,780000000462C053,480,,Smokeless Village,bamg-01
+5c067cdf-0000-0000-0000-CC78AB77EA80,3-7-05-02,Dot-EA80,CC:78:AB:77:EA:80,300,,MINEM test campaign,galinka29@hotmail.com
+b4450a7e-774e-4b2d-9ecf-e8becb35c931,SLV_024_TS_4,,520000000459D753,480,,Smokeless Village,bamg-01
+74ffa472-9461-4315-a1c8-bcf9abcc612e,SLV_002_TS_4,,B80000000457C953,480,,Smokeless Village,bamg-01
+5c0677d4-0000-0000-0000-CC78AB77FFA9,3-7-05-02,Dot-FFA9,CC:78:AB:77:FF:A9,300,OHC,MINEM test campaign,galinka29@hotmail.com
+5bf5732a-0000-0000-0000-CC78AB77FFC7,3-7-05-04,Dot-FFC7,CC:78:AB:77:FF:C7,300,ohc,MINEM test campaign,olguita
+6a7e5732-7bd7-4d07-9441-3401aef4ff5e,SLV_003_TS_4,,1F0000000457F453,480,,Smokeless Village,bamg-01
+5be1bc29-0000-0000-0000-CC78AB6E0DBC,Dot-0DBC | 2018-11-06 11:06,Dot-0DBC,CC:78:AB:6E:0D:BC,300,OHC,MINEM test campaign,olguita
+5d931c98-0000-0000-0000-CC78AB77F721,Dot-F721 | 2019-10-01 12:28,Dot-F721,CC:78:AB:77:F7:21,300,,CAA-Kenya,caakenya
+5cdeecb9-0000-0000-0000-CC78AB77FE5C,,Dot-FE5C,CC:78:AB:77:FE:5C,300,hhhhgg,MINEM test campaign,ricpie@gmail.com
+5cdeec91-0000-0000-0000-CC78ABADA34F,,Dot_A34F,CC:78:AB:AD:A3:4F,300,ghhj,MINEM test campaign,ricpie@gmail.com
+5cdeecdb-0000-0000-0000-CC78ABADA34F,daniella,Dot_A34F,CC:78:AB:AD:A3:4F,300,,MINEM test campaign,ricpie@gmail.com
+5cdeecef-0000-0000-0000-CC78AB77FE5C,DaniellaTest,Dot-FE5C,CC:78:AB:77:FE:5C,300,,MINEM test campaign,ricpie@gmail.com
+5cdeecf3-0000-0000-0000-CC78ABADA34F,hghh,Dot_A34F,CC:78:AB:AD:A3:4F,300,,MINEM test campaign,ricpie@gmail.com
+5cdeef19-0000-0000-0000-CC78AB77FE5C,test5,Dot-FE5C,CC:78:AB:77:FE:5C,3,,,ricpie@gmail.com
+5cdeef56-0000-0000-0000-CC78AB77FE5C,tszt4,Dot-FE5C,CC:78:AB:77:FE:5C,2,,MINEM test campaign,ricpie@gmail.com
+5cdeeed1-0000-0000-0000-CC78AB77FE5C,trst4,Dot-FE5C,CC:78:AB:77:FE:5C,300,,MINEM test campaign,ricpie@gmail.com
+39f85c12-41d7-49c7-acbf-397336406ac1,SLV_004_TS_4,,8B00000004597053,480,,Smokeless Village,bamg-01
+c980a2ab-2700-4a6a-9c3c-8503983ef4be,SLV_005_TS_4,,5700000004212853,480,,Smokeless Village,bamg-01
+1e51d7a1-6446-45b4-9f5a-43b13fadc251,SLV_006_TS_4,,840000000440D453,480,,Smokeless Village,bamg-01
+8c54d25f-5e2a-4ab3-8046-2e56bd4953c0,SLV_007_TS_4,,5D00000004624A53,480,,Smokeless Village,bamg-01
+7ec3d017-37d4-44c4-886d-0ff9d545c0fe,SLV_010_TS_4,,1E0000000418E053,480,,Smokeless Village,bamg-01
+5bf55c06-0000-0000-0000-CC78AB78010A,3-2-05-03,Dot-010A,CC:78:AB:78:01:0A,300,OHC,MINEM test campaign,olguita
+37c1693b-8610-4120-8e4b-81bc50c570b9,SLV_011_TS_4,,780000000462C053,480,,Smokeless Village,bamg-01
+e7e453dd-a516-4855-b809-c4e9f1f1b683,SLV_013_TS_4,,71000000040C8A53,480,,Smokeless Village,bamg-01
+0bc9e0b6-b47d-464b-ac67-9ad7d167c7cd,SLV_016_TS_4,,240000000431D453,480,,Smokeless Village,bamg-01
+d3d8cebe-3859-431f-a0ff-2e4d738e2316,SLV_017_TS_4,,46000000041B4D53,480,,Smokeless Village,bamg-01
+f1b3a674-8a17-443f-85a2-c4c719c84538,SLV_008_TS_4,,2600000004237C53,480,,Smokeless Village,bamg-01
+1c9f46b0-6e80-4bfd-b86e-665cfea02dbd,SLV_009_TS_4,,7D0000000452E153,480,,Smokeless Village,bamg-01
+2c799598-c5d4-4500-b821-7de9329d2549,SLV_012_TS_4,,C600000004123853,480,,Smokeless Village,bamg-01
+5cffe942-0000-0000-0000-A0E6F86DEAA5,test,Dot_EAA5,A0:E6:F8:6D:EA:A5,300,,MINEM test campaign,admin
+5cdeed4f-0000-0000-0000-CC78ABADA34F,Dot-A34F | 2019-12-17 23:01:35,Dot-A34F,CC:78:AB:AD:A3:4F,300,,MINEM test campaign,ricpie@gmail.com
+72ccca13-b243-468f-9e12-74f56fd2ce4d,SLV_014_TS_4,,67000000043CA553,480,,Smokeless Village,bamg-01
+709bb092-5b07-43e4-b9ed-c6a0116682fa,SLV_015_TS_4,,B7000000041B8F53,480,,Smokeless Village,bamg-01
+ea7be7c6-8dd7-421d-babe-48dfafb911fd,SLV_018_TS_4,,3500000004190A53,480,,Smokeless Village,bamg-01
+5f6de1db-3a83-479c-a2a5-9a602dc1541f,SLV_019_TS_4,,54000000041EBB53,480,,Smokeless Village,bamg-01
+0525ec5e-f10d-468d-a1ba-eff0059218ea,SLV_020_TS_4,,CF00000004088253,480,,Smokeless Village,bamg-01
+992ba6c4-b664-4a53-87ba-6feda6f2d7b8,SL_021_TS_4,,A900000004401253,480,,Smokeless Village,bamg-01
+fb1b3b2a-1e36-453b-8ad6-93f36ab22c04,SLV_)25_TS_4,,EF0000000409B253,480,,Smokeless Village,bamg-01
+1d5a954d-73f9-4301-9ef8-5b8e1d118fd3,SLV_09_TS_3,,7D0000000452E153,480,,Smokeless Village,bamg-01
+c2716873-b80b-4192-8776-6de6919edfc4,SLV_12_TS_3,,C600000004123853,480,,Smokeless Village,bamg-01
+25a52ae9-b175-4c7f-b150-ae6da6ddc634,SLV_14_TS_3,,67000000043CA553,480,,Smokeless Village,bamg-01
+600f874d-add3-4090-b7ca-5efbc265efc3,SLV_18_TS_3,,3500000004190A53,480,,Smokeless Village,bamg-01
+906ea4d7-7ddf-42ff-9538-af78f5e97f80,SLV_19_TS_3,,54000000041EBB53,480,,Smokeless Village,bamg-01
+a405bc90-2895-4826-8eb0-6767d059b0a0,SLV_20_TS_3,,CF00000004088253,480,,Smokeless Village,bamg-01
+3997222f-2702-4d58-ae93-733df4f3c892,SLV_21_TS_3,,A900000004401253,480,,Smokeless Village,bamg-01
+03bd0be9-de61-4ae4-b38a-e32348450049,SLV_25_TS_3,,EF0000000409B253,480,,Smokeless Village,bamg-01
+5114086a-c56b-478e-9d15-337337e747bb,SLV_17_TS_3,,46000000041B4D53,480,,Smokeless Village,bamg-01
+7842f464-6a13-4159-8190-94971ddccd04,SLV_03_TS_3,,1F0000000457F453,480,,Smokeless Village,bamg-01
+beb5010c-18a8-4ef2-8fb2-57ad58561ae3,SLV_04_TS_3,,8B00000004597053,480,,Smokeless Village,bamg-01
+2b2b0abb-d474-4541-b5a9-e0a457880a46,SLV_05_TS_3,,5700000004212853,480,,Smokeless Village,bamg-01
+512fe3bc-ea1b-4096-9318-e62d331adaed,SLV_06_TS_3,,840000000440D453,480,,Smokeless Village,bamg-01
+678ec765-0ba2-443b-870b-e17e465c8bdb,SLV_07_TS_3,,5D00000004624A53,480,,Smokeless Village,bamg-01
+766b9bc1-e904-4d2b-b0d6-d748c43aae9a,SLV_08_TS_3,,2600000004237C53,480,,Smokeless Village,bamg-01
+39acd516-89c1-435e-888a-70422d03f4bb,SLV_10_TS_3,,1E0000000418E053,480,,Smokeless Village,bamg-01
+093a2b7e-4f94-478e-82ca-426a85a047fd,SLV_11_TS_3,,780000000462C053,480,,Smokeless Village,bamg-01
+12cd2fa0-47e5-46fe-bbd9-2d86ebdd73d1,SLV_15_TS_3,,B7000000041B8F53,480,,Smokeless Village,bamg-01
+7bbfe8ba-5293-4817-bff9-67820794a89c,SLV_16_TS_3,,240000000431D453,480,,Smokeless Village,bamg-01
+b1e2f74b-d850-4cc7-b5f1-0f3e0e2e3c25,SLV_24_TS_3,,520000000459D753,480,,Smokeless Village,bamg-01
+bd853798-5b45-4b52-aabe-e42d0b454a6e,SLV_02_TS_3,,B80000000457C953,480,,Smokeless Village,bamg-01
+1273c26f-d97c-47b0-8a38-fda6c67b18be,SLV_03_TS_2,,1F0000000457F453,480,,Smokeless Village,bamg-01
+185b66ca-d8f8-4f44-b2e4-4545e9d58877,SLV_04_TS_2,,8B00000004597053,480,,Smokeless Village,bamg-01
+bb14999e-2a1f-4dcd-b159-0e9622aca57e,SLV_06_TS_2,,840000000440D453,480,,Smokeless Village,bamg-01
+95bc5e98-e3b4-4f7f-b2b6-23a1b0deef2e,SLV_08_TS_2,,2600000004237C53,480,,Smokeless Village,bamg-01
+d6ff9513-13f6-488c-984c-5ceb41a37b1b,SLV_10_TS_2,,1E0000000418E053,480,,Smokeless Village,bamg-01
+8036483a-f685-4928-ba64-dafcae2ab1ff,SLV_08_TS_2.csv 2,,360000000440D253,480,,Smokeless Village,bamg-01
+4afd485b-53c9-4f8c-896b-ebba40670887,SLV_17_TS_2,,46000000041B4D53,480,,Smokeless Village,bamg-01
+f5f79a66-57f5-4392-acb5-fc93737904ee,SLV_02_TS_2,,B80000000457C953,480,,Smokeless Village,bamg-01
+4a3a6ed6-2310-4e42-8a24-4e1daad41a85,SLV_24_TS_2,,520000000459D753,480,,Smokeless Village,bamg-01
+7363eae9-2321-43cd-b8f1-f173db4c260a,SLV_11_TS_2,,780000000462C053,480,,Smokeless Village,bamg-01
+5f5907ac-741a-45a9-b41a-539039d5c9a8,SLV_20_TS_2,,CF00000004088253,480,,Smokeless Village,bamg-01
+810ff6db-4bab-4918-acc0-f3361115a127,SLV_07_TS_2,,5D00000004624A53,480,,Smokeless Village,bamg-01
+2d248ede-b64d-47c2-98a1-16c31ee78ad0,SLV_09_TS_2,,7D0000000452E153,480,,Smokeless Village,bamg-01
+9d1ff952-ffbf-4134-85a7-8da59df7470b,SLV_12_TS_2,,C600000004123853,480,,Smokeless Village,bamg-01
+a9114eec-fe89-48d2-bfdb-8bcb3216fb8a,SLV_14_TS_2,,67000000043CA553,480,,Smokeless Village,bamg-01
+fd1383bd-00ca-43f3-b50c-66ab0ff07d97,SLV_15_TS_2,,B7000000041B8F53,480,,Smokeless Village,bamg-01
+cf38a438-f6d6-480f-be25-4cf40d05dc70,SLV_16_TS_2,,240000000431D453,480,,Smokeless Village,bamg-01
+bbae6cf4-80f8-42e7-9b01-a03aaf7d58c7,SLV_18_TS_2,,3500000004190A53,480,,Smokeless Village,bamg-01
+cda15e42-6cb2-40b8-83f6-d9f905700a7c,SLV_19_TS_2,,54000000041EBB53,480,,Smokeless Village,bamg-01
+cc065a7d-bb43-4379-a373-a7df43a4a380,SLV_21_TS_2,,A900000004401253,480,,Smokeless Village,bamg-01
+4020f525-a20f-43d1-a306-471ca275efca,SLV_25_TS_2,,EF0000000409B253,480,,Smokeless Village,bamg-01
+96cdc19d-8975-4759-8aa3-79167159dac7,SLV_05_TS_2,,5700000004212853,480,,Smokeless Village,bamg-01
+73743157-99e7-40ff-bbc5-c1506ecd4408,SLV_16_TS_1,,240000000431D453,480,,Smokeless Village,bamg-01
+c426b379-dcf7-413f-bfff-4911b1c16f7d,SLV_02_TS_1,,B80000000457C953,480,,Smokeless Village,bamg-01
+2d8503a9-e881-4776-b53e-845d033bb1b9,SLV_17_TS_1,,46000000041B4D53,480,,Smokeless Village,bamg-01
+6f9debc8-5457-49b8-af89-630143dae2b3,SLV_03_TS_1,,1F0000000457F453,480,,Smokeless Village,bamg-01
+632067ab-64cd-4dcf-a69c-1c00568b500a,SLV_04_TS_1,,8B00000004597053,480,,Smokeless Village,bamg-01
+5d938059-0000-0000-0000-CC78AB77E9B2,Dot-E9B2 | 2019-10-01 11:33,Dot-E9B2,CC:78:AB:77:E9:B2,300,,NAMA Piloto Solar y Ventilador,namas
+64420fd2-89be-47c1-9679-8ec4a6408f4e,SLV_012_TS_6AC,,C600000004123853,480,,Smokeless Village,bamg-01
+5def381a-0000-0000-0000-806FB063584D,Dot-584D | 2019-12-10 14:15,Dot-584D,80:6F:B0:63:58:4D,60,14：28,Smokeless Village,bamg-01
+5d938273-0000-0000-0000-CC78AB78010A,Dot-010A 111105,Dot-010A san felipe,CC:78:AB:78:01:0A,300,"111105
+Davila Casternoque Olga cocina A leña",NAMA Piloto Solar y Ventilador,namas
+5d94f403-0000-0000-0000-CC78AB77E9B2,Dot-E9B2 111105,Dot-E9B2 san felipe,CC:78:AB:77:E9:B2,300,San Felipe,NAMA Piloto Solar y Ventilador,namas
+5d952ac1-0000-0000-0000-CC78AB6E0DBC,Dot-0DBC | 2019-10-02 17:54,Dot-0DBC,CC:78:AB:6E:0D:BC,300,,NAMA Piloto Solar y Ventilador,namas
+5d95eabb-0000-0000-0000-CC78AB6E0578,Dot-0578 | 2019-10-03 07:33,Dot-0578,CC:78:AB:6E:05:78,300,,NAMA Piloto Solar y Ventilador,namas
+10d7d696-4dd0-44ca-9581-f596eb814e6a,SL_021_TS_4,,A900000004401253,480,,Smokeless Village,bamg-01
+e7f73d9b-3157-4b53-b2cf-806d768ff88f,SLV_)25_TS_4,,EF0000000409B253,480,,Smokeless Village,bamg-01
+1820caa7-c3a4-4c23-b82a-f603d1d261b7,SLV_02_TS_1,,B80000000457C953,480,,Smokeless Village,bamg-01
+4d94ba11-0877-476a-aac5-d6bd7eb865b3,SLV_03_TS_1,,1F0000000457F453,480,,Smokeless Village,bamg-01
+87250778-237a-44be-a093-9c0c7127638a,SLV_03_TS_2,,1F0000000457F453,480,,Smokeless Village,bamg-01
+7933c582-9b25-4032-84ac-ce21c8a97e65,SLV_03_TS_3,,1F0000000457F453,480,,Smokeless Village,bamg-01
+68679ad3-a1c1-4264-bd79-22a17e64eaff,SLV_003_TS_4,,1F0000000457F453,480,,Smokeless Village,bamg-01
+eb9400b6-8fcc-40d2-b131-12172fbba00c,SLV_003_TS_5,,1F0000000457F453,480,,Smokeless Village,bamg-01
+785ef19e-ea8a-4260-989d-8cc36782a553,SLV_003_TS_6,,1F0000000457F453,480,,Smokeless Village,bamg-01
+5d562749-0000-0000-0000-CC78AB77EA80,Dot-EA80 | 2019-08-15 22:47,Dot-EA80,CC:78:AB:77:EA:80,300,hhjj,NAMA Piloto Solar y Ventilador,namas
+5d58548a-0000-0000-0000-CC78AB77E9B2,Dot-E9B2 | 2019-08-17 14:24,Dot-E9B2,CC:78:AB:77:E9:B2,300,"cocina tradicional, Metardo Ojanama, Localidad Canayo, San Martin",NAMA Piloto Solar y Ventilador,namas
+5d5853f3-0000-0000-0000-CC78AB78010A,Dot-010A | 2019-08-17 14:21,Dot-010A,CC:78:AB:78:01:0A,300,"Cocina tradicional, Olga Davila Casternoque, localidad San felipe, Loreto. Se movio pilas.",NAMA Piloto Solar y Ventilador,namas
+5d405e31-0000-0000-0000-CC78AB6E0526,Dot-0526 | 2019-07-30 10:10,Dot-0526,CC:78:AB:6E:05:26,300,censor de cosina solar familia 1,NAMA Piloto Solar y Ventilador,namas
+5d405ff2-0000-0000-0000-CC78AB77FCD5,Dot-FCD5 | 2019-07-30 10:18,Dot-FCD5,CC:78:AB:77:FC:D5,300,cocina tradicional o fogón familia 1,NAMA Piloto Solar y Ventilador,namas
+5d4066ea-0000-0000-0000-CC78AB77F22C,Dot-F22C | 2019-07-30 10:48,Dot-F22C,CC:78:AB:77:F2:2C,300,cocina a glp familia 1,NAMA Piloto Solar y Ventilador,namas
+5d4071e7-0000-0000-0000-CC78AB6DF880,Dot-F880 | 2019-07-30 11:35,Dot-F880,CC:78:AB:6D:F8:80,300,cocina tradicional o fogón(mejorada),NAMA Piloto Solar y Ventilador,namas
+5d407175-0000-0000-0000-CC78AB6E050A,Dot-050A | 2019-07-30 11:33,Dot-050A,CC:78:AB:6E:05:0A,300,cocona solar familia 2,NAMA Piloto Solar y Ventilador,namas
+5d448b3f-0000-0000-0000-CC78AB77FCE0,Dot-FCE0 | 2019-08-02 14:12,Dot-FCE0,CC:78:AB:77:FC:E0,300,cocina tradicional de Samuel Urquia Arimuya,NAMA Piloto Solar y Ventilador,namas
+5d448bc2-0000-0000-0000-CC78AB77FCE0,Dot-FCE0 | 2019-08-02 14:14,Dot-FCE0,CC:78:AB:77:FC:E0,300,cocina tradicional de Segundo Silvano Macahuachi,NAMA Piloto Solar y Ventilador,namas
+5d448c10-0000-0000-0000-CC78AB77FCBB,Dot-FCBB | 2019-08-02 14:15,Dot-FCBB,CC:78:AB:77:FC:BB,300,"cocina con ventilador, Segundo Silvano Macahuachi",NAMA Piloto Solar y Ventilador,namas
+5d4602b9-0000-0000-0000-CC78AB6E0346,Dot-0346 | 2019-08-03 16:54,Dot-0346,CC:78:AB:6E:03:46,300,"Griseria de la Cruz Cabrera
+control cocina tradicional",NAMA Piloto Solar y Ventilador,namas
+5d7a002c-0000-0000-0000-CC78AB780147,Dot-0147 | 2019-09-12 11:13,Dot-0147,CC:78:AB:78:01:47,300,,CAA-Kenya,caakenya
+5d7a0a7d-0000-0000-0000-CC78AB6E0DEF,Dot-0DEF | 2019-09-12 12:05,Dot-0DEF,CC:78:AB:6E:0D:EF,300,,CAA-Kenya,caakenya
+5d7a09d0-0000-0000-0000-CC78AB6E0DEF,Dot-0DEF | 2019-09-12 12:01,Dot-0DEF,CC:78:AB:6E:0D:EF,300,,CAA-Kenya,caakenya
+5d7a0c38-0000-0000-0000-CC78AB6E0DEF,Dot-0DEF | 2019-09-12 12:12,Dot-0DEF,CC:78:AB:6E:0D:EF,300,,CAA-Kenya,caakenya
+5d7a01fa-0000-0000-0000-CC78AB77FF8D,Dot-FF8D | 2019-09-12 11:28,Dot-FF8D,CC:78:AB:77:FF:8D,300,,CAA-Kenya,caakenya
+5d7a0b19-0000-0000-0000-CC78AB6E0DEF,Dot-0DEF | 2019-09-12 12:07,Dot-0DEF,CC:78:AB:6E:0D:EF,300,,CAA-Kenya,caakenya
+5d7a0b73-0000-0000-0000-CC78AB780147,Dot-0147 | 2019-09-12 12:09,Dot-0147,CC:78:AB:78:01:47,300,,CAA-Kenya,caakenya
+5d7a0d7f-0000-0000-0000-CC78AB6E0DEF,Dot-0DEF | 2019-09-12 12:17,Dot-0DEF,CC:78:AB:6E:0D:EF,300,,CAA-Kenya,caakenya
+5d7a0bf4-0000-0000-0000-CC78AB780147,Dot-0147 | 2019-09-12 12:11,Dot-0147,CC:78:AB:78:01:47,300,,CAA-Kenya,caakenya
+efb5eda4-d071-4c7a-825b-4eab406c922d,SLV_024_LPG_6,,6D00000004542F53,480,,Smokeless Village,bamg-01
+a701a14e-e571-4242-9952-d88388fb7f7a,SLV_014_LPG_4,,8800000004321853,480,,Smokeless Village,bamg-01
+89e9f655-bbcb-4de4-89f7-844b99ef03ee,SLV_011_LPG_6,,AB0000000453A353,480,,Smokeless Village,bamg-01
+5d7a4ecf-0000-0000-0000-CC78AB6E0FAE,Dot-0FAE | 2019-09-12 16:56,Dot-0FAE,CC:78:AB:6E:0F:AE,300,,CAA-Kenya,caakenya
+f26462a1-a3bc-49a9-9315-03f735e97f31,SLV_008_LPG_6,,6F0000000462E853,480,,Smokeless Village,bamg-01
+5d7a5ff1-0000-0000-0000-CC78AB6E05E7,Dot-05E7 | 2019-09-12 18:10,Dot-05E7,CC:78:AB:6E:05:E7,300,,CAA-Kenya,caakenya
+5d7b3499-0000-0000-0000-CC78AB77FCEC,Dot-FCEC | 2019-09-13 09:16,Dot-FCEC,CC:78:AB:77:FC:EC,300,,CAA-Kenya,caakenya
+5d7b4756-0000-0000-0000-CC78AB6E0DEF,Dot-0DEF | 2019-09-13 10:36,Dot-0DEF,CC:78:AB:6E:0D:EF,300,,CAA-Kenya,caakenya
+70ece7ed-a9ff-4760-8f9d-bc73777108ae,SLV_003_LPG_6,,030000000420DD53,480,,Smokeless Village,bamg-01
+5d7a4e8b-0000-0000-0000-CC78AB77F9F8,Dot-F9F8 | 2019-09-12 16:55,Dot-F9F8,CC:78:AB:77:F9:F8,300,,CAA-Kenya,caakenya
+5d7a458c-0000-0000-0000-CC78AB6E0FAE,Dot-0FAE | 2019-09-12 16:16,Dot-0FAE,CC:78:AB:6E:0F:AE,300,,CAA-Kenya,caakenya
+f666af21-76b2-4fb7-9b41-924b7e9d018a,SLV_012_LPG_6,,470000000461A653,480,,Smokeless Village,bamg-01
+4ddd92e7-1f28-4d2d-8083-940cf4d9783a,SLV_001_LPG_6,,4B00000004598653,480,,Smokeless Village,bamg-01
+5d7fbaef-0000-0000-0000-CC78AB6E0CA2,Dot-0CA2 | 2019-09-16 19:33,Dot-0CA2,CC:78:AB:6E:0C:A2,300,,CAA-Kenya,caakenya
+4d858599-5204-4cca-9d5c-a8fcd387cefa,SLV_002_LPG_6,,0B00000004484453,480,,Smokeless Village,bamg-01
+05938312-f96c-4921-a635-5b50614568b3,SLV_005_LPG_6,,6C00000004578153,480,,Smokeless Village,bamg-01
+5d8223d3-0000-0000-0000-CC78AB77FCDB,Dot-FCDB | 2019-09-18 15:30,Dot-FCDB,CC:78:AB:77:FC:DB,300,,CAA-Kenya,caakenya
+5d81fcf5-0000-0000-0000-CC78AB6DFFC4,Dot-FFC4 | 2019-09-18 12:45,Dot-FFC4,CC:78:AB:6D:FF:C4,300,,CAA-Kenya,caakenya
+5d80e7fd-0000-0000-0000-CC78AB6E0CA2,Dot-OCA2 | 2019-09-17 17:04,Dot-OCA2,CC:78:AB:6E:0C:A2,300,,CAA-Kenya,caakenya
+5d81fbd3-0000-0000-0000-CC78AB6E0FAE,Dot-0FAE | 2019-09-18 12:40,Dot-0FAE,CC:78:AB:6E:0F:AE,300,rubber,CAA-Kenya,caakenya
+5d8223d2-0000-0000-0000-CC78AB6E09B4,Dot-09B4 | 2019-09-18 15:30,Dot-09B4,CC:78:AB:6E:09:B4,300,,CAA-Kenya,caakenya
+5d7b999b-0000-0000-0000-CC78AB6E0CA2,Dot-0CA2 | 2019-09-13 16:28,Dot-0CA2,CC:78:AB:6E:0C:A2,300,,CAA-Kenya,caakenya
+5d81fc2e-0000-0000-0000-CC78AB6E0DEF,Dot-0DEF | 2019-09-18 12:42,Dot-0DEF,CC:78:AB:6E:0D:EF,300,u clamp,CAA-Kenya,caakenya
+5d822432-0000-0000-0000-CC78AB6E09B4,Dot-09B4 | 2019-09-18 15:33,Dot-09B4,CC:78:AB:6E:09:B4,300,,CAA-Kenya,caakenya
+5d822488-0000-0000-0000-CC78AB77FCDB,Dot-FCDB | 2019-09-18 15:34,Dot-FCDB,CC:78:AB:77:FC:DB,300,,CAA-Kenya,caakenya
+5d7a45f8-0000-0000-0000-CC78AB77FCFF,Dot-FCFF | 2019-09-12 16:16,Dot-FCFF,CC:78:AB:77:FC:FF,302,,CAA-Kenya,caakenya
+87dec69b-0fd7-45e8-9569-545863b66a82,SLV_016_LPG_6,,530000000408D453,480,,Smokeless Village,bamg-01
+33eb4c51-741f-4575-941a-54c007297489,SLV_007_LPG_6,,1500000004183A53,480,,Smokeless Village,bamg-01
+dce7cd67-3f43-4d3b-872a-0cde386c6b10,SLV_006_LPG_6,,7F00000004243053,480,,Smokeless Village,bamg-01
+929c15d6-46a4-4b95-8a74-93cbdd78bbcf,SLV_015_LPG_6,,FA00000004190053,480,,Smokeless Village,bamg-01
+eb0f2b90-a8b8-4a5f-9057-5327cc8f95bd,SLV_010_LPG_6,,CD000000041B3353,480,,Smokeless Village,bamg-01
+5d5ef13d-c5d2-406e-92d3-ae35b74738ad,SLV_023_LPG_6,,E00000000418DE53,480,,Smokeless Village,bamg-01
+3e30691e-2a90-41dd-8f7b-05c57b7237e3,SLV_014_LPG_6,,8800000004321853,480,,Smokeless Village,bamg-01
+cfbd3ff5-7407-4840-97ec-24f43e294ef1,SLV_009_LPG_6,,DE00000004089F53,480,,Smokeless Village,bamg-01
+4d2e1682-0788-44b0-80c2-4799b1ec9204,SLV_025_LPG_6,,400000000408DA53,480,,Smokeless Village,bamg-01
+4ddb5e28-44e4-4039-bc38-033ac8dada15,SLV_020_LPG_6,,9400000004688F53,480,,Smokeless Village,bamg-01
+55bd2728-8884-4892-916a-239b3b3a9023,SLV_018_LPG_6,,E7000000043F2A53,480,,Smokeless Village,bamg-01
+976fdcb9-aa76-403b-aeee-5e2e76e47a5d,SLV_019_LPG_6,,F40000000468F453,480,,Smokeless Village,bamg-01
+0f793b03-3d5d-49ed-9afc-a0eebb5b2ddc,SLV_022_LPG_6,,E500000004245353,480,,Smokeless Village,bamg-01
+78d65abc-b327-40b0-be13-027fb4a11348,SLV_021_LPG_6,,2F0000000423B553,480,,Smokeless Village,bamg-01
+e6242c1f-326f-4b76-b1dc-d735946e8a6b,SLV_013_LPG_6,,A8000000043CAF53,480,,Smokeless Village,bamg-01
+9d55b693-9075-4fec-83bb-8edbf30077f8,SLV_004_LPG_6,,6A00000004182553,480,,Smokeless Village,bamg-01
+53de1c30-2088-482b-8a31-b32b55ade36d,SLV_017_LPG_6,,E80000000441DC53,480,,Smokeless Village,bamg-01
+7f93b51d-c209-469a-aacf-e9fc155c260a,SLV_024_LPG_5,,6D00000004542F53,480,,Smokeless Village,bamg-01
+5f71db60-c32c-4257-9863-effced578475,SLV_003_LPG_5,,030000000420DD53,480,,Smokeless Village,bamg-01
+6f4be85d-b9b2-4be8-9849-df8c402cf65e,SLV_004_LPG_5,,6A00000004182553,480,,Smokeless Village,bamg-01
+cc480ba2-0d09-4edb-91d0-8cf98b416310,SLV_005_LPG_5,,6C00000004578153,480,,Smokeless Village,bamg-01
+e181cc3e-e2bf-4654-8102-1a3c5f34499d,SLV_007_LPG_5,,1500000004183A53,480,,Smokeless Village,bamg-01
+83bc4774-3809-4e61-be7e-8c05a0e9df48,SLV_008_LPG_5,,6F0000000462E853,480,,Smokeless Village,bamg-01
+0a41a941-490a-465f-bfc6-42b59f2fc001,SLV_013_LPG_5,,A8000000043CAF53,480,,Smokeless Village,bamg-01
+a50d8742-955f-4625-976b-06c67172f06a,SLV_015_LPG_5,,FA00000004190053,480,,Smokeless Village,bamg-01
+e54349b2-bd44-4a72-ba51-0bbd1f0d2996,SLV_016_LPG_5,,530000000408D453,480,,Smokeless Village,bamg-01
+4cbad4d8-e31e-4ddd-b20e-ff24efbe77b3,SLV_020_LPG_5,,9400000004688F53,480,,Smokeless Village,bamg-01
+9d697a45-9b49-4f26-a0e1-e14ee25c22c6,SLV_009_LPG_5,,DE00000004089F53,480,,Smokeless Village,bamg-01
+ac8eb896-8e00-44e9-b76d-730dc03875b8,SLV_014_LPG_5,,8800000004321853,480,,Smokeless Village,bamg-01
+a0b8b287-4838-416c-a157-1854ff9dc426,SLV_018_LPG_5,,E7000000043F2A53,480,,Smokeless Village,bamg-01
+277d4e7d-127c-47ab-ba14-317e7d864df4,SLV_019_LPG_5,,F40000000468F453,480,,Smokeless Village,bamg-01
+a39e535f-d939-41bd-95a0-b0548c3ad794,SLV_025_LPG_5,,400000000408DA53,480,,Smokeless Village,bamg-01
+e9e91aa1-e6a2-463a-a4a4-51f085906eb8,SLV_002_LPG_5,,0B00000004484453,480,,Smokeless Village,bamg-01
+390389f9-3310-4280-b352-490b991ef889,SLV_006_LPG_5,,7F00000004243053,480,,Smokeless Village,bamg-01
+3da23e77-02b8-41fb-8253-e96bb3a295c9,SLV_010_LPG_5,,CD000000041B3353,480,,Smokeless Village,bamg-01
+ce1cec2d-e0f7-41b3-b7cb-0ab9110a9b90,SLV_012_LPG_5,,470000000461A653,480,,Smokeless Village,bamg-01
+3c975b05-1a0f-4e4a-be91-660781020c23,SLV_017_LPG_5,,E80000000441DC53,480,,Smokeless Village,bamg-01
+f9cae3f7-acce-48fb-a8a8-0f46ba856dda,SLV_021_LPG_5,,2F0000000423B553,480,,Smokeless Village,bamg-01
+6f29d33d-4c41-4c00-912c-c6953ea8bfed,SLV_022_LPG_5,,E500000004245353,480,,Smokeless Village,bamg-01
+13c03540-d028-4a68-8c99-9dc6fbf8bdd6,SLV_023_LPG_5,,E00000000418DE53,480,,Smokeless Village,bamg-01
+718f327d-9e06-4917-b7bd-8cb21e4563ab,SLV_024_LPG_4,,6D00000004542F53,480,,Smokeless Village,bamg-01
+28b74992-ad96-43a8-b12e-71ef72f6d1c0,SLV_002_LPG_4,,0B00000004484453,480,,Smokeless Village,bamg-01
+a5090c74-5191-4dd5-b3f7-aee4cb589048,SLV_003_LPG_4,,030000000420DD53,480,,Smokeless Village,bamg-01
+95aec4c9-4301-422e-8f31-417074b0fd98,SLV_004_LPG_4,,6A00000004182553,480,,Smokeless Village,bamg-01
+d256b903-af22-4eb8-b8d9-89b6a4963537,SLV_005_LPG_4,,6C00000004578153,480,,Smokeless Village,bamg-01
+b0fab875-90d0-4ddf-b7ec-fa284864bf68,SLV_006_LPG_4,,7F00000004243053,480,,Smokeless Village,bamg-01
+5da44069-0000-0000-0000-CC78AB77FE3E,Dot-FE3E | 2019-10-14 12:29,Dot-FE3E,CC:78:AB:77:FE:3E,300,,CAA-Kenya,caakenya
+a1d10a2d-593c-4327-9136-79af2c60ee58,SLV_024_AMB_6,,5700000004538E53,480,,Smokeless Village,bamg-01
+5da5a1ac-0000-0000-0000-CC78AB77F32B,,Dot-F32B,CC:78:AB:77:F3:2B,300,,CAA-Kenya,caakenya
+c5ea51f0-cf14-40f9-a878-be99f18350e4,SLV_011_AMB_6,,9900000004320553,480,,Smokeless Village,bamg-01
+5da5a207-0000-0000-0000-CC78AB77F32B,Dot-F32B | 2019-10-15 13:39,Dot-F32B,CC:78:AB:77:F3:2B,300,,CAA-Kenya,caakenya
+861cfb32-c58a-43c9-aedc-bdae1685bdb3,SLV_001_AMB_6,,FF0000000419A353,480,,Smokeless Village,bamg-01
+9501458f-8cd7-40ef-97cd-87d8e25a83d7,SLV_008_AMB_6,,D600000004233B53,480,,Smokeless Village,bamg-01
+4655b841-a948-4833-8683-c41b2ca886b6,SLV_003_AMB_6,,9700000004199453,480,,Smokeless Village,bamg-01
+5a22dcb9-fa42-4066-90a8-5b534672096c,SLV_012_AMB_6,,7E00000004081253,480,,Smokeless Village,bamg-01
+5da5a93a-0000-0000-0000-CC78AB77FE65,Dot-FE65 | 2019-10-15 14:08,Dot-FE65,CC:78:AB:77:FE:65,300,,CAA-Kenya,caakenya
+7e76da2f-2fab-4b5f-8bb5-b279ad0fdf59,SLV_002_AMB_6,,BC0000000409EE53,480,,Smokeless Village,bamg-01
+9d484657-dbe7-4a25-9c56-6ffee71e5e90,SLV_005_AMB_6,,7D00000004236C53,480,,Smokeless Village,bamg-01
+036ce18b-b8a6-4f1a-980e-b9c673be7aff,SLV_016_AMB_6,,5200000004085153,480,,Smokeless Village,bamg-01
+189d9889-1082-4d34-a542-274380759ff3,SLV_007_AMB_6,,8E0000000442B953,480,,Smokeless Village,bamg-01
+4cf5d6b7-503f-43eb-86a7-ea0d95f1ca98,SLV_006_AMB_6,,960000000431D253,480,,Smokeless Village,bamg-01
+0c3b8ea5-47bf-489d-b297-32323efe4947,SLV_015_AMB_6,,1D00000004196F53,480,,Smokeless Village,bamg-01
+9b4bc9f7-eb50-43e6-820f-0f243517a06e,SLV_010_AMB_6,,360000000440D253,480,,Smokeless Village,bamg-01
+7c96764c-bbc1-4461-8b93-481170cfa519,SLV_023_AMB_6,,59000000043E5F53,480,,Smokeless Village,bamg-01
+2b6d6deb-82e7-46ba-969b-d03789637cf7,SLV_014_AMB_6,,6400000004194553,480,,Smokeless Village,bamg-01
+883e89ff-7b19-43db-8e31-bf5789857e35,SLV_009_AMB_6,,CE0000000462E053,480,,Smokeless Village,bamg-01
+69d08995-a5c8-4d46-a66f-402ea29009ac,SLV_025_AMB_6,,5000000004123153,480,,Smokeless Village,bamg-01
+890f5c84-10e9-4f51-a479-2109b529e020,SLV_020_AMB_6,,D900000004125C53,480,,Smokeless Village,bamg-01
+fd45714d-ad18-4f8e-8a9b-5341abcb098a,SLV_18_AMB_6,,0800000004232C53,480,,Smokeless Village,bamg-01
+789fca3f-2767-4665-8f38-196c9ca0cf7d,SLV_019_AMB_6,,2000000004558B53,480,,Smokeless Village,bamg-01
+cd5d5f64-33e4-4a7f-be01-df571a7224ae,SLV_022_AMB_6,,3100000004224D53,480,,Smokeless Village,bamg-01
+44e389be-27da-4baa-82a9-7c61faaaa8ad,SLV_021_AMB_6,,EF00000004635553,480,,Smokeless Village,bamg-01
+7bd5c4fb-bde3-4ab0-a2db-d4246160e1ac,SLV_013_AMB_6,,C400000004333953,480,,Smokeless Village,bamg-01
+75be6ed1-6f02-4101-9091-4c760224318d,SLV_004_AMB_6,,9D00000004122853,480,,Smokeless Village,bamg-01
+5612a9ea-66f6-43f0-a989-e28e33a5c1d1,SLV_017_AMB_6,,6600000004195653,480,,Smokeless Village,bamg-01
+09955e16-7195-4a46-9226-9d83a43facb8,SLV_024_AMB_5,,5700000004538E53,480,,Smokeless Village,bamg-01
+cc87fdd6-4798-42e2-ace1-4c1e0270d41a,SLV_003_AMB_5,,9700000004199453,480,,Smokeless Village,bamg-01
+43634160-fad5-4d1e-b1a5-4e7fbc781166,SLV_004_AMB_5,,9D00000004122853,480,,Smokeless Village,bamg-01
+0f5c3c57-49b8-431f-a4af-e45862addf2b,SLV_005_AMB_5,,7D00000004236C53,480,,Smokeless Village,bamg-01
+a10e9441-6108-4633-9427-5be0801c899e,SLV_007_AMB_5,,8E0000000442B953,480,,Smokeless Village,bamg-01
+1e6038c6-1215-4571-b305-526010fc6fed,SLV_008_AMB_5,,D600000004233B53,480,,Smokeless Village,bamg-01
+cba2fdcf-6e15-450f-925d-57191eb0c5c0,SLV_013_AMB_5,,C400000004333953,480,,Smokeless Village,bamg-01
+2cf12914-d9c4-4689-aee0-9b99bd886a0f,SLV_015_AMB_5,,1D00000004196F53,480,,Smokeless Village,bamg-01
+b7b35a5c-b2cd-4488-882c-927b22258595,SLV_016_AMB_5,,5200000004085153,480,,Smokeless Village,bamg-01
+239403da-73ce-4058-99de-ba4fc56cb32f,SLV_020_AMB_5,,D900000004125C53,480,,Smokeless Village,bamg-01
+3e72ea41-1d4b-4101-859f-3c76947fbc1c,SLV_009_AMB_5,,CE0000000462E053,480,,Smokeless Village,bamg-01
+fd50efff-8ae6-47ce-a3b8-cfee3458e2b9,SLV_014_AMB_5,,6400000004194553,480,,Smokeless Village,bamg-01
+39cae489-2481-46b2-a9a7-5fcebb8f9102,SLV_018_AMB_5,,0800000004232C53,480,,Smokeless Village,bamg-01
+ab532b69-e690-415a-a2be-bd7fb2009740,SLV_019_AMB_5,,2000000004558B53,480,,Smokeless Village,bamg-01
+8cbffc2f-6cc9-4c29-84f6-69368cb171e6,SLV_025_AMB_5,,5000000004123153,480,,Smokeless Village,bamg-01
+2d65f732-2403-4abe-b1e0-2da33fdbd602,SLV_006_AMB_5,,960000000431D253,480,,Smokeless Village,bamg-01
+36820614-da1f-4669-8b59-95275278a086,SLV_002_AMB_5,,BC0000000409EE53,480,,Smokeless Village,bamg-01
+79eec5d9-2103-495e-a536-4b2d922f0410,SLV_010_AMB_5,,360000000440D253,480,,Smokeless Village,bamg-01
+7d6aadf5-8eaf-4b8e-b6a1-db78b8c26210,SLV_012_AMB_5,,7E00000004081253,480,,Smokeless Village,bamg-01
+f96128ec-3d2c-4a6f-9a00-1c21b46cf01a,SLV_017_AMB_5,,6600000004195653,480,,Smokeless Village,bamg-01
+ce17b0f6-fd9e-4ea6-98c1-8584f9f53262,SLV_021_AMB_5,,EF00000004635553,480,,Smokeless Village,bamg-01
+b8afe0b4-a33f-4f40-a720-e07b0717bbcb,SLV_022_AMB_5,,3100000004224D53,480,,Smokeless Village,bamg-01
+14a56879-fce5-4e9a-87eb-4c1ee29e46a1,SLV_023_AMB_5,,59000000043E5F53,480,,Smokeless Village,bamg-01
+9502cd4a-14ae-4593-bb1b-63f5c4676b28,SLV_011_AMB_5,,9900000004320553,480,,Smokeless Village,bamg-01
+c5fd8047-b58a-497d-abf6-c9045f32f8af,SLV_024_AMB_4,,5700000004538E53,480,,Smokeless Village,bamg-01
+03e7b4e3-cd66-47d8-84c5-7762b4d6e875,SLV_002_AMB_4,,BC0000000409EE53,480,,Smokeless Village,bamg-01
+53780d40-2abf-4b3a-8e75-8b03e78d4e59,SLV_003_AMB_4,,9700000004199453,480,,Smokeless Village,bamg-01
+6fb9ab2b-5682-4b80-bedd-120473078b0b,SLV_004_AMB_4,,9D00000004122853,480,,Smokeless Village,bamg-01
+3ee961c7-f64f-462c-9098-413b26a3a285,SLV_005_AMB_4,,7D00000004236C53,480,,Smokeless Village,bamg-01
+48e25a0e-b08a-4355-a63b-1597c337c2e6,SLV_006_AMB_4,,960000000431D253,480,,Smokeless Village,bamg-01
+42b33af1-bc1b-4660-a386-77d94c193ee1,SLV_007_AMB_4,,8E0000000442B953,480,,Smokeless Village,bamg-01
+201fbd8c-0650-46ce-9689-6ac0383187e3,SLV_010_AMB_4,,360000000440D253,480,,Smokeless Village,bamg-01
+d9f68e12-173e-4328-a990-3da6fd96f3dc,SLV_011_AMB_4,,9900000004320553,480,,Smokeless Village,bamg-01
+08522980-8614-4186-863d-72319cc5eeca,SLV_013_AMB_4,,C400000004333953,480,,Smokeless Village,bamg-01
+95debc19-723a-4c58-8fa2-4391202b257c,SLV_016_AMB_4,,5200000004085153,480,,Smokeless Village,bamg-01
+d55383ce-1718-443f-9089-194cc2052cb8,SLV_017_AMB_4,,6600000004195653,480,,Smokeless Village,bamg-01
+d30a43f8-d3c5-4c20-b0be-f737d9ac7bde,SLV_008_AMB_4,,D600000004233B53,480,,Smokeless Village,bamg-01
+9e55bf3d-b39a-4ba0-9b1f-40a8ab44f06a,SLV_009_AMB_4,,CE0000000462E053,480,,Smokeless Village,bamg-01
+7c6dcf97-d8ff-418c-a0b1-4b86fc39ce06,SLV_012_AMB_4,,7E00000004081253,480,,Smokeless Village,bamg-01
+7dfc4853-2b08-4b00-84d3-88c12cf87117,SLV_014_AMB_4,,6400000004194553,480,,Smokeless Village,bamg-01
+dd7179b4-e37b-49c8-a433-c44dedcdbbb9,SLV_015_AMB_4,,1D00000004196F53,480,,Smokeless Village,bamg-01
+412077d0-604b-4c24-83f5-e3f102df8520,SLV_018_AMB_4,,0800000004232C53,480,,Smokeless Village,bamg-01
+bc92f5ee-e450-4754-ae35-42ca4ff4f151,SLV_019_AMB_4,,2000000004558B53,480,,Smokeless Village,bamg-01
+e77c2dc9-549b-48a9-9bcc-bba76245e93d,SLV_020_AMB_4,,D900000004125C53,480,,Smokeless Village,bamg-01
+957ff697-5c57-4a58-8ec9-1397b75b7523,SLV_021_AMB_4,,EF00000004635553,480,,Smokeless Village,bamg-01
+2f656307-8afa-45f7-b536-e0757fb23a5c,SLV_022_AMB_4,,3100000004224D53,480,,Smokeless Village,bamg-01
+975780fb-3dbd-4ea2-82a1-5e777d53ad65,SLV_023_AMB_4,,59000000043E5F53,480,,Smokeless Village,bamg-01
+ef0c7b86-7655-47bc-b684-fdb25639aa46,SLV_025_AMB_4,,5000000004123153,480,,Smokeless Village,bamg-01
+5da5fe8b-0000-0000-0000-CC78AB781FBD,Dot-1FBD | 2019-10-15 12:07,Dot-1FBD,CC:78:AB:78:1F:BD,300,nama Perú cocina solar Walter Gerardo Coaquira Paricahua comunidad cahualla distrito mañaso departamento Puno,NAMA Piloto Solar y Ventilador,namas
+68a46514-fe59-498a-9e40-2873eb305b09,SLV_014_TS_6AC,,67000000043CA553,480,,Smokeless Village,bamg-01
+4e6a0afd-c44f-424b-96bb-4c34ac95c3cd,SLV_015_TS_6AC,,B7000000041B8F53,480,,Smokeless Village,bamg-01
+8a8a8b29-eb6f-425f-9934-0b6a4d62a2d2,SLV_016_TS_6AC,,240000000431D453,480,,Smokeless Village,bamg-01
+5def230b-0000-0000-0000-806FB0635DBB,pellets stove 2,Dot-5DBB,80:6F:B0:63:5D:BB,60,stove chimney,Smokeless Village,bamg-01
+5da60247-0000-0000-0000-CC78AB6DFC74,Dot-FC74 | 2019-10-15 12:28,Dot-FC74,CC:78:AB:6D:FC:74,300,nama Perú cocina Solar Walter Gerardo Coaquira Paricahua comunidad cahualla distrito  mañaso departamento Puno,NAMA Piloto Solar y Ventilador,namas
+5ddb895a-0000-0000-0000-CC78AB6E0FB4,Dot-0FB4 | 2019-11-25 10:56,Dot-0FB4,CC:78:AB:6E:0F:B4,300,,CAA-Kenya,caakenya
+5def70e2-0000-0000-0000-CC78AB77FFBC,Dot-FFBC | 2019-12-10 13:17,Dot-FFBC,CC:78:AB:77:FF:BC,300,,CAA-Kenya,caakenya
+5def80fd-0000-0000-0000-CC78AB77FFC6,Dot-FFC6 | 2019-12-10 14:26,Dot-FFC6,CC:78:AB:77:FF:C6,300,,CAA-Kenya,caakenya
+5def8141-0000-0000-0000-CC78AB77FFC6,Dot-FFC6 | 2019-12-10 14:27,Dot-FFC6,CC:78:AB:77:FF:C6,300,,CAA-Kenya,caakenya
+5df0b5fc-0000-0000-0000-CC78AB6E09B4,Dot-09B4 | 2019-12-11 12:24,Dot-09B4,CC:78:AB:6E:09:B4,300,,CAA-Kenya,caakenya
+1d13e90f-e54c-409d-85a3-d285c78a22ed,SLV_017_TS_6AC,,46000000041B4D53,480,,Smokeless Village,bamg-01
+5df1e727-0000-0000-0000-806FB0636576,yangxin house1,null,80:6F:B0:63:65:76,60,"chimney 
+biomass water heating stove",Smokeless Village,bamg-01
+68969523-6556-42b8-8486-783fe15e80bf,SLV_09_AMB_3,,CE0000000462E053,480,,Smokeless Village,bamg-01
+2ece53db-a44c-4aa6-9566-ee259b51021e,SLV_12_AMB_3,,7E00000004081253,480,,Smokeless Village,bamg-01
+5db969f7-0000-0000-0000-CC78AB77CBBE,Dot-CBBE | 2019-10-30 13:45,Dot-CBBE,CC:78:AB:77:CB:BE,300,,CAA-Kenya,caakenya
+5db97416-0000-0000-0000-CC78AB77FCD4,Dot-FCD4 | 2019-10-30 14:28,Dot-FCD4,CC:78:AB:77:FC:D4,300,,CAA-Kenya,caakenya
+5dde2c3a-0000-0000-0000-CC78AB6E0D98,Dot-0D98 | 2019-11-27 10:56,Dot-0D98,CC:78:AB:6E:0D:98,300,,CAA-Kenya,caakenya
+5def7228-0000-0000-0000-CC78AB6E0571,Dot-0571 | 2019-12-10 13:22,Dot-0571,CC:78:AB:6E:05:71,300,,CAA-Kenya,caakenya
+5def8120-0000-0000-0000-CC78AB77FFC6,Dot-FFC6 | 2019-12-10 14:27,Dot-FFC6,CC:78:AB:77:FF:C6,300,,CAA-Kenya,caakenya
+5df0ad05-0000-0000-0000-806FB063664E,Dot-664E | 2019-12-11 11:46,Dot-664E,80:6F:B0:63:66:4E,300,,CAA-Kenya,caakenya
+db791ff1-d5c5-44bb-ac1f-54d9babad6ec,SLV_14_AMB_3,,6400000004194553,480,,Smokeless Village,bamg-01
+513e2fc5-4ca3-4d59-8c05-e422b3ddc55d,SLV_18_AMB_3,,0800000004232C53,480,,Smokeless Village,bamg-01
+ab9f67b2-8f84-43a5-a2fe-f3323600ffac,SLV_19_AMB_3,,2000000004558B53,480,,Smokeless Village,bamg-01
+5ddb898e-0000-0000-0000-CC78AB77EF13,Dot-EF13 | 2019-11-25 10:57,Dot-EF13,CC:78:AB:77:EF:13,300,,CAA-Kenya,caakenya
+5df0b9a8-0000-0000-0000-CC78AB6E153B,Dot-153B | 2019-12-11 12:40,Dot-153B,CC:78:AB:6E:15:3B,300,,CAA-Kenya,caakenya
+5def7236-0000-0000-0000-CC78AB77E32D,Dot-E32D | 2019-12-10 13:22,Dot-E32D,CC:78:AB:77:E3:2D,300,,CAA-Kenya,caakenya
+5df0b92a-0000-0000-0000-CC78AB6DFFC4,Dot-FFC4 | 2019-12-11 12:36,Dot-FFC4,CC:78:AB:6D:FF:C4,300,,CAA-Kenya,caakenya
+bc38a180-c369-491e-b74b-e99aa1cbc837,SLV_20_AMB_3,,D900000004125C53,480,,Smokeless Village,bamg-01
+c7bdaaa9-b80a-44ac-b8c1-980fc2da231b,SLV_21_AMB_3,,EF00000004635553,480,,Smokeless Village,bamg-01
+5ddb89b6-0000-0000-0000-CC78AB77F326,Dot-F326 | 2019-11-25 10:58,Dot-F326,CC:78:AB:77:F3:26,300,,CAA-Kenya,caakenya
+5dde2c16-0000-0000-0000-CC78AB77EA86,Dot-EA86 | 2019-11-27 10:55,Dot-EA86,CC:78:AB:77:EA:86,300,,CAA-Kenya,caakenya
+ce929c55-55a5-42a1-bd55-526efa214c7f,SLV_22_AMB_3,,3100000004224D53,480,,Smokeless Village,bamg-01
+cc618bf0-7d83-483a-b9e1-9ce3e4068fca,SLV_23_AMB_3,,59000000043E5F53,480,,Smokeless Village,bamg-01
+838f59b4-788f-47e3-9549-397021ca6326,SLV_25_AMB_3,,5000000004123153,480,,Smokeless Village,bamg-01
+598c3117-611b-4aa5-9cdd-6fc860666b0b,SLV_17_AMB_3,,6600000004195653,480,,Smokeless Village,bamg-01
+9041154d-253f-428f-a13d-173b578d333c,SLV_03_AMB_3,,9700000004199453,480,,Smokeless Village,bamg-01
+d47b0564-65bf-43e5-a051-29f572e8d775,SLV_04_AMB_3,,9D00000004122853,480,,Smokeless Village,bamg-01
+3318a557-26c1-4ef6-975e-b4c23794e97f,SLV_05_AMB_3,,7D00000004236C53,480,,Smokeless Village,bamg-01
+16e3badc-8ecd-4d97-b3ed-de032ebcc5f0,SLV_06_AMB_3,,960000000431D253,480,,Smokeless Village,bamg-01
+28dc235f-9b0e-4825-a7bf-0cb5b6abf4cf,SLV_07_AMB_3,,8E0000000442B953,480,,Smokeless Village,bamg-01
+b557359d-c43b-4149-87d4-2fd6eb8ea1ea,SLV_08_AMB_3,,D600000004233B53,480,,Smokeless Village,bamg-01
+2528708c-1418-4eaa-87ce-258efcd6c781,SLV_10_AMB_3,,360000000440D253,480,,Smokeless Village,bamg-01
+6d603a67-35c4-4324-99de-b25f6d187cc4,SLV_11_AMB_3,,9900000004320553,480,,Smokeless Village,bamg-01
+18c43c46-859b-4360-898c-b07b4789991f,SLV_15_AMB_3,,1D00000004196F53,480,,Smokeless Village,bamg-01
+5b632a73-23da-4b14-900c-94fc6f319771,SLV_16_AMB_3,,5200000004085153,480,,Smokeless Village,bamg-01
+936fc9c9-8700-4321-afa8-3aa3ce8f0e8d,SLV_24_AMB_3,,5700000004538E53,480,,Smokeless Village,bamg-01
+f4190838-31fb-4c9d-a3a9-6534195172c3,SLV_02_AMB_3,,BC0000000409EE53,480,,Smokeless Village,bamg-01
+a5eb35cf-7ac3-4502-b0c7-233b4e2c07df,SLV_13_AMB_3,,C400000004333953,480,,Smokeless Village,bamg-01
+7e28918d-337a-4a60-a6e8-fc4f67f96198,SLV_03_AMB_2,,9700000004199453,480,,Smokeless Village,bamg-01
+7b8047c5-9fe9-43e1-8a86-82ae0ae15093,SLV_04_AMB_2,,9D00000004122853,480,,Smokeless Village,bamg-01
+5d7229fd-c7a5-48a5-b169-b83bcd75c43a,SLV_06_AMB_2,,960000000431D253,480,,Smokeless Village,bamg-01
+8ed7af9c-8a53-4a18-8692-0a78c57e3fdd,SLV_08_AMB_2,,D600000004233B53,480,,Smokeless Village,bamg-01
+95c14fe7-c4d9-4d97-99bf-bc75cf5e37e1,SLV_01_AMB_2,,FF0000000419A353,480,,Smokeless Village,bamg-01
+807289de-845a-4b30-9899-1e3f55c9ad7b,SLV_17_AMB_2,,6600000004195653,480,,Smokeless Village,bamg-01
+2f527281-10a5-47a7-a1bf-17f10652f5d0,SLV_02_AMB_2,,BC0000000409EE53,480,,Smokeless Village,bamg-01
+27d8e1a3-3514-40f4-80a7-bc822bbe6f5e,SLV_24_AMB_2,,5700000004538E53,480,,Smokeless Village,bamg-01
+43b0e675-b997-4998-a8cf-1b73f63bc34f,SLV_11_AMB_2,,9900000004320553,480,,Smokeless Village,bamg-01
+5616195a-668d-4071-8d15-4b568ca3458e,SLV_20_AMB_2,,D900000004125C53,480,,Smokeless Village,bamg-01
+6c20ba39-ba70-4f8c-b46d-acf3cf2303b9,SLV_07_AMB_2,,8E0000000442B953,480,,Smokeless Village,bamg-01
+6cbf74bc-cd01-472b-8e35-9bb93460f622,SLV_09_AMB_2,,CE0000000462E053,480,,Smokeless Village,bamg-01
+4da05b38-29a2-48c8-9308-6723c0137bbf,SLV_12_AMB_2,,7E00000004081253,480,,Smokeless Village,bamg-01
+850f46f2-baeb-44e4-81c9-de902c74e39e,SLV_14_AMB_2,,6400000004194553,480,,Smokeless Village,bamg-01
+27b39861-b2b9-44ff-8165-eaf41c3e8788,SLV_15_AMB_2,,1D00000004196F53,480,,Smokeless Village,bamg-01
+e1d561e4-9015-48bf-810d-433e0a7d2c69,SLV_16_AMB_2,,5200000004085153,480,,Smokeless Village,bamg-01
+d2d5994b-5917-448e-acff-03447eb2aced,SLV_18_AMB_2,,0800000004232C53,480,,Smokeless Village,bamg-01
+1eb6c2b7-59c3-4458-8866-d7899323331d,SLV_19_AMB_2,,2000000004558B53,480,,Smokeless Village,bamg-01
+5528258e-94de-4270-acc5-6399a28c3b73,SLV_21_AMB_2,,EF00000004635553,480,,Smokeless Village,bamg-01
+b202997f-f8f3-4005-81c0-d5d2e9ddf5bd,SLV_22_AMB_2,,3100000004224D53,480,,Smokeless Village,bamg-01
+563d751c-d12f-43ae-a214-64d44fecf2e9,SLV_23_AMB_2,,59000000043E5F53,480,,Smokeless Village,bamg-01
+b8ce7030-df74-4958-b82a-801d92d0518a,SLV_25_AMB_2,,5000000004123153,480,,Smokeless Village,bamg-01
+34cde43e-d989-450b-927b-6508ae5a042c,SLV_13_AMB_2,,C400000004333953,480,,Smokeless Village,bamg-01
+f50e0684-d072-451a-b7b8-c320ce554cf9,SLV_01_AMB_1,,FF0000000419A353,480,,Smokeless Village,bamg-01
+ea18bf19-0030-49c8-aa59-0bc70ec619cc,SLV_16_AMB_1,,5200000004085153,480,,Smokeless Village,bamg-01
+201692fd-e9a0-4d55-813e-705dcbfd628d,SLV_17_AMB_1,,6600000004195653,480,,Smokeless Village,bamg-01
+b0ffe427-b60b-4c48-b1d0-197c003a4003,SLV_02_AMB_1,,BC0000000409EE53,480,,Smokeless Village,bamg-01
+34217122-bd5e-4449-ab79-fe64154c6fbb,SLV_03_AMB_1,,9700000004199453,480,,Smokeless Village,bamg-01
+02be1cbf-df1a-413a-be1d-faa69a74edfc,SLV_04_AMB_1,,9D00000004122853,480,,Smokeless Village,bamg-01
+5b8e33c7-4d61-4e5e-9fb7-11a109e8679b,SLV_06_AMB_1,,960000000431D253,480,,Smokeless Village,bamg-01
+9782e5de-1f43-42e3-b3b5-d68775731a1d,SLV_07_AMB_1,,8E0000000442B953,480,,Smokeless Village,bamg-01
+b07f9347-b128-427c-a5a9-36f03ad3ef63,SLV_11_AMB_1,,9900000004320553,480,,Smokeless Village,bamg-01
+68edacde-e65e-4007-b323-2a652d574eda,SLV_13_AMB_1,,C400000004333953,480,,Smokeless Village,bamg-01
+cfb4c897-2359-4777-909a-9c93234f4aad,SLV_23_AMB_1,,59000000043E5F53,480,,Smokeless Village,bamg-01
+a168d1cb-ea89-4ce5-8dfd-a3084031ee4d,SLV_25_AMB_1,,5000000004123153,480,,Smokeless Village,bamg-01
+85a058f6-b46f-4c41-8358-76a63107af83,SLV_09_AMB_1,,CE0000000462E053,480,,Smokeless Village,bamg-01
+0465ab8e-537a-43c5-a2ea-09de9fc61c11,SLV_18_AMB_1,,0800000004232C53,480,,Smokeless Village,bamg-01
+88c6ab33-1ae2-451a-ab19-820e32833c02,SLV_20_AMB_1,,D900000004125C53,480,,Smokeless Village,bamg-01
+46d5a5aa-a80c-4abd-a74b-8cd19d220ac0,SLV_001_BG_6,,E100000004318153,480,,Smokeless Village,bamg-01
+20a5969d-9df1-4cb2-b394-0dfa87850d6f,SLV_022_BG_5,,B70000000461E153,480,,Smokeless Village,bamg-01
+70ea2316-1d3a-42a2-9974-bc54757e4c22,SLV_023_BG_5,,130000000431D553,480,,Smokeless Village,bamg-01
+b8ee99c4-5b1c-4bb3-9da8-8992270147b8,SLV_023_BG_4,,130000000431D553,480,,Smokeless Village,bamg-01
+ee9081d2-0260-481e-9e6b-e17ef42cf43f,SLV_01_BG_2,,E100000004318153,480,,Smokeless Village,bamg-01
+8cf512f3-f458-4b0b-a487-c0f55deeea5f,SLV_23_BG_2,,130000000431D553,480,,Smokeless Village,bamg-01
+2bd21ba7-e664-487e-8732-3406ce3d7c1e,SLV_019_TS_6AC,,54000000041EBB53,480,,Smokeless Village,bamg-01
+87c55997-b4a2-4608-8e6a-b0374cd0c209,SLV_020_TS_6AC,,CF00000004088253,480,,Smokeless Village,bamg-01
+a33773a6-f319-45c5-920a-2f8b78591bd1,SLV_018_TS_6AC,,3500000004190A53,480,,Smokeless Village,bamg-01
+5df1efa3-0000-0000-0000-806FB0635DBB,house3,Dot-5DBB,80:6F:B0:63:5D:BB,60,,Smokeless Village,bamg-01
+0ef9755b-8527-4539-a8af-02d35acdece0,SLV_025_LPG_6AC,,400000000408DA53,480,,Smokeless Village,smitharao
+cdef02e5-010e-4a7c-ba5d-ef4e7952f568,SLV_021_TS_6AC,,A900000004401253,480,,Smokeless Village,bamg-01
+445851df-cb47-468f-b1b0-e7b158c4d3f0,SLV_024_LPG_6AC,,6D00000004542F53,480,,Smokeless Village,smitharao
+5da828be-0000-0000-0000-CC78AB6DFD4B,,Dot-FD4B,CC:78:AB:6D:FD:4B,300,,CAA-Kenya,caakenya
+5da83f84-0000-0000-0000-CC78AB77FAD0,Dot-FAD0 | 2019-10-17 13:15,Dot-FAD0,CC:78:AB:77:FA:D0,300,,CAA-Kenya,caakenya
+5da6e162-0000-0000-0000-CC78AB77F713,Dot-F713 | 2019-10-16 12:20,Dot-F713,CC:78:AB:77:F7:13,300,,CAA-Kenya,caakenya
+5df1eb88-0000-0000-0000-806FB0635DA7,20191212house two,Dot-5DA7,80:6F:B0:63:5D:A7,60,,Smokeless Village,bamg-01
+5da84519-0000-0000-0000-CC78AB780128,Dot-0128 | 2019-10-17 13:38,Dot-0128,CC:78:AB:78:01:28,300,,CAA-Kenya,caakenya
+5da8365c-0000-0000-0000-CC78AB77F71D,Dot-F71D | 2019-10-17 12:36,Dot-F71D,CC:78:AB:77:F7:1D,300,,CAA-Kenya,caakenya
+c0fd9369-a485-43aa-9e02-adcb383b4a47,SLV_023_LPG_6AC,,E00000000418DE53,480,,Smokeless Village,smitharao
+5d441f8c-0000-0000-0000-CC78AB77FE1F,Dot-FE1F | 2019-08-02 06:31,Dot-FE1F,CC:78:AB:77:FE:1F,300,"En la casa del sr. Eduardo Simeon, Paucar se instala un sensor para la cocina tipo VENTILADOR en el anexo Chuamba, Distrito Chullhuas, provincia Huancayo, Region Junin.",NAMA Piloto Solar y Ventilador,namas
+18694f64-2c53-4807-b307-662b36657164,SLV_021_LPG_6AC,,2F0000000423B553,480,,Smokeless Village,smitharao
+2fa24ff9-b2e5-487c-83c2-37ca4e57bc16,SLV_022_LPG_6AC,,E500000004245353,480,,Smokeless Village,smitharao
+d51bb575-6c3a-420c-b68a-ca8d8dfda6e0,SLV_020_LPG_6AC,,9400000004688F53,480,,Smokeless Village,smitharao
+d2786167-5b20-4f88-a3bb-bba41f5ca21d,SLV_019_LPG_6AC,,F40000000468F453,480,,Smokeless Village,smitharao
+3175cc72-3ac1-4ddf-b8dd-c6ddfaa1bf07,SLV_018_LPG_6AC,,E7000000043F2A53,480,,Smokeless Village,smitharao
+b0a32982-5d74-44c2-9717-465d07f751d3,SLV_01_BG_1,,E100000004318153,480,,Smokeless Village,bamg-01
+134bcd43-c7e7-4f99-9898-73a8c3295c65,SLV_22_BG_2,,B70000000461E153,480,,Smokeless Village,bamg-01
+9ee1d729-356f-4a21-9a69-75a9df510f28,SLV_22_AMB_1,,3100000004224D53,480,,Smokeless Village,bamg-01
+46c792aa-aa21-450b-b738-a30ba6ec6ed4,SLV_023_BG_6,,130000000431D553,480,,Smokeless Village,bamg-01
+03ac09a0-b43a-4689-bcb2-b45322711b03,SLV_19_AMB_1,,2000000004558B53,480,,Smokeless Village,bamg-01
+a00d19bc-a4fa-44c1-9499-733f27100509,SLV_10_AMB_1,,360000000440D253,480,,Smokeless Village,bamg-01
+37302c16-7223-4de0-8e70-3310eafa11d4,SLV_22_BG_1,,B70000000461E153,480,,Smokeless Village,bamg-01
+1a1e1be6-c7d2-47c8-806f-3ba63fb43fea,SLV_12_AMB_1,,7E00000004081253,480,,Smokeless Village,bamg-01
+40a35701-054d-4d01-8fb6-76aef0a8e81d,SLV_022_BG_6,,B70000000461E153,480,,Smokeless Village,bamg-01
+f9d2b3be-abf1-4cc8-ade6-a7e5d66a6c30,SLV_002_LPG_4_corrected,,0B00000004484453,480,,Smokeless Village,bamg-01
+d8c676a0-3d42-4494-a2e1-7e1b5a7afb5e,SLV_22_BG_3,,B70000000461E153,480,,Smokeless Village,bamg-01
+830d705b-51fa-466a-b00b-2d91197419c0,SLV_022_BG_4,,B70000000461E153,480,,Smokeless Village,bamg-01
+e5e9238c-2525-4b96-86d4-dd32be408fba,SLV_15_AMB_1,,1D00000004196F53,480,,Smokeless Village,bamg-01
+6c6749e4-cb00-48d0-820b-7f449ae220a5,SLV_23_BG_3,,130000000431D553,480,,Smokeless Village,bamg-01
+cb996b84-0ff6-4d5a-a5c8-950f276e3940,SLV_08_AMB_1,,D600000004233B53,480,,Smokeless Village,bamg-01
+fe403fb2-1211-4963-a87f-f3e4f9f6295a,SLV_23_BG_1,,130000000431D553,480,,Smokeless Village,bamg-01
+1b3f4a55-4f7d-4ea0-b6eb-45216ca44081,SLV_21_AMB_1,,EF00000004635553,480,,Smokeless Village,bamg-01
+c4551767-3ca8-46e4-8410-71080d5ec84a,SLV_017_LPG_6AC,,E80000000441DC53,480,,Smokeless Village,smitharao
+d38cce0f-b268-4b50-b6a3-8041467832f4,SLV_016_LPG_6AC,,530000000408D453,480,,Smokeless Village,smitharao
+aa77fd4a-01af-4323-ab4f-5fae4e95ef2e,SLV_015_LPG_6AC,,FA00000004190053,480,,Smokeless Village,smitharao
+3d045e62-3b0f-4f9e-9fc7-811925db7efd,SLV_05_AMB_1,,6200000004620753,480,,Smokeless Village,bamg-01
+bb327ccd-e7b4-4faf-bb16-3604986add71,SLV_14_AMB_1,,6400000004194553,480,,Smokeless Village,bamg-01
+5df7446d-0000-0000-0000-806FB06363A0,Dot-63A0 | 2019-12-16 11:45,Dot-63A0,80:6F:B0:63:63:A0,300,,CAA-Kenya,caakenya
+5df7644f-0000-0000-0000-CC78AB77FE2F,Dot-FE2F | 2019-12-16 14:02,Dot-FE2F,CC:78:AB:77:FE:2F,300,,CAA-Kenya,caakenya
+3139983e-8dde-43de-a58f-ab5aa7ea0e3d,SLV_24_AMB_1,,5700000004538E53,480,,Smokeless Village,bamg-01
+4425f6b2-5b4b-414e-b42b-026293c3db29,SLV_001_BG_6AC,,E100000004318153,480,,Smokeless Village,bamg-01
+0e0ba0de-6b44-495c-9e9d-78298f9f6d26,SLV_001_LPG_6AC,,4B00000004598653,480,,Smokeless Village,bamg-01
+fa768a80-1aa6-475e-8f47-0a885b0d26bc,SLV_002_LPG_6AC,,0B00000004484453,480,,Smokeless Village,bamg-01
+5dae184a-0000-0000-0000-CC78AB6E0FF2,Dot-OFF2-061502,Dot-0FF2,CC:78:AB:6E:0F:F2,300,"NAMA PERU
+COCINA A GAS
+AREQUIPA-JACHAÑA
+21002
+La cocinera: Engracia Llasa Moruchara",NAMA Piloto Solar y Ventilador,namas
+5da595e0-0000-0000-0000-CC78AB77FCBF,Dot-FCBF | 2019-10-15 12:47,Dot-FCBF,CC:78:AB:77:FC:BF,300,,CAA-Kenya,caakenya
+5db02395-0000-0000-0000-CC78AB77F36D,Dot-F36D | 2019-10-23 12:54,Dot-F36D,CC:78:AB:77:F3:6D,300,,CAA-Kenya,caakenya
+5db030d2-0000-0000-0000-CC78AB77FCBF,FCBF | 2019-10-23 13:50,FCBF,CC:78:AB:77:FC:BF,300,,CAA-Kenya,caakenya
+26195283-654b-4d19-8604-4b02b3ddbbcb,SLV_01_BG_1,,E100000004318153,480,,Smokeless Village,bamg-01
+5dae1c3c-0000-0000-0000-CC78AB77FFC7,Dot-FFC7-061502,Dot-FFC7,CC:78:AB:77:FF:C7,300,"NAMA PERU
+COCINA TRADICIONAL-FOGON
+AREQUIPA-JACHAÑA
+11002
+la cocinera: Engracia Llasa Moruchara",NAMA Piloto Solar y Ventilador,namas
+5db05414-0000-0000-0000-CC78AB6E07F8,Dot-07F8 | 2019-10-23 16:21,Dot-07F8,CC:78:AB:6E:07:F8,300,,CAA-Kenya,caakenya
+40f69b9b-87b6-4384-92bf-3e0280d006bd,SLV_22_BG_1,,B70000000461E153,480,,Smokeless Village,bamg-01
+5da43717-0000-0000-0000-CC78AB77FFF0,Dot-FFF0 | 2019-10-14 11:50,Dot-FFF0,CC:78:AB:77:FF:F0,300,,CAA-Kenya,caakenya
+5dae2367-0000-0000-0000-CC78AB6E0CE9,Dot-OCE9-061502,Dot-0CE9,CC:78:AB:6E:0C:E9,300,"NAMA PERU
+COCINA SOLAR
+AREQUIPA-JACHAÑA
+41002",NAMA Piloto Solar y Ventilador,namas
+ad7d5fb3-dee4-4ff2-8606-160d01af8fa8,SLV_23_BG_1,,130000000431D553,480,,Smokeless Village,bamg-01
+289a4c7b-fa7d-473b-9156-31f480513c60,SLV_002_TS_6AC,,B80000000457C953,480,,Smokeless Village,bamg-01
+5db16377-0000-0000-0000-CC78AB6E003B,Dot-003B | 2019-10-24 11:38,Dot-003B,CC:78:AB:6E:00:3B,300,,CAA-Kenya,caakenya
+5db181c3-0000-0000-0000-CC78AB77FAC6,Dot-FAC6 | 2019-10-24 13:48,Dot-FAC6,CC:78:AB:77:FA:C6,300,,CAA-Kenya,caakenya
+5db158cb-0000-0000-0000-CC78AB6E0CFD,Dot-0CFD | 2019-10-24 10:54,Dot-0CFD,CC:78:AB:6E:0C:FD,300,,CAA-Kenya,caakenya
+5db1ad5b-0000-0000-0000-CC78AB77F36D,Dot-F36D | 2019-10-24 16:54,Dot-F36D,CC:78:AB:77:F3:6D,300,,CAA-Kenya,caakenya
+5daefd4e-0000-0000-0000-CC78AB6E07E5,Dot-07E5 | 2019-10-22 15:57,Dot-07E5,CC:78:AB:6E:07:E5,300,,CAA-Kenya,caakenya
+f6d50f8a-6e44-4bb9-ab3a-64d589f66ec0,SLV_003_LPG_6AC,,030000000420DD53,480,,Smokeless Village,bamg-01
+5db1ab8b-0000-0000-0000-CC78AB77F36D,Dot-F36D | 2019-10-24 16:47,Dot-F36D,CC:78:AB:77:F3:6D,300,,CAA-Kenya,caakenya
+5db02cab-0000-0000-0000-CC78AB77F717,Dot-F717 | 2019-10-23 13:33,Dot-F717,CC:78:AB:77:F7:17,300,,CAA-Kenya,caakenya
+5daefd9b-0000-0000-0000-CC78AB6E07E5,Dot-07E5 | 2019-10-22 16:00,Dot-07E5,CC:78:AB:6E:07:E5,300,,CAA-Kenya,caakenya
+5370da78-d9fa-4ec1-a5cb-ee2f709616a2,SLV_003_TS_6AC,,1F0000000457F453,480,,Smokeless Village,bamg-01
+886a75da-85c9-4ec9-be4b-075e1e8605b6,SLV_004_LPG_6AC,,6A00000004182553,480,,Smokeless Village,bamg-01
+e5606fb8-5949-4d97-9104-c0c6c98a6662,SLV_004_TS_6AC,,8B00000004597053,480,,Smokeless Village,bamg-01
+5db2c751-0000-0000-0000-CC78AB77F355,Dot-F355 | 2019-10-25 12:58,Dot-F355,CC:78:AB:77:F3:55,300,,CAA-Kenya,caakenya
+5db2d4b3-0000-0000-0000-CC78AB77FFAC,,Dot-FFAC,CC:78:AB:77:FF:AC,300,,CAA-Kenya,caakenya
+5db01948-0000-0000-0000-CC78AB6E07F8,Dot-07F8 | 2019-10-23 12:08,Dot-07F8,CC:78:AB:6E:07:F8,300,,CAA-Kenya,caakenya
+5db6bde3-0000-0000-0000-CC78AB77FE6A,Dot-FE6A | 2019-10-28 13:06,Dot-FE6A,CC:78:AB:77:FE:6A,300,,CAA-Kenya,caakenya
+5db048d4-0000-0000-0000-CC78AB6E0AE0,Dot-0AE0 | 2019-10-23 15:30,Dot-0AE0,CC:78:AB:6E:0A:E0,300,,CAA-Kenya,caakenya
+5db6cef4-0000-0000-0000-CC78AB77FFAC,Dot-FFAC | 2019-10-28 14:19,Dot-FFAC,CC:78:AB:77:FF:AC,300,,CAA-Kenya,caakenya
+5db2c1ff-0000-0000-0000-CC78AB77FAEE,Dot-FAEE | 2019-10-25 12:35,Dot-FAEE,CC:78:AB:77:FA:EE,300,,CAA-Kenya,caakenya
+54b3e51c-e5fb-4dfb-bc7e-eadd747c9a6e,SLV_005_LPG_6AC,,6C00000004578153,480,,Smokeless Village,bamg-01
+5db2dced-0000-0000-0000-CC78AB6E09E6,Dot-09E6 | 2019-10-25 14:29,Dot-09E6,CC:78:AB:6E:09:E6,300,,CAA-Kenya,caakenya
+5db6d02f-0000-0000-0000-CC78AB77F9A1,Dot-F9A1 | 2019-10-28 14:24,Dot-F9A1,CC:78:AB:77:F9:A1,300,,CAA-Kenya,caakenya
+5d52ee0c-0000-0000-0000-CC78AB77F23B,Dot-F23B | 2019-08-13 12:05,Dot-F23B,CC:78:AB:77:F2:3B,300,sensor instalado en la cocina tradicional en la casa del señor daniel matamet quispe en el cp tantamaco en el distrito de macusani en la provincia carabaya en la region de puno,NAMA Piloto Solar y Ventilador,namas
+9298ecac-e2ff-4710-b52a-80a3beb173e9,SLV_005_TS_6AC,,5700000004212853,480,,Smokeless Village,bamg-01
+5db6d5ab-0000-0000-0000-CC78AB77E998,Dot-E998 | 2019-10-28 14:48,Dot-E998,CC:78:AB:77:E9:98,300,,CAA-Kenya,caakenya
+5db804bb-0000-0000-0000-CC78AB77FE67,Dot-FE67 | 2019-10-29 12:20,Dot-FE67,CC:78:AB:77:FE:67,300,,CAA-Kenya,caakenya
+5db2c6cb-0000-0000-0000-CC78AB6E0CFD,Dot-0CFD | 2019-10-25 12:54,Dot-0CFD,CC:78:AB:6E:0C:FD,300,,CAA-Kenya,caakenya
+5db2ceb0-0000-0000-0000-CC78AB77FE2E,Dot-FE2E | 2019-10-25 13:28,Dot-FE2E,CC:78:AB:77:FE:2E,300,,CAA-Kenya,caakenya
+5db2bf29-0000-0000-0000-CC78AB77FCEF,Dot-FCEF | 2019-10-25 12:22,Dot-FCEF,CC:78:AB:77:FC:EF,300,,CAA-Kenya,caakenya
+5db6da25-0000-0000-0000-CC78AB6E0CD9,Dot-0CD9 | 2019-10-28 15:07,Dot-0CD9,CC:78:AB:6E:0C:D9,300,,CAA-Kenya,caakenya
+616072c9-2ccc-479b-87d8-56ae4c0f958d,SLV_006_LPG_6AC,,7F00000004243053,480,,Smokeless Village,bamg-01
+c09dd5fc-8b8d-424a-929d-1ca28da59ca9,SLV_006_TS_6AC,,840000000440D453,480,,Smokeless Village,bamg-01
+5db80338-0000-0000-0000-CC78AB77FCCE,Dot-FCCE | 2019-10-29 12:15,Dot-FCCE,CC:78:AB:77:FC:CE,300,,CAA-Kenya,caakenya
+5db2bf79-0000-0000-0000-CC78AB77FCEF,Dot-FCEF | 2019-10-25 12:24,Dot-FCEF,CC:78:AB:77:FC:EF,300,,CAA-Kenya,caakenya
+5db2b7b1-0000-0000-0000-CC78AB6E05B3,Dot-05B3 | 2019-10-25 11:51,Dot-05B3,CC:78:AB:6E:05:B3,300,,CAA-Kenya,caakenya
+5d442dc1-0000-0000-0000-CC78AB77FFCC,Dot-FFCC | 2019-08-02 07:31,Dot-FFCC,CC:78:AB:77:FF:CC,300,"En la casa de la sra.Yulincia Canchanya Vasquez, se instala un sensor en la cocina tipo Ventilador en  el anexo Chuamba, Distrito Cullhuas, Provinvia Huancayo, Region Junin.",NAMA Piloto Solar y Ventilador,namas
+5db96022-0000-0000-0000-CC78AB6E0545,Dot-0545 | 2019-10-30 13:01,Dot-0545,CC:78:AB:6E:05:45,300,,CAA-Kenya,caakenya
+5cdeed34-0000-0000-0000-CC78AB77FE5C,MEMtest2,Dot-FE5C,CC:78:AB:77:FE:5C,10,,MINEM test campaign,ricpie@gmail.com
+5db6c5a4-0000-0000-0000-CC78AB77F75C,Dot-F75C | 2019-10-28 13:39,Dot-F75C,CC:78:AB:77:F7:5C,300,,CAA-Kenya,caakenya
+5db6d08b-0000-0000-0000-CC78AB77FE11,Dot-FE11 | 2019-10-28 14:26,Dot-FE11,CC:78:AB:77:FE:11,300,,CAA-Kenya,caakenya
+2889e4db-2721-43ac-a53a-3a97084ced6c,SLV_007_LPG_6AC,,1500000004183A53,480,,Smokeless Village,bamg-01
+5d598f18-0000-0000-0000-CC78AB77FCF1,Dot-FCF1 | 2019-08-18 12:45,Dot-FCF1,CC:78:AB:77:FC:F1,300,"Caylloma 
+Sonia Malcoacha Nina
+control cocina a Gas
+18 de agosto del 2019
+codigo Dot-FCF1",NAMA Piloto Solar y Ventilador,namas
+5d3d8c75-0000-0000-0000-CC78AB77FFC4,Dot-FFC4 | 2019-07-28 06:51,Dot-FFC4,CC:78:AB:77:FF:C4,300,sensor ubicado en la casa del señor odelon santos verde en la comunidad de yacumali en el distrito de jivia en la provincia de lauricocha en la region se huanuco para una cocina de biomasa,NAMA Piloto Solar y Ventilador,namas
+bc294cc5-781c-4345-bae4-3f553f865e2b,SLV_008_LPG_6AC,,6F0000000462E853,480,,Smokeless Village,bamg-01
+be760504-7f93-4ccd-bed0-9116f598d9e2,SLV_008_TS_6AC,,2600000004237C53,480,,Smokeless Village,bamg-01
+5d58530d-0000-0000-0000-CC78AB781FBD,Dot-1FBD | 2019-08-17 14:17,Dot-1FBD,CC:78:AB:78:1F:BD,300,"cocina con ventilador, Metardo Ojanama Panaifo, Localidad Canayo, San Martin",NAMA Piloto Solar y Ventilador,namas
+f5f2654f-e6a8-45a7-a03d-02520396a026,SLV_007_TS_6AC,,5D00000004624A53,480,,Smokeless Village,bamg-01
+86e6708e-569c-41f3-8f2d-8f8c216764c3,SLV_009_TS_6AC,,7D0000000452E153,480,,Smokeless Village,bamg-01
+de76c485-40f0-42ed-a99f-c1b9f48eae69,SLV_010_LPG_6AC,,CD000000041B3353,480,,Smokeless Village,bamg-01
+d5b030da-a092-4e43-8cbd-5ea3f9947c4f,SLV_010_TS_6AC,,1E0000000418E053,480,,Smokeless Village,bamg-01
+d2b6f539-b30b-458d-8eb9-61847cf29eba,SLV_009_LPG_6AC,,DE00000004089F53,480,,Smokeless Village,bamg-01
+5d52fdc2-0000-0000-0000-CC78AB781FF4,Dot-1FF4 | 2019-08-13 13:12,Dot-1FF4,CC:78:AB:78:1F:F4,300,sensor instalado en la cocina tradicional en la casa de la señora clara gladys torres tapia en el cp tantamaco en el distrito de macusani en la provincia de carabaya en la region de puno,NAMA Piloto Solar y Ventilador,namas
+5dbac0e8-0000-0000-0000-CC78AB6E058B,Dot-058B | 2019-10-31 14:08,Dot-058B,CC:78:AB:6E:05:8B,300,,CAA-Kenya,caakenya
+5d52fd50-0000-0000-0000-CC78AB6DFC50,Dot-FC50 | 2019-08-13 13:10,Dot-FC50,CC:78:AB:6D:FC:50,300,sensor instalado en la cocina solar de la señor clara gladys torres tapia en el cp tantamaco en el distrito de macusani en la provincia de carabaya en la region de puno,NAMA Piloto Solar y Ventilador,namas
+5d5aaab9-0000-0000-0000-CC78AB77FE60,Dot-FE60 | 2019-08-19 08:56,Dot-FE60,CC:78:AB:77:FE:60,300,sensor en cocina tradicional en la casa de la señora victoria quico coaguila cp camata distrito ubinas region moquegua,NAMA Piloto Solar y Ventilador,namas
+5d460470-0000-0000-0000-CC78AB6E0DCD,Dot-0DCD | 2019-08-03 17:01,Dot-0DCD,CC:78:AB:6E:0D:CD,300,"Griseria De la Cruz Cabrera
+control Cocina GLP",NAMA Piloto Solar y Ventilador,namas
+5db96db3-0000-0000-0000-CC78AB6E0DA3,Dot-0DA3 | 2019-10-30 14:00,Dot-0DA3,CC:78:AB:6E:0D:A3,300,,CAA-Kenya,caakenya
+5d5aa9d5-0000-0000-0000-CC78AB77E324,Dot-E324 | 2019-08-19 08:52,Dot-E324,CC:78:AB:77:E3:24,300,sensor instalado en la casa de la señora juana coaguila benegas para la cocina solar instalads en el cp camata distrito ubinas region moquegua,NAMA Piloto Solar y Ventilador,namas
+5d45b2ae-0000-0000-0000-CC78AB77FE4D,Dot-FE4D | 2019-08-03 11:12,Dot-FE4D,CC:78:AB:77:FE:4D,300,"sensor en cocina tradicional, juan perez",NAMA Piloto Solar y Ventilador,namas
+a55db719-bef4-418a-9e22-29370fb22891,SLV_011_LPG_6AC,,AB0000000453A353,480,,Smokeless Village,bamg-01
+5d460a44-0000-0000-0000-CC78AB6E0578,Dot-0578 | 2019-08-03 17:26,Dot-0578,CC:78:AB:6E:05:78,300,"Domitala Flores Rojas
+Control Cocina solar
+Familia 2",NAMA Piloto Solar y Ventilador,namas
+5d46093a-0000-0000-0000-CC78AB6E0DBC,Dot-0DBC | 2019-08-03 17:22,Dot-0DBC,CC:78:AB:6E:0D:BC,300,"Domitila Flores Rojas
+Control cocina tradicional
+Familia 2",NAMA Piloto Solar y Ventilador,namas
+a15fb9de-0458-4573-aba8-089accc2e46b,SLV_012_LPG_6AC,,470000000461A653,480,,Smokeless Village,bamg-01
+5d46013f-0000-0000-0000-CC78AB6E0FA2,Dot-0FA2 | 2019-08-03 16:48,Dot-0FA2,CC:78:AB:6E:0F:A2,300,"familia Griseria de la Cruz Cabrera 
+control de cocina solar",NAMA Piloto Solar y Ventilador,namas
+5d3d8e83-0000-0000-0000-CC78AB6DFD75,Dot-FD75 | 2019-07-28 06:59,Dot-FD75,CC:78:AB:6D:FD:75,300,sensor en la casa del señor odelon santos verde en el cp yacumali en el distrito de jivia en la provincia de lauricocha en la region de huanuco,NAMA Piloto Solar y Ventilador,namas
+84f6fe71-8830-4223-a9e5-33960f474352,SLV_012_TS_6AC,,C600000004123853,480,,Smokeless Village,bamg-01
+5dc3cae7-0000-0000-0000-CC78AB6E05E3,Dot-05E3 | 2019-11-07 10:41,Dot-05E3,CC:78:AB:6E:05:E3,300,,CAA-Kenya,caakenya
+5dc3dac8-0000-0000-0000-806FB06363CA,Dot-63CA | 2019-11-07 11:49,Dot-63CA,80:6F:B0:63:63:CA,300,,CAA-Kenya,caakenya
+5dc2a6d2-0000-0000-0000-806FB063653F,Dot-653F | 2019-11-06 13:53,Dot-653F,80:6F:B0:63:65:3F,300,,CAA-Kenya,caakenya
+5dc534f4-0000-0000-0000-CC78AB77F241,Dot-F241 | 2019-11-08 12:25,Dot-F241,CC:78:AB:77:F2:41,300,,CAA-Kenya,caakenya
+5dc18c30-0000-0000-0000-806FB0635607,Dot-5607 | 2019-11-05 17:47,Dot-5607,80:6F:B0:63:56:07,300,,CAA-Kenya,caakenya
+5dc15046-0000-0000-0000-CC78AB77F372,Dot-F372 | 2019-11-05 13:33,Dot-F372,CC:78:AB:77:F3:72,300,,CAA-Kenya,caakenya
+5dc15b51-0000-0000-0000-CC78AB6E0FA0,Dot-0FA0 | 2019-11-05 14:21,Dot-0FA0,CC:78:AB:6E:0F:A0,300,,CAA-Kenya,caakenya
+5dc2a2aa-0000-0000-0000-CC78AB6E0A99,Dot-0A99 | 2019-11-06 13:37,Dot-0A99,CC:78:AB:6E:0A:99,300,,CAA-Kenya,caakenya
+5dc93c97-0000-0000-0000-CC78AB77E9A7,Dot-E9A7 | 2019-11-11 13:47,Dot-E9A7,CC:78:AB:77:E9:A7,300,,CAA-Kenya,caakenya
+5db80f26-0000-0000-0000-CC78AB77F5B3,Dot-F5B3 | 2019-10-29 13:05,Dot-F5B3,CC:78:AB:77:F5:B3,300,,CAA-Kenya,caakenya
+5dc940e9-0000-0000-0000-CC78AB77F5B0,Dot-F5B0 | 2019-11-11 14:06,Dot-F5B0,CC:78:AB:77:F5:B0,300,,CAA-Kenya,caakenya
+5db9810c-0000-0000-0000-CC78AB77FE67,Dot-FE67 | 2019-10-30 15:23,Dot-FE67,CC:78:AB:77:FE:67,300,,CAA-Kenya,caakenya
+d2adb219-6d65-4c29-bce1-9556e6b1142c,SLV_011_TS_6AC,,780000000462C053,480,,Smokeless Village,bamg-01
+46babb56-c9a5-4d63-8285-d12d74844d49,SLV_013_TS_6AC,,71000000040C8A53,480,,Smokeless Village,bamg-01
+3085568c-30fa-4d83-b2b4-ab2f52629456,SLV_013_LPG_6AC,,A8000000043CAF53,480,,Smokeless Village,bamg-01
+5dcbc82a-0000-0000-0000-CC78AB6E0554,Dot-0554 | 2019-11-13 12:07,Dot-0554,CC:78:AB:6E:05:54,300,,CAA-Kenya,caakenya
+5dcbd158-0000-0000-0000-CC78AB6E0561,Dot-0561 | 2019-11-13 12:44,Dot-0561,CC:78:AB:6E:05:61,300,,CAA-Kenya,caakenya
+5dcc0519-0000-0000-0000-CC78AB6E0561,Dot-0561 | 2019-11-13 16:27,Dot-0561,CC:78:AB:6E:05:61,300,,CAA-Kenya,caakenya
+5dcbcf94-0000-0000-0000-CC78AB77FF9A,Dot-FF9A | 2019-11-13 12:31,Dot-FF9A,CC:78:AB:77:FF:9A,303,,CAA-Kenya,caakenya
+5dcbcf8a-0000-0000-0000-CC78AB77F9CB,Dot-F9CB | 2019-11-13 12:32,Dot-F9CB,CC:78:AB:77:F9:CB,303,,CAA-Kenya,caakenya
+d2500b1c-7ebb-4dba-a506-a75dadc9b0ba,SLV_014_LPG_6AC,,8800000004321853,480,,Smokeless Village,bamg-01
+75e9d687-aae4-4e59-a9ef-5873daf09acd,SLV_014_TS_6AC,,67000000043CA553,480,,Smokeless Village,bamg-01
+97eee349-046a-4961-ba7b-2750e3c145bc,SLV_015_LPG_6AC,,FA00000004190053,480,,Smokeless Village,bamg-01
+e3ad0c0b-ed87-4edc-a0f8-7c898e4f9a5d,SLV_015_TS_6AC,,B7000000041B8F53,480,,Smokeless Village,bamg-01
+5dcbcfb4-0000-0000-0000-CC78AB77FE76,Dot-FE76 | 2019-11-13 12:31,Dot-FE76,CC:78:AB:77:FE:76,300,,CAA-Kenya,caakenya
+ee7fc721-c629-4eb4-8284-9ad06bccc780,SLV_016_TS_6AC,,240000000431D453,480,,Smokeless Village,bamg-01
+1f72f1d7-b476-4950-b1c3-10c443bb7eb7,SLV_017_TS_6AC,,46000000041B4D53,480,,Smokeless Village,bamg-01
+a3a6c0d7-37f5-4957-b117-9148c4fe04d9,SLV_016_LPG_6AC,,530000000408D453,480,,Smokeless Village,bamg-01
+b51cbe36-20f2-4ea1-bca0-40c2d89c8cb1,SLV_017_LPG_6AC,,E80000000441DC53,480,,Smokeless Village,bamg-01
+e73a95dc-8580-49f7-a631-e48e5e1b8492,SLV_001_LPG_6_MRAC,,4B00000004598653,480,,Smokeless Village,bamg-01
+e99cc598-c9d1-4a8f-afd5-70e56f557d7f,SLV_001_LPG_6_MRAC,,4B00000004598653,480,,Smokeless Village,bamg-01
+8fa449f4-e42f-463e-a33f-4756822c0ed2,SLV_001_LPG_6_MRAC (1),,4B00000004598653,480,,Smokeless Village,bamg-01
+28ee706b-65a6-4c0c-ae89-3fc65462a404,SLV_001_LPG_6_MRAC (1),,4B00000004598653,480,,Smokeless Village,bamg-01
+1e420e42-b38b-4677-bf52-cd3c8a6b96b0,SLV_001_LPG_6AC,,4B00000004598653,480,,Smokeless Village,bamg-01
+47beafb7-8f8c-4d72-af34-9e1af237ee9f,SLV_001_LPG_6ACsecond,,4B00000004598653,480,,Smokeless Village,bamg-01
+394aaeba-838c-43ca-b22e-5542b14e78d5,SLV_001_LPG_6AC (2)rp2,,4B00000004598653,480,,Smokeless Village,bamg-01
+84ce0fe4-263f-4e6d-b256-915bfae9a95a,SLV_018_LPG_6AC,,E7000000043F2A53,480,,Smokeless Village,bamg-01
+4a43c09d-f408-41de-8932-f986136b9117,SLV_001_LPG_6_MRAC_renamed,,4B00000004598653,480,,Smokeless Village,bamg-01
+88c1e1f3-5b30-41d8-9b7f-95cf933f9fdf,SLV_002_LPG_6AC,,0B00000004484453,480,,Smokeless Village,bamg-01
+44425080-3e6c-4686-a011-c18dc60bfc06,SLV_019_LPG_6AC,,F40000000468F453,480,,Smokeless Village,bamg-01
+1c4871e3-0c8e-43a7-9aa6-49eb8aaf9eb1,SLV_001_LPG_6_renamed,,4B00000004598653,480,,Smokeless Village,bamg-01
+c389a6c3-6a08-43f3-aaff-14594b79067a,SLV_018_TS_6AC,,3500000004190A53,480,,Smokeless Village,bamg-01
+c680932a-a683-4f30-80c9-413f36fd20f5,SLV_019_TS_6AC,,54000000041EBB53,480,,Smokeless Village,bamg-01
+f8d1e66d-fe8a-433a-a637-2c8ee3a5e794,SLV_020_LPG_6AC,,9400000004688F53,480,,Smokeless Village,bamg-01
+f386980b-9afe-4b2b-b647-0d26936365ae,SLV_020_TS_6AC,,CF00000004088253,480,,Smokeless Village,bamg-01
+b8659866-c7a3-450b-92de-c4929a842d74,SLV_021_LPG_6AC,,2F0000000423B553,480,,Smokeless Village,bamg-01
+6b07f691-9b24-4309-bda8-9febe93ec2ed,SLV_014_LPG_6AC,,8800000004321853,480,,,ricpie@gmail.com
+2e9e4c12-3ad6-4b11-942e-afc8cc1acf16,SLV_013_LPG_6AC,,A8000000043CAF53,480,,,ricpie@gmail.com
+d4e027ff-2365-4a24-87fc-ec0257471770,SLV_015_LPG_6AC,,FA00000004190053,480,,,ricpie@gmail.com
+85359c1c-a64e-43b8-adec-35a2ebe15949,SLV_010_LPG_6AC,,CD000000041B3353,480,,Smokeless Village,bamg-01
+662e74f6-1f57-4abb-ba68-84d5238e9a22,SLV_001_LPG_6AC,,4B00000004598653,480,,Smokeless Village,bamg-01
+665873ca-cb97-4e3c-9a95-e476954f7113,SLV_008_LPG_6AC,,6F0000000462E853,480,,Smokeless Village,bamg-01
+9127f84a-dbed-4aa2-98d2-a8e9be15ece8,SLV_015_LPG_6AC,,FA00000004190053,480,,Smokeless Village,bamg-01
+18bf32b6-5586-4444-9060-24e9085ecc81,SLV_013_LPG_6AC,,A8000000043CAF53,480,,Smokeless Village,bamg-01
+451afdbd-9d90-461d-8dc9-396856407ce3,SLV_014_LPG_6AC,,8800000004321853,480,,Smokeless Village,bamg-01
+41537d1b-db7f-477a-964a-20578ecc83c1,SLV_011_LPG_6AC,,AB0000000453A353,480,,Smokeless Village,bamg-01
+d8989f56-6926-4149-b201-673a74af6339,SLV_012_LPG_6AC,,470000000461A653,480,,Smokeless Village,bamg-01
+af3a2717-b623-4ff1-b8e4-83d01fea249e,SLV_007_LPG_6AC,,1500000004183A53,480,,Smokeless Village,bamg-01
+3a19e55f-f9b5-4ec4-9faf-959d8a351b4a,SLV_005_LPG_6AC,,6C00000004578153,480,,Smokeless Village,bamg-01
+be05276e-9dca-4bb0-b52e-634b8740276d,SLV_004_LPG_6AC,,6A00000004182553,480,,Smokeless Village,bamg-01
+daca4f01-d931-4d6d-aabb-3c4955a417a8,SLV_002_LPG_6AC,,0B00000004484453,480,,Smokeless Village,bamg-01
+334684e1-9fd6-4841-82b6-4ee630e7dd23,SLV_022_BG_6AC,,B70000000461E153,480,,Smokeless Village,bamg-01
+5d46d5ea-0000-0000-0000-CC78AB77F59F,Dot-F59F | 2019-08-04 07:54,Dot-F59F,CC:78:AB:77:F5:9F,300,sensor instalado en la casa del señor vicente maldonado allca para la cocina tradicional en cp de pampawasi en el distrito de pilchaca en la provincia de huancavelica en la region de huancavelica,NAMA Piloto Solar y Ventilador,namas
+5d46d449-0000-0000-0000-CC78AB77FAE1,Dot-FAE1 | 2019-08-04 07:47,Dot-FAE1,CC:78:AB:77:FA:E1,300,sensor instalado en la casa del señor vicente maldonado allca para la cocina de biomasa en el cp pampawasi en el distrito de pilchaca en la provincia de huancavelica en la region de huancavelica,NAMA Piloto Solar y Ventilador,namas
+5d46c9b5-0000-0000-0000-CC78AB6E1566,Dot-1566 | 2019-08-04 07:02,Dot-1566,CC:78:AB:6E:15:66,300,sensor instalado en la casa de la cocina de la señora Constantina Maura Maldonado Olivar para una cocina de biomasa en el cp de pampahuasi en el distrito de pilchaca en la provincia de huancavelica en la region de huancavelica,NAMA Piloto Solar y Ventilador,namas
+5d46cb18-0000-0000-0000-CC78AB77FAF5,Dot-FAF5 | 2019-08-04 07:08,Dot-FAF5,CC:78:AB:77:FA:F5,300,sensor instalado en la casa de la señora constantina maura maldonado olivar para una cocina tradicional en el cp de pampawasi en el distrito de pilchaca en la provincia de huancavelica en la region de huancavelica,NAMA Piloto Solar y Ventilador,namas
+5d46d29a-0000-0000-0000-CC78AB6E026E,Dot-026E | 2019-08-04 07:40,Dot-026E,CC:78:AB:6E:02:6E,300,sensor instalado en la casa del señor vicente maldonado allca en la cocina de gas en el cp de pampawasi en el distrito de pilchaca en la provincia de huancavelica region de huancavelica,NAMA Piloto Solar y Ventilador,namas
+47cbb18e-31ec-40b7-a7dc-ee1a1240c917,SLV_021_TS_6AC,,A900000004401253,480,,Smokeless Village,bamg-01
+51637908-0eb3-4e5a-aa8e-044fe5e5a96a,SLV_023_BG_6AC,,130000000431D553,480,,Smokeless Village,bamg-01
+16d737f7-95b4-4b34-b96d-4666feca2444,SLV_022_LPG_6AC,,E500000004245353,480,,Smokeless Village,bamg-01
+f4362eaf-922b-4d1d-949c-12652f3dfe70,SLV_024_LPG_6AC,,6D00000004542F53,480,,Smokeless Village,bamg-01
+c850caf4-1b85-456c-95d0-aada29031c3c,SLV_023_LPG_6AC,,E00000000418DE53,480,,Smokeless Village,bamg-01
+04060282-5d4f-40b6-aa50-7d7c1b6193ea,SLV_025_LPG_6AC,,400000000408DA53,480,,Smokeless Village,bamg-01
+939c89ba-5811-4778-bba4-72ebcd89f677,SLV_014_LPG_6AC,,8800000004321853,480,,Smokeless Village,smitharao
+fc57eaac-4dfc-44a1-bfc8-1cd2e35e6132,SLV_013_LPG_6AC,,A8000000043CAF53,480,,Smokeless Village,smitharao
+5df74a92-0000-0000-0000-CC78AB77FCDB,Dot-FCDB | 2019-12-16 12:12,Dot-FCDB,CC:78:AB:77:FC:DB,300,,CAA-Kenya,caakenya
+4b1d3948-d501-4379-90ad-6fa7a1bd42ca,SLV_012_LPG_6AC,,470000000461A653,480,,Smokeless Village,smitharao
+5df74afe-0000-0000-0000-CC78AB77E33F,Dot-E33F | 2019-12-16 12:14,Dot-E33F,CC:78:AB:77:E3:3F,300,,CAA-Kenya,caakenya
+5df8b2bc-0000-0000-0000-CC78AB77FC81,Dot-FC81 | 2019-12-17 13:48,Dot-FC81,CC:78:AB:77:FC:81,300,,CAA-Kenya,caakenya
+5d89ee3d-0000-0000-0000-CC78AB780141,Dot-0141 | 2019-09-24 13:20,Dot-0141,CC:78:AB:78:01:41,300,,CAA-Kenya,caakenya
+d302e6bb-86cd-4f5f-9784-a8b469807dd5,SLV_011_LPG_6AC,,AB0000000453A353,480,,Smokeless Village,smitharao
+5dd79316-0000-0000-0000-CC78AB77F5B3,Dot-F5B3 | 2019-11-22 10:47,Dot-F5B3,CC:78:AB:77:F5:B3,300,,CAA-Kenya,caakenya
+5dd7968d-0000-0000-0000-CC78AB6E0F91,Dot-0F91 | 2019-11-22 11:04,Dot-0F91,CC:78:AB:6E:0F:91,300,,CAA-Kenya,caakenya
+5dd79707-0000-0000-0000-CC78AB77FC8F,Dot-FC8F | 2019-11-22 11:06,Dot-FC8F,CC:78:AB:77:FC:8F,300,,CAA-Kenya,caakenya
+5dd799bb-0000-0000-0000-CC78AB77EF40,Dot-EF40 | 2019-11-22 11:17,Dot-EF40,CC:78:AB:77:EF:40,300,,CAA-Kenya,caakenya
+5dd79a09-0000-0000-0000-CC78AB77FCFF,Dot-FCFF | 2019-11-22 11:18,Dot-FCFF,CC:78:AB:77:FC:FF,300,,CAA-Kenya,caakenya
+5dd7a18b-0000-0000-0000-CC78AB6DFC5A,Dot-FC5A | 2019-11-22 11:49,Dot-FC5A,CC:78:AB:6D:FC:5A,300,,CAA-Kenya,caakenya
+5dd7a1e3-0000-0000-0000-CC78AB77F9E4,Dot-F9E4 | 2019-11-22 11:52,Dot-F9E4,CC:78:AB:77:F9:E4,300,,CAA-Kenya,caakenya
+5df9edd5-0000-0000-0000-CC78AB77FFA7,Dot-FFA7 | 2019-12-18 12:11,Dot-FFA7,CC:78:AB:77:FF:A7,300,,CAA-Kenya,caakenya
+5dd7a294-0000-0000-0000-CC78AB6E0564,Dot-0564 | 2019-11-22 11:54,Dot-0564,CC:78:AB:6E:05:64,300,,CAA-Kenya,caakenya
+3ce00878-e5f7-4b7b-b2d3-2922978de3fa,SLV_002_LPG_6AC,,0B00000004484453,480,,Smokeless Village,bamg-01
+3fb5a96a-57fc-4aee-91e0-3118789b866d,SLV_003_LPG_6AC,,030000000420DD53,480,,Smokeless Village,bamg-01
+6f50bb29-3f78-4c78-bf38-e0285d8ceccb,SLV_006_LPG_6AC,,7F00000004243053,480,,Smokeless Village,bamg-01
+2b1a57a3-5351-441b-b1de-32c92e7c3718,SLV_001_LPG_6AC,,4B00000004598653,480,,Smokeless Village,bamg-01
+a425712b-d791-4e39-bf18-6bdde4939bfd,SLV_004_LPG_6AC,,6A00000004182553,480,,Smokeless Village,bamg-01
+28797e79-38e1-4b30-b012-e7258782c4e8,SLV_005_LPG_6AC,,6C00000004578153,480,,Smokeless Village,bamg-01
+5df9f647-0000-0000-0000-CC78AB77E9CA,Dot-E9CA | 2019-12-18 12:48,Dot-E9CA,CC:78:AB:77:E9:CA,300,,CAA-Kenya,caakenya
+1d5058d1-0374-4b01-b452-e5bb46751e16,SLV_007_LPG_6AC,,1500000004183A53,480,,Smokeless Village,bamg-01
+80dbee95-915c-4dfc-96a3-979c8a314ffe,SLV_008_LPG_6AC,,6F0000000462E853,480,,Smokeless Village,bamg-01
+5ddb82bc-0000-0000-0000-CC78AB6E0516,Dot-0516 | 2019-11-25 10:27,Dot-0516,CC:78:AB:6E:05:16,300,,CAA-Kenya,caakenya
+5ddb9143-0000-0000-0000-CC78AB6E0FEC,Dot-0FEC | 2019-11-25 11:30,Dot-0FEC,CC:78:AB:6E:0F:EC,300,,CAA-Kenya,caakenya
+5ddba4fe-0000-0000-0000-CC78AB77E9B8,Dot-E9B8 | 2019-11-25 12:54,Dot-E9B8,CC:78:AB:77:E9:B8,300,,CAA-Kenya,caakenya
+5ddcef90-0000-0000-0000-CC78AB77E9B8,Dot-E9B8 | 2019-11-26 12:25,Dot-E9B8,CC:78:AB:77:E9:B8,300,,CAA-Kenya,caakenya
+5ddb8b79-0000-0000-0000-CC78AB77F768,Dot-F768 | 2019-11-25 11:03,Dot-F768,CC:78:AB:77:F7:68,300,,CAA-Kenya,caakenya
+5ddcebe1-0000-0000-0000-CC78AB77FE1E,Dot-FE1E | 2019-11-26 12:08,Dot-FE1E,CC:78:AB:77:FE:1E,300,,CAA-Kenya,caakenya
+5ddcec2b-0000-0000-0000-CC78AB6E0043,Dot-0043 | 2019-11-26 12:10,Dot-0043,CC:78:AB:6E:00:43,300,,CAA-Kenya,caakenya
+5ddb84c4-0000-0000-0000-CC78AB77E9BD,Dot-E9BD | 2019-11-25 10:36,Dot-E9BD,CC:78:AB:77:E9:BD,300,,CAA-Kenya,caakenya
+5ddb90ce-0000-0000-0000-CC78AB77F984,Dot-F984 | 2019-11-25 11:27,Dot-F984,CC:78:AB:77:F9:84,300,,CAA-Kenya,caakenya
+5ddb87d7-0000-0000-0000-CC78AB6E0565,Dot-0565 | 2019-11-25 10:50,Dot-0565,CC:78:AB:6E:05:65,300,,CAA-Kenya,caakenya
+5ddba481-0000-0000-0000-CC78AB6E0506,Dot-0506 | 2019-11-25 12:51,Dot-0506,CC:78:AB:6E:05:06,300,,CAA-Kenya,caakenya
+5ddcf855-0000-0000-0000-CC78AB6E0516,Dot-0516 | 2019-11-26 13:02,Dot-0516,CC:78:AB:6E:05:16,300,,CAA-Kenya,caakenya
+5ddb8bf1-0000-0000-0000-CC78AB77E9E2,Dot-E9E2 | 2019-11-25 11:07,Dot-E9E2,CC:78:AB:77:E9:E2,300,,CAA-Kenya,caakenya
+5ddb9bf5-0000-0000-0000-CC78AB6E0DE4,Dot-0DE4 | 2019-11-25 12:15,Dot-0DE4,CC:78:AB:6E:0D:E4,300,,CAA-Kenya,caakenya
+5df9ef50-0000-0000-0000-A0E6F86DEAA9,Dot-EAA9 | 2019-12-18 12:03,Dot-EAA9,A0:E6:F8:6D:EA:A9,300,,CAA-Kenya,caakenya
+5ddb880d-0000-0000-0000-CC78AB6E0ABB,Dot-0ABB | 2019-11-25 10:51,Dot-0ABB,CC:78:AB:6E:0A:BB,300,,CAA-Kenya,caakenya
+5ddcf968-0000-0000-0000-CC78AB77E9BD,Dot-E9BD | 2019-11-26 13:06,Dot-E9BD,CC:78:AB:77:E9:BD,300,,CAA-Kenya,caakenya
+5dde2785-0000-0000-0000-CC78AB6E0CB5,Dot-0CB5 | 2019-11-27 10:35,Dot-0CB5,CC:78:AB:6E:0C:B5,300,,CAA-Kenya,caakenya
+39c0791d-631d-4c85-8ba2-dc79a2c3ab7e,SLV_009_LPG_6AC,,DE00000004089F53,480,,Smokeless Village,bamg-01
+8848226b-34a6-440c-9d44-fd6ae1d945da,SLV_010_LPG_6AC,,CD000000041B3353,480,,Smokeless Village,bamg-01
+5ddce597-0000-0000-0000-CC78AB77FFB8,Dot-FFB8 | 2019-11-26 11:42,Dot-FFB8,CC:78:AB:77:FF:B8,300,,CAA-Kenya,caakenya
+5ddb9c1f-0000-0000-0000-CC78AB6E09E0,Dot-09E0 | 2019-11-25 12:15,Dot-09E0,CC:78:AB:6E:09:E0,300,,CAA-Kenya,caakenya
+5dfb827d-0000-0000-0000-CC78AB6DFEB1,Dot-FEB1 | 2019-12-19 16:59,Dot-FEB1,CC:78:AB:6D:FE:B1,301,,CAA-Kenya,caakenya
+5ddb9ec8-0000-0000-0000-CC78AB6E0506,Dot-0506 | 2019-11-25 12:27,Dot-0506,CC:78:AB:6E:05:06,300,,CAA-Kenya,caakenya
+7393e372-dde8-4537-a1a3-55d5440e318e,SLV_011_LPG_6AC,,AB0000000453A353,480,,Smokeless Village,bamg-01
+5ddb8f09-0000-0000-0000-CC78AB6E10FE,Dot-10FE | 2019-11-25 11:19,Dot-10FE,CC:78:AB:6E:10:FE,300,,CAA-Kenya,caakenya
+5dde22e5-0000-0000-0000-CC78AB6E053D,Dot-053D | 2019-11-27 10:14,Dot-053D,CC:78:AB:6E:05:3D,300,,CAA-Kenya,caakenya
+5ddb9dc6-0000-0000-0000-CC78AB77FC81,Dot-FC81 | 2019-11-25 12:23,Dot-FC81,CC:78:AB:77:FC:81,300,,CAA-Kenya,caakenya
+87b84940-13a5-4fa0-8f3b-201d7d9f7386,SLV_012_LPG_6AC,,470000000461A653,480,,Smokeless Village,bamg-01
+5dde27cb-0000-0000-0000-CC78AB77FE4B,Dot-FE4B | 2019-11-27 10:37,Dot-FE4B,CC:78:AB:77:FE:4B,300,,CAA-Kenya,caakenya
+5dde3591-0000-0000-0000-CC78AB77F279,Dot-F279 | 2019-11-27 11:35,Dot-F279,CC:78:AB:77:F2:79,300,,CAA-Kenya,caakenya
+5dde3d79-0000-0000-0000-CC78AB6E0785,Dot-0785 | 2019-11-27 12:09,Dot-0785,CC:78:AB:6E:07:85,300,,CAA-Kenya,caakenya
+5ddf8294-0000-0000-0000-CC78AB77EF67,Dot-EF67 | 2019-11-28 11:16,Dot-EF67,CC:78:AB:77:EF:67,300,,CAA-Kenya,caakenya
+5ddf88be-0000-0000-0000-CC78AB6E0998,Dot-0998 | 2019-11-28 11:42,Dot-0998,CC:78:AB:6E:09:98,300,,CAA-Kenya,caakenya
+5ddf82c6-0000-0000-0000-CC78AB6E0CC2,Dot-0CC2 | 2019-11-28 11:17,Dot-0CC2,CC:78:AB:6E:0C:C2,300,,CAA-Kenya,caakenya
+5dde35d1-0000-0000-0000-CC78AB77FCD9,Dot-FCD9 | 2019-11-27 11:37,Dot-FCD9,CC:78:AB:77:FC:D9,300,,CAA-Kenya,caakenya
+5dde4479-0000-0000-0000-CC78AB77FFA5,Dot-FFA5 | 2019-11-27 12:36,Dot-FFA5,CC:78:AB:77:FF:A5,300,,CAA-Kenya,caakenya
+5dde4525-0000-0000-0000-CC78AB6E034C,Dot-034C | 2019-11-27 12:42,Dot-034C,CC:78:AB:6E:03:4C,300,,CAA-Kenya,caakenya
+5dde44b6-0000-0000-0000-CC78AB77F9F4,Dot-F9F4 | 2019-11-27 12:35,Dot-F9F4,CC:78:AB:77:F9:F4,240,,CAA-Kenya,caakenya
+5dde4580-0000-0000-0000-CC78AB6E09ED,Dot-09ED | 2019-11-27 12:42,Dot-09ED,CC:78:AB:6E:09:ED,300,,CAA-Kenya,caakenya
+5dde338e-0000-0000-0000-CC78AB77E6EE,Dot-E6EE | 2019-11-27 11:27,Dot-E6EE,CC:78:AB:77:E6:EE,300,,CAA-Kenya,caakenya
+5de4ccee-0000-0000-0000-CC78AB77FCEC,Dot-FCEC | 2019-12-02 11:35,Dot-FCEC,CC:78:AB:77:FC:EC,300,,CAA-Kenya,caakenya
+5de61356-0000-0000-0000-CC78AB77FFAD,Dot-FFAD | 2019-12-03 10:48,Dot-FFAD,CC:78:AB:77:FF:AD,300,,CAA-Kenya,caakenya
+5de62a3b-0000-0000-0000-CC78AB77FFB7,Dot-FFB7 | 2019-12-03 12:25,Dot-FFB7,CC:78:AB:77:FF:B7,300,,CAA-Kenya,caakenya
+5dde4563-0000-0000-0000-CC78AB6E1545,Dot-1545 | 2019-11-27 12:43,Dot-1545,CC:78:AB:6E:15:45,300,,CAA-Kenya,caakenya
+5de4cd1d-0000-0000-0000-CC78AB6DFC69,Dot-FC69 | 2019-12-02 11:36,Dot-FC69,CC:78:AB:6D:FC:69,300,,CAA-Kenya,caakenya
+5dde332a-0000-0000-0000-CC78AB77FAB2,Dot-FAB2 | 2019-11-27 11:25,Dot-FAB2,CC:78:AB:77:FA:B2,300,,CAA-Kenya,caakenya
+5dde460a-0000-0000-0000-CC78AB77FE73,Dot-FE73 | 2019-11-27 12:46,Dot-FE73,CC:78:AB:77:FE:73,300,,CAA-Kenya,caakenya
+5de62d6c-0000-0000-0000-CC78AB6E0FA4,Dot-0FA4 | 2019-12-03 12:39,Dot-0FA4,CC:78:AB:6E:0F:A4,300,,CAA-Kenya,caakenya
+5de4e190-0000-0000-0000-CC78AB77F24F,Dot-F24F | 2019-12-02 13:03,Dot-F24F,CC:78:AB:77:F2:4F,301,,CAA-Kenya,caakenya
+5dde3287-0000-0000-0000-CC78AB77E6EE,Dot-E6EE | 2019-11-27 11:22,Dot-E6EE,CC:78:AB:77:E6:EE,300,,CAA-Kenya,caakenya
+5de8d323-0000-0000-0000-CC78AB77E33F,Dot-E33F | 2019-12-05 12:50,Dot-E33F,CC:78:AB:77:E3:3F,300,,CAA-Kenya,caakenya
+5de8c59d-0000-0000-0000-A0E6F86DEAA1,Dot-EAA1 | 2019-12-05 11:52,Dot-EAA1,A0:E6:F8:6D:EA:A1,300,,CAA-Kenya,caakenya
+5dde24a8-0000-0000-0000-CC78AB6E0571,Dot-0571 | 2019-11-27 10:22,Dot-0571,CC:78:AB:6E:05:71,300,,CAA-Kenya,caakenya
+5dde24e5-0000-0000-0000-CC78AB77E9CA,Dot-E9CA | 2019-11-27 10:24,Dot-E9CA,CC:78:AB:77:E9:CA,300,,CAA-Kenya,caakenya
+5de4d3b6-0000-0000-0000-CC78AB77FFD5,Dot-FFD5 | 2019-12-02 12:03,Dot-FFD5,CC:78:AB:77:FF:D5,300,,CAA-Kenya,caakenya
+5de6131a-0000-0000-0000-CC78AB6E0CA2,Dot-OCA2 | 2019-12-03 10:46,Dot-OCA2,CC:78:AB:6E:0C:A2,300,,CAA-Kenya,caakenya
+5de8c7d1-0000-0000-0000-CC78AB77FCC7,Dot-FCC7 | 2019-12-05 12:01,Dot-FCC7,CC:78:AB:77:FC:C7,300,,CAA-Kenya,caakenya
+5de8c685-0000-0000-0000-CC78AB6E0DFC,Dot-0DFC | 2019-12-05 11:56,Dot-0DFC,CC:78:AB:6E:0D:FC,300,,CAA-Kenya,caakenya
+d25c4463-5a4b-4c1b-951f-9da73bb71d54,SLV_013_LPG_6AC,,A8000000043CAF53,480,,Smokeless Village,bamg-01
+5dde29e9-0000-0000-0000-CC78AB6E054F,Dot-054F | 2019-11-27 10:44,Dot-054F,CC:78:AB:6E:05:4F,300,,CAA-Kenya,caakenya
+5de8cb44-0000-0000-0000-CC78AB6E053A,Dot-053A | 2019-12-05 12:17,Dot-053A,CC:78:AB:6E:05:3A,300,,CAA-Kenya,caakenya
+98fc45d5-b57e-4950-b941-80f32f32a8a6,SLV_015_LPG_6AC,,FA00000004190053,480,,Smokeless Village,bamg-01
+986f1696-d2f3-4386-a14c-ba3069e40393,SLV_016_LPG_6AC,,530000000408D453,480,,Smokeless Village,bamg-01
+d0fa83c6-63c0-4577-9e6b-5a2d2027d033,SLV_014_LPG_6AC,,8800000004321853,480,,Smokeless Village,bamg-01
+d307474f-d30f-4512-bacb-d94f7c26a574,SLV_017_LPG_6AC,,E80000000441DC53,480,,Smokeless Village,bamg-01
+9ca7aa56-5ce2-4f96-8279-b7d604856191,SLV_018_LPG_6AC,,E7000000043F2A53,480,,Smokeless Village,bamg-01
+b5f5759f-3716-4f2e-add7-a9a6b7dd8641,SLV_019_LPG_6AC,,F40000000468F453,480,,Smokeless Village,bamg-01
+460ff508-84aa-47a0-8b90-69495853cbf2,SLV_021_LPG_6AC,,2F0000000423B553,480,,Smokeless Village,bamg-01
+f7207bee-3ea7-46db-a8eb-ab0fa5842946,SLV_020_LPG_6AC,,9400000004688F53,480,,Smokeless Village,bamg-01
+1a139e93-46ec-4d97-ae0e-ef49c7ea078e,SLV_022_LPG_6AC,,E500000004245353,480,,Smokeless Village,bamg-01
+5dee2ade-0000-0000-0000-CC78AB6E0784,Dot-0784 | 2019-12-09 14:06,Dot-0784,CC:78:AB:6E:07:84,300,,CAA-Kenya,caakenya
+1715a213-2345-4480-93f6-1593da4f39aa,SLV_023_LPG_6AC,,E00000000418DE53,480,,Smokeless Village,bamg-01
+861a448e-cc08-47c7-ad4e-81e01e685b1c,SLV_025_LPG_6AC,,400000000408DA53,480,,Smokeless Village,bamg-01
+df4994ed-8f71-4906-8223-a04b51aaad77,SLV_024_LPG_6AC,,6D00000004542F53,480,,Smokeless Village,bamg-01
+e1dcd204-4d6a-45c8-afa9-8fb6b3f828f2,SLV_001_BG_6AC,,E100000004318153,480,,Smokeless Village,bamg-01
+9a409512-d1f2-44e6-b97b-ff18627d34bf,SLV_022_BG_6AC,,B70000000461E153,480,,Smokeless Village,bamg-01
+da9ef760-69c6-4c5b-8432-247937513ef6,SLV_023_BG_6AC,,130000000431D553,480,,Smokeless Village,bamg-01
+5dee2b1a-0000-0000-0000-CC78AB77E6F8,Dot-E6F8 | 2019-12-09 14:07,Dot-E6F8,CC:78:AB:77:E6:F8,300,,CAA-Kenya,caakenya
+5dee1df6-0000-0000-0000-806FB0636651,Dot-6651 | 2019-12-09 13:11,Dot-6651,80:6F:B0:63:66:51,300,,CAA-Kenya,caakenya
+5deedeef-0000-0000-0000-806FB0636576,china test,Dot-6576,80:6F:B0:63:65:76,10,,Smokeless Village,bamg-01
+73817aed-43e1-454a-8a8d-8b0c10a0bbac,SLV_002_TS_6AC,,B80000000457C953,480,,Smokeless Village,bamg-01
+5def1e13-0000-0000-0000-806FB063584D,Dot-584D | 2019-12-10 12:21,Dot-584D,80:6F:B0:63:58:4D,300,50  minutes,Smokeless Village,bamg-01
+5def1ed2-0000-0000-0000-806FB063584D,Dot-584D | 2019-12-10 12:27,Dot-584D,80:6F:B0:63:58:4D,60,50 minutes,Smokeless Village,bamg-01
+9bb3bcdd-6bf8-4373-9b58-c2c16f71c404,SLV_003_TS_6AC,,1F0000000457F453,480,,Smokeless Village,bamg-01
+5def1ddb-0000-0000-0000-806FB0635ACE,test,Dot-5ACE,80:6F:B0:63:5A:CE,60,temprature,Smokeless Village,bamg-01
+c6db6d76-f933-4a23-bb54-687381b6be38,SLV_004_TS_6AC,,8B00000004597053,480,,Smokeless Village,bamg-01
+5def1ef4-0000-0000-0000-806FB0635863,pellets stove study,Dot-5863,80:6F:B0:63:58:63,60,biomass stove heating chamber,Smokeless Village,bamg-01
+5def233d-0000-0000-0000-806FB063584D,Dot-584D | 2019-12-10 12:46,Dot-584D,80:6F:B0:63:58:4D,60,coffee,Smokeless Village,bamg-01
+5def2368-0000-0000-0000-806FB0635863,pellets stove 3,Dot-5863,80:6F:B0:63:58:63,60,stove chimney,Smokeless Village,bamg-01
+fcf8bf40-0f15-4b2c-95ce-3930b57b29ab,SLV_005_TS_6AC,,5700000004212853,480,,Smokeless Village,bamg-01
+30ef2653-6da5-4077-91eb-ba733aebc4d1,SLV_006_TS_6AC,,840000000440D453,480,,Smokeless Village,bamg-01
+24f11ff9-4e12-4cdc-92c9-3414236ce25a,SLV_008_TS_6AC,,2600000004237C53,480,,Smokeless Village,bamg-01
+5def22be-0000-0000-0000-806FB06363BD,pellets stove,Dot-63BD,80:6F:B0:63:63:BD,60,stove chimney,Smokeless Village,bamg-01
+401fd833-8809-461e-8cd1-8acd330b20ef,SLV_009_TS_6AC,,7D0000000452E153,480,,Smokeless Village,bamg-01
+b568744f-7d22-412c-a608-a91eff04a209,SLV_010_TS_6AC,,1E0000000418E053,480,,Smokeless Village,bamg-01
+5def256b-0000-0000-0000-806FB0635ACE,Dot-5ACE | 2019-12-10 12:55,Dot-5ACE,80:6F:B0:63:5A:CE,10,,Smokeless Village,bamg-01
+e37f30e5-123f-4f92-8ca7-b0c01f1e9cda,SLV_007_TS_6AC,,5D00000004624A53,480,,Smokeless Village,bamg-01
+5d419c8a-0000-0000-0000-CC78AB77FE5C,Dot-FE5C | 2019-07-31 08:47,Dot-FE5C,CC:78:AB:77:FE:5C,300,"En la casa de la sr. Rosa Acosta Comberso se instala un sensor en su cocina Tradicional en el Cp de Patay Rondos, Distrito Marias, Provincia Dos de Mayo, Region Huanuco.",NAMA Piloto Solar y Ventilador,namas
+5d419339-0000-0000-0000-CC78AB77FCCC,Dot-FCCC | 2019-07-31 08:07,Dot-FCCC,CC:78:AB:77:FC:CC,300,"En la casa del sr. Lino , serafin Acosta se instala un sensor en su cocina TRADICIONAL en el cp Patay Rondos, Distrito Marias, Provincia Dos de mayo , Region Huanuco.",NAMA Piloto Solar y Ventilador,namas
+5d419bd9-0000-0000-0000-CC78AB6E0551,Dot-0551 | 2019-07-31 08:44,Dot-0551,CC:78:AB:6E:05:51,300,"En la casa de la sr. Rosa Acosta Comberso se intala un sensor en el tipo de cocina VENTILADOR, en el Cp Patay Rondos, Distrito Marias, Provincia Dos de Mayo, Region Huanuco.",NAMA Piloto Solar y Ventilador,namas
+5def20a9-0000-0000-0000-806FB063584D,Dot-584D | 2019-12-10 12:35,Dot-584D,80:6F:B0:63:58:4D,60,,Smokeless Village,bamg-01
+5d419da0-0000-0000-0000-CC78AB77FE58,Dot-FE58 | 2019-07-31 08:52,Dot-FE58,CC:78:AB:77:FE:58,300,"En la casa de la sr. Rosa Acosta Comberso se instala un sensor en la cocina GLP en el Cp Patay Rondos, Distrito Marias,Provincia Dos de Mayo, Region Huanuco",NAMA Piloto Solar y Ventilador,namas
+5d418c7b-0000-0000-0000-CC78AB77EA8D,Dot-EA8D | 2019-07-31 07:38,Dot-EA8D,CC:78:AB:77:EA:8D,300,"En la casa del sr. Lino, Serafin Acosta se instala un sensor  para la cocina tipo ventilador, en el cp Patay Rondos,Distrito Marias, Provincia Dos de Mayo, Region Huanuco.",NAMA Piloto Solar y Ventilador,namas
+29fd409e-d421-4316-a1b9-3d36d7dc203a,SLV_011_TS_6AC,,780000000462C053,480,,Smokeless Village,bamg-01
+4ec01a8d-bae8-4283-9a4f-1c9ba95b7ac5,SLV_013_TS_6AC,,71000000040C8A53,480,,Smokeless Village,bamg-01
+5def3854-0000-0000-0000-806FB0635ACE,Dot-5ACE | 2019-12-10 14:16,Dot-5ACE,80:6F:B0:63:5A:CE,1,,Smokeless Village,bamg-01
+5def39e3-0000-0000-0000-806FB0635ACE,Dot-5ACE | 2019-12-10 14:23,Dot-5ACE,80:6F:B0:63:5A:CE,10,,Smokeless Village,bamg-01
+3f1469f8-11cd-4be6-92e4-0c3fd7728f4d,SLV_010_LPG_6AC,,CD000000041B3353,480,,Smokeless Village,smitharao
+db8a1a88-a47c-4f2b-afd5-f45719e92309,SLV_008_LPG_6AC,,6F0000000462E853,480,,Smokeless Village,smitharao
+551aade8-be69-4558-b0aa-d6113d640a49,SLV_009_LPG_6AC,,DE00000004089F53,480,,Smokeless Village,smitharao
+7e2fb6d6-3f4c-4dfa-b813-2caef09c282d,SLV_007_LPG_6AC,,1500000004183A53,480,,Smokeless Village,smitharao
+e26a571e-1d97-4564-8edf-1ee6c6f4dda5,SLV_006_LPG_6AC,,7F00000004243053,480,,Smokeless Village,smitharao
+c342bb96-72e4-4f5b-932c-047ac0e9c4c2,SLV_005_LPG_6AC,,6C00000004578153,480,,Smokeless Village,smitharao
+91ba90be-fbc9-481b-ba91-1152993de7f8,SLV_004_LPG_6AC,,6A00000004182553,480,,Smokeless Village,smitharao
+70288d7e-5887-4057-9654-f02245e11686,SLV_003_LPG_6AC,,030000000420DD53,480,,Smokeless Village,smitharao
+d39b2e6d-30a7-4ff8-87ce-dea680f94cbe,SLV_002_LPG_6AC,,0B00000004484453,480,,Smokeless Village,smitharao
+610fb1a8-3645-4800-8b16-224c91a10646,SLV_001_LPG_6AC,,4B00000004598653,480,,Smokeless Village,smitharao
+3bd23351-1b63-4c97-91cc-ffc6da4f9b79,SLV_021_TS_6AC,,A900000004401253,480,,Smokeless Village,smitharao
+697af7f8-c88e-4801-a5e3-77284d3bc0c2,SLV_020_TS_6AC,,CF00000004088253,480,,Smokeless Village,smitharao
+d74a0f3a-f406-43f0-bc55-2612dd37f4ae,SLV_019_TS_6AC,,54000000041EBB53,480,,Smokeless Village,smitharao
+4508a00b-a22c-4cd4-8af4-c896a8ab1552,SLV_018_TS_6AC,,3500000004190A53,480,,Smokeless Village,smitharao
+16485b0b-eb89-4d85-8ffb-631fd2f1c21a,SLV_017_TS_6AC,,46000000041B4D53,480,,Smokeless Village,smitharao
+f5de7ff6-e4a9-4333-a2ee-ac4f4532eec0,SLV_016_TS_6AC,,240000000431D453,480,,Smokeless Village,smitharao
+c2cccb33-aaf9-45f8-b548-5c445f390f68,SLV_015_TS_6AC,,B7000000041B8F53,480,,Smokeless Village,smitharao
+fc589ed2-ee11-4b37-803a-a9c5e47cac86,SLV_014_TS_6AC,,67000000043CA553,480,,Smokeless Village,smitharao
+a5ebebf1-99f9-4f25-9db8-424de08fb371,SLV_013_TS_6AC,,71000000040C8A53,480,,Smokeless Village,smitharao
+6caa1235-a7ce-432e-be88-6854a9784a9a,SLV_012_TS_6AC,,C600000004123853,480,,Smokeless Village,smitharao
+21a69e90-6261-4e9e-87db-7dcff4ec5518,SLV_011_TS_6AC,,780000000462C053,480,,Smokeless Village,smitharao
+1a408eaf-6e04-426f-b474-bd6b99acd30e,SLV_010_TS_6AC,,1E0000000418E053,480,,Smokeless Village,smitharao
+484e8df7-bf58-4ddf-bb03-7ca1c5d2354d,SLV_009_TS_6AC,,7D0000000452E153,480,,Smokeless Village,smitharao
+07024bec-583a-41a7-8e50-7522a687eb5b,SLV_008_TS_6AC,,2600000004237C53,480,,Smokeless Village,smitharao
+34508c50-55b2-4f1f-9e42-4a905222fe59,SLV_007_TS_6AC,,5D00000004624A53,480,,Smokeless Village,smitharao
+73ff2a18-e685-44cb-ab1a-43af314cac91,SLV_006_TS_6AC,,840000000440D453,480,,Smokeless Village,smitharao
+fbee683d-606c-4df8-86e1-3ba3ceb0e11e,SLV_005_TS_6AC,,5700000004212853,480,,Smokeless Village,smitharao
+8ee05836-78d4-408c-bbf0-5811d24f07e8,SLV_004_TS_6AC,,8B00000004597053,480,,Smokeless Village,smitharao
+a80dbec8-94fb-416f-a631-24988cd68788,SLV_003_TS_6AC,,1F0000000457F453,480,,Smokeless Village,smitharao
+d8434fd1-b4d6-4df9-9a7a-b7369cf96d9b,SLV_002_TS_6AC,,B80000000457C953,480,,Smokeless Village,smitharao
+500ef1df-f854-42a1-ac11-a8565b4a8a68,SLV_023_BG_6AC,,130000000431D553,480,,Smokeless Village,smitharao
+f589b2c1-af5b-4bf4-8049-ce119b089f16,SLV_022_BG_6AC,,B70000000461E153,480,,Smokeless Village,smitharao
+9b32d7cd-3b21-4dfb-aa77-148a13aa8630,SLV_001_BG_6AC,,E100000004318153,480,,Smokeless Village,smitharao
