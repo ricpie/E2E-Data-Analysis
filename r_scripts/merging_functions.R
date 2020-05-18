@@ -140,7 +140,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   
   
   # merge with preplacement data subset or emissions subset?
-  pre <- preplacement[,c('...')]
+  # pre <- preplacement[,c('...')]
   
   
   all_merged = merge(wide_ecm_dot_data,wide_co_data, by.x = c("datetime","pm_hhid_numeric"),
@@ -151,6 +151,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                       by.y = c("datetime","HHID"), all.x = T, all.y = F)
   all_merged = merge(all_merged,tsi_timeseries, by.x = c("datetime","pm_hhid_numeric"),
                      by.y = c("datetime","HHID"), all.x = T, all.y = F)
+  # merge with emissions, (tsi) preplacement
   
   
   all_merged<-all_merged[order(rank(pm_hhid_numeric)),]
@@ -177,75 +178,8 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                                                           location_kitchen_threshold != 'Kitchen' ~ `CO_Living Room`,
                                                           TRUE ~ CO_Ambient)]
   
-  # merge with emissions, (tsi) preplacement
-  
-  
-  
-  
-  
   
 
-
-
-  
-
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  if(nrow(beacon_data_temp)==0){
-    base::message('No Beacon data found, various possible issue!  May check the Mobenzi start date/time or Beacon file timestamps or IDs.  
-                  Also possible that no Beacon emitter found, please check Beacon inventory and Beacon logger file, Check ID_missing_beacons for more information')
-    base::message(paste('Beacon IDs found: ', paste(Beacons_mobenzi$loggerID,collapse = ' ')))
-    base::message(paste('Mobenzi Start Date: ', selected_preplacement$Start))
-    return(list(beacon_data_temp=NULL, beacon_logger_COmerged=NULL))
-    
-  }else { #Calculate exposure estimates
-    lascar_calibrated_subset <- CO_calibrated_timeseries[datetime>selected_preplacement$start_datetime & datetime<selected_preplacement$start_datetime+86400,]
-    beacon_logger_COmerged = merge(beacon_data_temp,lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),
-                                   by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
-    beacon_logger_COmerged[,sampletype := "C"] 
-    beacon_logger_COmerged = merge(beacon_logger_COmerged, lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),
-                                   by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
-    setnames(beacon_logger_COmerged, old=c("CO_ppm.x","CO_ppm.y"), new=c("CO_ppm_indirect", "CO_ppm_direct"))
-    
-    lascar_calibrated_subset <- CO_calibrated_timeseries[datetime>selected_preplacement$start_datetime & datetime<selected_preplacement$start_datetime+86400,]
-    beacon_logger_COmerged = merge(beacon_data_temp,lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),
-                                   by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
-    beacon_logger_COmerged[,sampletype := "C"] 
-    beacon_logger_COmerged = merge(beacon_logger_COmerged, lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),
-                                   by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
-    setnames(beacon_logger_COmerged, old=c("CO_ppm.x","CO_ppm.y"), new=c("CO_ppm_indirect", "CO_ppm_direct"))
-  }
-  
-  tryCatch({ 
-    #Plot the position.
-    samplename <- paste0("Loc_",selected_preplacement$HHID,"_",as.character(selected_preplacement$UNOPS_Date))
-    beacon_logger_COmerged_melted = melt(beacon_logger_COmerged,measure.vars = c("CO_ppm_indirect", "CO_ppm_direct"))
-    p1 <- qplot(CO_ppm_indirect_nearest,CO_ppm_direct, data = beacon_logger_COmerged) + ggtitle(samplename)
-    p2 <- qplot(datetime,CO_ppm_indirect_kitchen_threshold, data = beacon_logger_COmerged_melted,geom = c("point", "smooth"),color=variable) + theme(legend.position="bottom")+
-      scale_color_viridis_d()
-    p3 <- qplot(datetime, Kitchen_RSSI, data = beacon_logger_COmerged,color = location_kitchen_threshold) + theme(legend.position="bottom")
-    p4 <- qplot(datetime, nearest_RSSI, data = beacon_logger_COmerged,color = location_nearest) + theme(legend.position="bottom")
-    beacon_plot <- arrangeGrob(p1, p2, p3,p4, nrow=2,ncol=2) #generates g
-    
-    plot_name = paste0("QA Reports/Instrument Plots/Loc_",selected_preplacement$HHID,"_",as.character(selected_preplacement$UNOPS_Date),'.png')
-    if(!file.exists(plot_name)){
-      ggsave(filename=plot_name,plot=beacon_plot,width = 8, height = 6)
-    }
-  }, error = function(e) {
-  }, finally={})
-  
-  if(all(output=='beacon_logger_COmerged')){return(beacon_logger_COmerged)}else
-    if(all(output=='beacon_data_temp')){return(beacon_data_temp)}else
-      if(all(output==c('beacon_data_temp', 'beacon_logger_COmerged'))){
-        return(list( beacon_data_temp=beacon_data_temp,beacon_logger_COmerged=beacon_logger_COmerged))
-      }
 }
 
 

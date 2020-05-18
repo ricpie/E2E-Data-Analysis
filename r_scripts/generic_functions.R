@@ -780,15 +780,7 @@ plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_t
     
     # if(!file.exists(plot_name)){
     png(plot_name,width = 1000, height = 800, units = "px")
-    
-    # p1 <- ggplotGrob(p1)
-    # p2 <- ggplotGrob(p2)
-    # # p3 <- ggplotGrob(p3)
-    # p4 <- ggplotGrob(p4)
-    # p5 <- ggplotGrob(p5)
-    
-    # grid::grid.newpage()
-    # grid::grid.draw(rbind(p1,p2,p4,p5, size = "last"))
+
     
     egg::ggarrange(p1, p2,p4,p5, heights = c(0.25, 0.25,.25,.25))
     

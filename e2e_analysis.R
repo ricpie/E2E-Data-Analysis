@@ -119,11 +119,11 @@ todays_date <- gsub("-", "", as.character(Sys.Date()))
 #Plot the deployments and output a wide merged dataset (ECM, Dots, TSI, Lascar, PATS+, Beacon Localization, ECM+Beacon exposure estimate
 #PATS+Beacon exposure estimate, Lascar+Beacon exposure estimate)
 
-all_data_merged <- all_merge_fun(selected_selected_preplacement,beacon_logger_data,
+all_merged <- all_merge_fun(preplacement,beacon_logger_data,
                              pats_data_timeseries,CO_calibrated_timeseries,tsi_timeseries,pats_data_timeseries,ecm_dot_data)
 
 for(i in 1:dim(preplacement)[1]){
-  plot_deployment(all_data_merged[HHID == preplacement[i,]$HHID])
+  plot_deployment(all_merged[HHID == preplacement[i,]$HHID])
 }
 
 
