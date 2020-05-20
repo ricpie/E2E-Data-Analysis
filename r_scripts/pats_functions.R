@@ -31,7 +31,7 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
   
   if(dim(raw_data)[1]==0){
     raw_data <-fread(file, skip = 36,sep=",",fill=TRUE)[,(c(4,5,13,14,15)):=NULL]
-    setnames(raw_data,c('dateTime','V_power','degC_air',	'%RH_air',	'CO_PPM',	'status',	'ref_sigDel',	'low20avg',	'high320avg',	'motion','PM_Estimate'),skip_absent=TRUE)
+    setnames(raw_data,c('dateTime','V_power','degC_air',	'%RH_air',	'CO_PPM',	'status',	'ref_sigDel',	'low20avg',	'high320avg',	'motion','pm25_conc'),skip_absent=TRUE)
   }
   
   if(badfileflag==1){
@@ -135,7 +135,7 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
       
       # Create a table with baseline parameters by hour
       # 5 percentile per hour, sd per hour, max per hour, num of observations per hour
-      bl_check <- raw_data[!is.na(PM_Estimate), list(hr_ave=mean(PM_Estimate, na.rm=T),hr_p05=quantile(PM_Estimate, 0.05, na.rm=T), hr_sd=sd(PM_Estimate, na.rm=T), hr_n=length(PM_Estimate)), by='round_time']
+      bl_check <- raw_data[!is.na(pm25_conc), list(hr_ave=mean(pm25_conc, na.rm=T),hr_p05=quantile(pm25_conc, 0.05, na.rm=T), hr_sd=sd(pm25_conc, na.rm=T), hr_n=length(pm25_conc)), by='round_time']
       bl_check[, hour_of_day:=hour(round_time)]
       #check the first three values of the summary
       first_hrs_bl <- round(bl_check[, median(head(hr_p05,3))],2)
@@ -151,17 +151,17 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
       bl_flag <- if(any(abs(bl_diffs)>=10*bl_shift_threshold,na.rm = TRUE) || sum(is.na(bl_diffs)) > 0){1}else{0}
       
       #Calculate daily average concentration flag
-      Daily_avg <- mean(raw_data$PM_Estimate,na.rm = TRUE)
+      Daily_avg <- mean(raw_data$pm25_conc,na.rm = TRUE)
       
-      Daily_avg_flag <- if(Daily_avg>=10*Daily_avg_threshold || sum(is.na(raw_data$PM_Estimate)) > 0){1}else{0}
-      Daily_sd <- sd(raw_data$PM_Estimate,na.rm = TRUE)
+      Daily_avg_flag <- if(Daily_avg>=10*Daily_avg_threshold || sum(is.na(raw_data$pm25_conc)) > 0){1}else{0}
+      Daily_sd <- sd(raw_data$pm25_conc,na.rm = TRUE)
       
       #Calculate hourly average concentration flag
       max_1hr_avg <- max(bl_check$hr_ave,na.rm = TRUE)
       max_1hr_avg_flag <- if(max_1hr_avg>=50*max_1hr_avg_threshold || sum(is.na(bl_check$hr_ave)) > 0){1}else{0}
       
       #Raise flag if stdev of values is zero.
-      nonresponsive_flag <- if(sd(raw_data$PM_Estimate,na.rm = TRUE)==0 || sum(is.na(raw_data$PM_Estimate)) > 0){1}else{0}
+      nonresponsive_flag <- if(sd(raw_data$pm25_conc,na.rm = TRUE)==0 || sum(is.na(raw_data$pm25_conc)) > 0){1}else{0}
       
       #sample duration
       sample_duration_flag <- if(meta_data$sampling_duration < sample_duration_thresholds[1]/1440 &&
@@ -181,12 +181,12 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
         #Prepare some text for looking at the ratios of high to low temps.
         plot_name = gsub(".txt",".png",basename(file))
         plot_name = paste0("QA Reports/Instrument Plots/pats_",gsub(".csv",".png",plot_name))
-        percentiles <- quantile(raw_data$PM_Estimate,c(.05,.95))
+        percentiles <- quantile(raw_data$pm25_conc,c(.05,.95))
         cat_string <- paste("5th % PM (ugm3) = ",as.character(percentiles[1]),
                             ", 95th % PM (ugm3)  = ",as.character(percentiles[2]))
         if(!file.exists(plot_name)){
           png(filename=plot_name,width = 550, height = 480, res = 100)
-          plot(raw_data$datetime, raw_data$PM_Estimate, main=plot_name,
+          plot(raw_data$datetime, raw_data$pm25_conc, main=plot_name,
                type = "p", xlab = cat_string, ylab="Calibrated PM (ugm3)",prob=TRUE,cex.main = .6,cex = .5)
           grid(nx = 5, ny = 10, col = "lightgray", lty = "dotted",
                lwd = par("lwd"), equilogs = TRUE)

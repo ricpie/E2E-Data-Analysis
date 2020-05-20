@@ -116,17 +116,21 @@ todays_date <- gsub("-", "", as.character(Sys.Date()))
 
 
 
-#Plot the deployments and output a wide merged dataset (ECM, Dots, TSI, Lascar, PATS+, Beacon Localization, ECM+Beacon exposure estimate
+#Create a wide merged dataset (ECM, Dots, TSI, Lascar, PATS+, Beacon Localization, ECM+Beacon exposure estimate
 #PATS+Beacon exposure estimate, Lascar+Beacon exposure estimate)
-
 all_merged <- all_merge_fun(preplacement,beacon_logger_data,
-                             pats_data_timeseries,CO_calibrated_timeseries,tsi_timeseries,pats_data_timeseries,ecm_dot_data)
+                             CO_calibrated_timeseries,tsi_timeseries,pats_data_timeseries,ecm_dot_data)
+
 
 for(i in 1:dim(preplacement)[1]){
-  plot_deployment(all_merged[HHID == preplacement[i,]$HHID])
+  plot_deployment(preplacement[i,],beacon_logger_data,
+                  pats_data_timeseries,CO_calibrated_timeseries,tsi_timeseries,ecm_dot_data)
+  plot_deployment_merged(all_merged[HHID == preplacement[i,]$HHID])
 }
+all_merged_summary <- all_merged %>% 
 
-
+  
+  
 #Ambient data
 ambient_analysis(CO_calibrated_timeseries,pats_data_timeseries,upasmeta,gravimetric_data) #Try to get ambient met data from Matt or others?
 

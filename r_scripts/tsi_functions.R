@@ -246,7 +246,9 @@ tsi_meta_data_fun <- function(file,output='raw_data',local_tz,meta_emissions="me
       raw_data[,sampletype := meta_data$sampletype]
       raw_data[,qc := meta_data$qc]
       
-      return(raw_data)
+      rraw_data[,Date := NULL]
+      raw_data[,Time := NULL]
+      eturn(raw_data)
     }
   }
 }

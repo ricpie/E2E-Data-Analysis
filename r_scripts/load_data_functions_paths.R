@@ -71,7 +71,8 @@ ecm_dot_data <- readRDS("../Data/analysis-20200421/ecm_dot_data.RDS") %>%
                             TRUE ~ as.character(stove_type)),
                 HHID = pm_hhid,
                 datetime = time_chunk,
-                pm_location = pm_monitor_type) %>%
+                sampletype = pm_monitor_type,
+                qc = "good") %>%
   # dplyr::filter(HHID != 'KE511-KE06' & HHID != 'KE508-KE12') %>%
   dplyr::select(-other_people_use,-meter_name,-meter_id,-notes,-creator_username,-pm_monitor_type,
                 -unops,-stove_type_other,-mission_id,-pm_hhid,-time_chunk,-pm_monitor_id,-pm_filter_id,-campaign) %>%

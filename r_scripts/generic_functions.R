@@ -520,15 +520,15 @@ ShiftTimeStamp_unops <- function(beacon_logger_data, newstartdatetime,timezone){
 
 baseline_correction_pats <- function(raw_data){
   #Get 10th percentile of first and last 20 points
-  zeroprctile_initial <- quantile(raw_data$PM_Estimate[1:20],c(0.1))
-  zero_initial_time <- raw_data[1:20][PM_Estimate==zeroprctile_initial,datetime][1]
-  zeroprctile_final <- quantile(tail(raw_data$PM_Estimate,20),c(0.1))
-  zero_final_time <- tail(raw_data,20)[PM_Estimate==zeroprctile_final,datetime][1]
+  zeroprctile_initial <- quantile(raw_data$pm25_conc[1:20],c(0.1))
+  zero_initial_time <- raw_data[1:20][pm25_conc==zeroprctile_initial,datetime][1]
+  zeroprctile_final <- quantile(tail(raw_data$pm25_conc,20),c(0.1))
+  zero_final_time <- tail(raw_data,20)[pm25_conc==zeroprctile_final,datetime][1]
   
   slope <- (zeroprctile_final - zeroprctile_initial)/as.numeric(difftime(zero_final_time,zero_initial_time,units='mins'))
   
   raw_data$minutecounter = as.numeric(difftime(raw_data$datetime,raw_data$datetime[1],units='mins'))
-  raw_data$PM_Estimate <- raw_data$PM_Estimate - slope*raw_data$minutecounter
+  raw_data$pm25_conc <- raw_data$pm25_conc - slope*raw_data$minutecounter
   raw_data$minutecounter = NULL
   return(raw_data)
 }
@@ -544,8 +544,8 @@ ambient_analysis <- function(CO_calibrated_timeseries,pats_data_timeseries,upasm
   
   # ambient_data_realtime <- merge(ambient_data_realtime,ambient_pats_data_timeseries,by=c("datetime"),all.x = T, all.y = F)
   ambient_data_realtime <- melt(ambient_data_realtime, id.vars = c('datetime','instrument', 'sampletype','qc'), measure.vars = 'CO_ppm')
-  meltedpats <- melt(ambient_pats_data_timeseries, id.vars = c('datetime','instrument', 'sampletype','qc'), measure.vars = c('PM_Estimate')) %>%
-    dplyr::mutate(variable = gsub('PM_Estimate','PM µgm-3',variable))
+  meltedpats <- melt(ambient_pats_data_timeseries, id.vars = c('datetime','instrument', 'sampletype','qc'), measure.vars = c('pm25_conc')) %>%
+    dplyr::mutate(variable = gsub('pm25_conc','PM µgm-3',variable))
   meltedpats_tempRH <- melt(ambient_pats_data_timeseries, id.vars = c('datetime','instrument', 'sampletype','qc'), measure.vars = c('degC_air','%RH_air')) %>%
     dplyr::mutate(class='met') %>%
     dplyr::mutate(instrument='PATS T/RH')
@@ -710,7 +710,8 @@ sampletype_fix_function <- function(raw_data){
 }
 
 
-plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_timeseries,CO_calibrated_timeseries,tsi_timeseries,ecm_dot_data){
+plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_timeseries,
+                            CO_calibrated_timeseries,tsi_timeseries,ecm_dot_data){
   
   tryCatch({
     # selected_preplacement <- preplacement[i,]
@@ -724,12 +725,11 @@ plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_t
     selected_COppm <- CO_calibrated_timeseries[CO_ppm>-1 & HHID %in% HHIDselected,c("CO_ppm","datetime","sampletype","emission_tags","qc")]
     selected_COppm<-sampletype_fix_function(selected_COppm)
     
-    selected_pats <- pats_data_timeseries[HHID %in% HHIDselected,c("PM_Estimate","datetime","sampletype","emission_tags","qc")]
+    selected_pats <- pats_data_timeseries[HHID %in% HHIDselected,c("pm25_conc","datetime","sampletype","emission_tags","qc")]
     selected_pats<-sampletype_fix_function(selected_pats)
     
-    # selected_ecm <- ecm_data_timeseries[HHID %in% HHIDselected,c("pm2.5ugm3","datetime","sampletype","emission_tags","qc")]
-    # selected_pats<-sampletype_fix_function(selected_pats)
-    
+    selected_ecm <- ecm_dot_data[HHID %in% HHIDselected,c("pm25_conc","datetime","sampletype")]
+
     selected_beacon <- beacon_logger_data[HHID %in% HHIDselected,c("location_nearest","location_kitchen_threshold","datetime","nearest_RSSI")]
     # selected_beacon<-sampletype_fix_function(selected_beacon)
     
@@ -744,7 +744,7 @@ plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_t
       ggtitle(paste0("HHID KE",HHIDselected)) + 
       ylab("CO ppm") 
     
-    p2 <- ggplot(aes(y = PM_Estimate, x = datetime), data = selected_pats) +
+    p2 <- ggplot(aes(y = pm25_conc, x = datetime), data = selected_pats) +
       geom_point(aes(colour = sampletype, shape = qc), alpha=0.25) +
       theme_bw(10) +
       theme(legend.title=element_blank(),axis.title.x = element_blank()) +
@@ -752,13 +752,13 @@ plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_t
       scale_y_continuous(limits = c(0,3000)) +
       ylab("PATS+ ugm-3")
     
-    # p3 <- ggplot(aes(y = PM_Estimate, x = datetime), data = selected_ecm) +
-    #   geom_point(aes(colour = sampletype, shape = qc), alpha=0.25) +
-    #   theme_bw(10) +
-    # scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
-    # theme(legend.title=element_blank(),axis.title.x = element_blank()) +
-    # scale_y_continuous(limits = c(0,1000)) +
-    # ylab("ECM/MicroPEM ugm-3")
+    p3 <- ggplot(aes(y = pm25_conc, x = datetime), data = selected_ecm) +
+      geom_point(aes(colour = sampletype, shape = qc), alpha=0.25) +
+      theme_bw(10) +
+    scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
+    theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+    scale_y_continuous(limits = c(0,1000)) +
+    ylab("ECM/MicroPEM ugm-3")
     
     p4 <- ggplot(aes(y = nearest_RSSI, x = datetime), data = selected_beacon) +
       geom_point(aes(colour = location_nearest), alpha=0.25)+
@@ -793,6 +793,87 @@ plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_t
   , finally={})
 }
 
+
+plot_deployment_merged <- function(all_merged_temp){
+  all_merged_temp <- all_merged[HHID == preplacement[i,]$HHID]
+  tryCatch({
+    # selected_preplacement <- preplacement[i,]
+    
+    
+    #Use ECM start and stop time to truncate the data.
+    maxdatetimeCO <- CO_calibrated_timeseries[CO_ppm>-1 & HHID %in% HHIDselected,lapply(.SD,max),.SDcols="datetime"]
+    
+    selected_COppm <- CO_calibrated_timeseries[CO_ppm>-1 & HHID %in% HHIDselected,c("CO_ppm","datetime","sampletype","emission_tags","qc")]
+    selected_COppm<-sampletype_fix_function(selected_COppm)
+    
+    selected_pats <- pats_data_timeseries[HHID %in% HHIDselected,c("pm25_conc","datetime","sampletype","emission_tags","qc")]
+    selected_pats<-sampletype_fix_function(selected_pats)
+    
+    # selected_ecm <- ecm_data_timeseries[HHID %in% HHIDselected,c("pm2.5ugm3","datetime","sampletype","emission_tags","qc")]
+    # selected_pats<-sampletype_fix_function(selected_pats)
+    
+    selected_beacon <- beacon_logger_data[HHID %in% HHIDselected,c("location_nearest","location_kitchen_threshold","datetime","nearest_RSSI")]
+    # selected_beacon<-sampletype_fix_function(selected_beacon)
+    
+    selected_tsi <- tsi_timeseries[HHID %in% HHIDselected,c("datetime","loggerID","HHID","qc","emission_tags","CO_ppm","CO2_ppm")]
+    
+    p1 <- ggplot(aes(y = CO_ppm, x = datetime), data = all_merged_temp) + 
+      geom_point(aes(colour = sampletype, shape = qc), alpha=0.25) + 
+      theme_bw(10) +
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
+      scale_y_continuous(limits = c(0,300))   +
+      ggtitle(paste0("HHID KE",HHIDselected)) + 
+      ylab("CO ppm") 
+    
+    p2 <- ggplot(aes(y = pm25_conc, x = datetime), data = selected_pats) +
+      geom_point(aes(colour = sampletype, shape = qc), alpha=0.25) +
+      theme_bw(10) +
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
+      scale_y_continuous(limits = c(0,3000)) +
+      ylab("PATS+ ugm-3")
+    
+    p3 <- ggplot(aes(y = pm25_conc, x = datetime), data = selected_ecm) +
+      geom_point(aes(colour = sampletype, shape = qc), alpha=0.25) +
+      theme_bw(10) +
+    scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
+    theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+    scale_y_continuous(limits = c(0,1000)) +
+    ylab("ECM/MicroPEM ugm-3")
+    
+    p4 <- ggplot(aes(y = nearest_RSSI, x = datetime), data = selected_beacon) +
+      geom_point(aes(colour = location_nearest), alpha=0.25)+
+      theme_bw(10) +
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
+      # scale_y_continuous(limits = c(0,3000)) +
+      ylab("Localization")
+    
+    p5 <- ggplot(data = selected_tsi,aes(y = CO_ppm, x = datetime, shape = emission_tags, colour = emission_tags,group = qc), alpha=0.25) +
+      geom_point()+
+      theme_bw(10) +
+      scale_y_log10() +
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
+      ylab("TSI CO2 and CO ppm")
+    
+    plot_name = paste0("QA Reports/Instrument Plots/all_merged_",HHIDselected,".png")
+    
+    # if(!file.exists(plot_name)){
+    png(plot_name,width = 1000, height = 800, units = "px")
+    
+    
+    egg::ggarrange(p1, p2,p4,p5, heights = c(0.25, 0.25,.25,.25))
+    
+    dev.off()
+    
+    # }
+  }, error = function(error_condition) {
+    print(paste0('Errore in HHID ', HHIDselected,', index ',i))
+  }
+  , finally={})
+}
 
 
 emailgroup <-  function(todays_date){
