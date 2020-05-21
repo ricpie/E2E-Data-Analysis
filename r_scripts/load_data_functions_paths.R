@@ -20,7 +20,7 @@ local_tz = "Africa/Nairobi"
 
 #Load paths
 path_other <- "../Data/Data from the team/Excel databases/Other databases.xlsx"
-path_emissions <- "../Data/Data from the team/Excel databases/USE THIS COPY_2019 Kenya Emissions database_Updated May 12.xlsx"
+path_emissions <- "../Data/Data from the team/Excel databases/2019 E2E Emissions database_v2.xlsx"
 
 tsifilepath <- "Processed Data/Cleaned TSI Data" #the corrected files should be placed here.
 file_list_tsi <- list.files(tsifilepath, pattern='.csv|.CSV', full.names = T,recursive = T)
@@ -81,10 +81,10 @@ ecm_dot_data <- readRDS("../Data/analysis-20200421/ecm_dot_data.RDS") %>%
 
 
 # Excel metadata import
-gravimetric_path <- "../Data/Data from the team/Gravimetric/UNOPS E2E_mj working.xlsx"
+gravimetric_path <- "../Data/Data from the team/Gravimetric/UNOPS E2E_v2.xlsx"
 gravimetric_data <- grav_import_fun(gravimetric_path)
-meta_emissions <- emissions_import_fun(path_emissions,sheetname='Data',local_tz); assign("meta","meta_emissions", envir=.GlobalEnv)
-saveRDS(meta_emissions,"Processed Data/meta_emissions.RDS")
+meta_emissions<- readRDS("Processed Data/meta_emissions.RDS")
+
 metadata_ambient <- ambient_import_fun(path_other,sheetname='Ambient Sampling')
 ambient_data = readRDS("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/ambient_data.rds")
 

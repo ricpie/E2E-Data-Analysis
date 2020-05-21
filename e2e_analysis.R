@@ -19,6 +19,12 @@ todays_date <- gsub("-", "", as.character(Sys.Date()))
 
 
  if (import==1){
+   
+   #Import emissions Excel database 
+   meta_emissions <- emissions_import_fun(path_emissions,sheetname='Data',local_tz); assign("meta","meta_emissions", envir=.GlobalEnv)
+   saveRDS(meta_emissions,"Processed Data/meta_emissions.RDS")
+   
+   
   # TSI Data.  TSI data needs to be manually prepared by only keeping the data from the test of interest.  Multiple tests in the same file will break it.
   #If there is an error with AER, check the emissions databased in the decaystarttime and decayendtime fields - likely an empty row or NA value that is breaking it.
   tsi_meta_qaqc <- ldply(setdiff(file_list_tsi,processed_filelist), tsi_qa_fun, .progress = 'text',meta_emissions=meta_emissions,local_tz) 
@@ -69,10 +75,6 @@ todays_date <- gsub("-", "", as.character(Sys.Date()))
                                          CO_calibrated_timeseries,pats_data_timeseries)) %>% sampletype_fix_function()
   rm(beacon_logger_raw)
   
-  # * Todo: Get Stove usage data integrated into analysis stream.
-  # * Do basic usage analysis using the SUMs code
-  # * Integrate events as time series flags.  Name variables based on possible stove types/locations: Indoor Trad/Outdoor Trad/LPG1/LPG2/Jiko/TraditionalCharcoal, etc.
-  
   #Calculate SES index with rapid survey data
   predicted_ses = ses_function(mobenzi_rapid)
   saveRDS(predicted_ses,"Processed Data/predicted_ses.rds")
@@ -102,7 +104,6 @@ todays_date <- gsub("-", "", as.character(Sys.Date()))
   saveRDS(lascar_meta,"Processed Data/lascar_meta.rds")
   saveRDS(tsi_meta_qaqc,"Processed Data/tsi_meta_qaqc.rds")
   saveRDS(pats_meta_qaqc,"Processed Data/pats_meta_qaqc.rds")
-  
   saveRDS(beacon_meta_qaqc,"Processed Data/beacon_meta_qaqc.rds")
   saveRDS(beacon_logger_raw,"Processed Data/Beacon_RawData.rds")
   saveRDS(beacon_logger_data,"Processed Data/beacon_logger_data.rds")
@@ -118,18 +119,19 @@ todays_date <- gsub("-", "", as.character(Sys.Date()))
 
 #Create a wide merged dataset (ECM, Dots, TSI, Lascar, PATS+, Beacon Localization, ECM+Beacon exposure estimate
 #PATS+Beacon exposure estimate, Lascar+Beacon exposure estimate)
-all_merged <- all_merge_fun(preplacement,beacon_logger_data,
+all_merged_list <- all_merge_fun(preplacement,beacon_logger_data,
                              CO_calibrated_timeseries,tsi_timeseries,pats_data_timeseries,ecm_dot_data)
-
+all_merged <- as.data.table(all_merged_list[1])
+all_merged_summary <- as.data.table(all_merged_list[2])
 
 for(i in 1:dim(preplacement)[1]){
   plot_deployment(preplacement[i,],beacon_logger_data,
                   pats_data_timeseries,CO_calibrated_timeseries,tsi_timeseries,ecm_dot_data)
   plot_deployment_merged(all_merged[HHID == preplacement[i,]$HHID])
 }
-all_merged_summary <- all_merged %>% 
 
-  
+  #Indirect exposure estimates
+
   
 #Ambient data
 ambient_analysis(CO_calibrated_timeseries,pats_data_timeseries,upasmeta,gravimetric_data) #Try to get ambient met data from Matt or others?
@@ -167,6 +169,8 @@ scatter_ecm_kitchen_cook <- timeseries_plot_simple(pivot_wider(ecm_meta_data,
                             `Kitchen PM µgm-3` = `PM µgm-3_Kitchen`),
                    y_var = "`Cook's PM µgm-3`", x_var = "`Kitchen PM µgm-3`")
 ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/scatter_ecm_kitchen_cook.png",plot=last_plot(),dpi=200,device=NULL)
+
+ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/scatter_ecm_lpgpercent.png",plot=last_plot(),dpi=200,device=NULL)
 
 
 #Plot kitchen concentration distributions
