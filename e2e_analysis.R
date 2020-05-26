@@ -131,7 +131,8 @@ for(i in 1:dim(preplacement)[1]){
 }
 
   #Indirect exposure estimates
-
+model_indirect_exposure(all_merged_summary,all_merged,preplacement,meta_emissions)
+  
   
 #Ambient data
 ambient_analysis(CO_calibrated_timeseries,pats_data_timeseries,upasmeta,gravimetric_data) #Try to get ambient met data from Matt or others?

@@ -46,7 +46,7 @@ beacon_deployment_fun = function(selected_preplacement,equipment_IDs,beacon_logg
     dplyr::group_by(datetime) %>%
     dplyr::mutate(Kitchen_RSSI = ifelse(location == "Kitchen",RSSI_max,NA)) %>%
     tidyr::fill(Kitchen_RSSI, .direction = "down") %>%
-    dplyr::mutate(location_kitchen_threshold = ifelse(Kitchen_RSSI>-70,"Kitchen",otherroom)) %>%
+    dplyr::mutate(location_kitchen_threshold = ifelse(Kitchen_RSSI< -70,"Kitchen",otherroom)) %>%
     dplyr::filter(nearest_RSSI==max(nearest_RSSI) | is.na(nearest_RSSI)) %>%
     dplyr::select(-instrument,-RSSI_max,-RSSI_min,-RSSI,-n) %>%
     dplyr::distinct(datetime,.keep_all=TRUE)
@@ -230,18 +230,19 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                                                                      TRUE ~ mean(PATS_Ambient,na.rm = TRUE))]
 
   #Estimate uses kitchen and living room PATS, and ambient if needed.
-  all_merged[, pm25_conc_beacon_pats := dt_case_when(location_kitchen_threshold == 'Kitchen' ~ PATS_Kitchen,
+  all_merged[, pm25_conc_beacon_pats_threshold := dt_case_when(location_kitchen_threshold == 'Kitchen' ~ PATS_Kitchen,
                                                      location_kitchen_threshold != 'Kitchen' ~ PATS_LivingRoom,
                                                      !is.na(PATS_Ambient) ~ PATS_Ambient,
                                                      TRUE ~ mean(PATS_Ambient,na.rm = TRUE))]
   
-  all_merged[, co_estimate_beacon_nearest := dt_case_when(location_kitchen_threshold == 'Kitchen' ~ CO_ppmKitchen,
+  all_merged[, co_estimate_beacon_nearest_threshold := dt_case_when(location_kitchen_threshold == 'Kitchen' ~ CO_ppmKitchen,
                                                           location_kitchen_threshold != 'Kitchen' ~ CO_ppmLivingRoom,
                                                           !is.na(CO_ppmAmbient) ~ CO_ppmAmbient,
                                                           TRUE ~ mean(CO_ppmAmbient,na.rm = TRUE))]
 
   all_merged_summary <- dplyr::group_by(all_merged,HHID) %>%
-    dplyr::summarise_all(mean,na.rm = TRUE)
+    dplyr::summarise_all(mean,na.rm = TRUE) %>%
+    left_join(meta_emissions,by = 'HHID')
   
   return(list(all_merged,all_merged_summary))
   

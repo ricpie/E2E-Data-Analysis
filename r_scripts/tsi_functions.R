@@ -11,17 +11,13 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
   raw_data_temp <- fread(file, skip = 28,fill=TRUE)
   if (nrow(raw_data_temp)<10 && ncol(raw_data_temp)<6){
     badfileflag <- 1
-  }else if(ncol(raw_data_temp)==6){
-    raw_data <- fread(file, skip = 29,fill=TRUE)
-    raw_data<- raw_data[,1:6]
-    setnames(raw_data, c("Date",	"Time",	"CO2_ppm",	"RH",	"Temp_C","CO_ppm"))
-    raw_data<-raw_data[complete.cases(raw_data), ]
   }else {
-    raw_data <- fread(file, skip = 29,fill=TRUE)
-    raw_data<- raw_data[,1:7]
-    setnames(raw_data, c("Date",	"Time",	"CO2_ppm",	"RH",	"Temp_C",	"Wetbulb_C","CO_ppm"))
+    raw_data <- fread(file, skip = 28,fill=TRUE,header = TRUE,check.names = TRUE)
+    raw_data[, deg.C:=NULL]
+    raw_data[, deg.C.1:=NULL]
+    raw_data[, deg.C.2:=NULL]
+    setnames(raw_data, c("Date",	"Time",	"CO2_ppm",	"RH","CO_ppm"))
     raw_data<-raw_data[complete.cases(raw_data), ]
-    raw_data <- raw_data[,c(1:5,7)]
   }
   
   if(all(is.na(filename$sampleID)) || badfileflag == 1){
@@ -246,10 +242,11 @@ tsi_meta_data_fun <- function(file,output='raw_data',local_tz,meta_emissions="me
       raw_data[,sampletype := meta_data$sampletype]
       raw_data[,qc := meta_data$qc]
       
-      rraw_data[,Date := NULL]
+      raw_data[,Date := NULL]
       raw_data[,Time := NULL]
-      eturn(raw_data)
+      eturn(rarw_data)
     }
   }
 }
+
 
