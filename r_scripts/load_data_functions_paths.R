@@ -21,6 +21,7 @@ local_tz = "Africa/Nairobi"
 #Load paths
 path_other <- "../Data/Data from the team/Excel databases/Other databases.xlsx"
 path_emissions <- "../Data/Data from the team/Excel databases/2019 E2E Emissions database_v2.xlsx"
+emissions_import_fun(path_emissions,'Data',local_tz)
 
 tsifilepath <- "Processed Data/Cleaned TSI Data" #the corrected files should be placed here.
 file_list_tsi <- list.files(tsifilepath, pattern='.csv|.CSV', full.names = T,recursive = T)
@@ -45,6 +46,8 @@ file_list_beacon <- list.files(beaconfilepath, pattern='.csv|.CSV', full.names =
 predicted_ses<-readRDS("Processed Data/predicted_ses.rds")
 preplacement <- as.data.table(readRDS("Processed Data/preplacement.rds"))
 preplacement <- merge(predicted_ses,preplacement,by="HHID",all.y = TRUE)
+saveRDS(preplacement,"Processed Data/ses_preplacement.rds")
+
 postplacement <- readRDS("Processed Data/postplacement.rds")
 mobenzi_indepth <- readRDS("Processed Data/mobenzi_indepth.rds")
 mobenzi_rapid <- readRDS("Processed Data/mobenzi_rapid.rds")
@@ -59,7 +62,9 @@ beacon_meta_qaqc<-readRDS("Processed Data/beacon_meta_qaqc.rds")
 lascar_meta<-readRDS("Processed Data/lascar_meta.rds")
 tsi_meta_qaqc<-readRDS("Processed Data/tsi_meta_qaqc.rds")
 pats_meta_qaqc<-readRDS("Processed Data/pats_meta_qaqc.rds")
-beacon_logger_raw <- readRDS("Processed Data/Beacon_RawData.rds")
+# beacon_logger_raw <- readRDS("Processed Data/Beacon_RawData.rds")
+all_merged <- readRDS("Processed Data/all_merged.rds")
+
 
 # ecm_data <- readRDS("../Data/analysis-20200421/ecm_data.RDS")
 # dot_data <- readRDS("../Data/analysis-20200421/dot_data.RDS")
@@ -74,15 +79,28 @@ ecm_dot_data <- readRDS("../Data/analysis-20200421/ecm_dot_data.RDS") %>%
                 sampletype = pm_monitor_type,
                 qc = "good") %>%
   # dplyr::filter(HHID != 'KE511-KE06' & HHID != 'KE508-KE12') %>%
+  dplyr::filter(HHID %in% preplacement$HHID) %>%
+  dplyr::filter(!(HHID == 'KE033-KE03' & sampletype == 'Kitchen')) %>%  #Bad data file.
+  dplyr::group_by(HHID) %>%
+  dplyr::mutate(samplestart = min(datetime[sampletype=='Cook'])) %>%
+  dplyr::mutate(sampleend = max(datetime[sampletype=='Cook'])) %>%
+  dplyr::mutate(sampleend = case_when(
+    difftime(sampleend,samplestart,'days')>1 ~samplestart + 86400,
+                                      TRUE ~ sampleend)) %>%
+  dplyr::filter((datetime > min(samplestart,na.rm=TRUE) & datetime < max(sampleend,na.rm=TRUE))) %>%
   dplyr::select(-other_people_use,-meter_name,-meter_id,-notes,-creator_username,-pm_monitor_type,
-                -unops,-stove_type_other,-mission_id,-pm_hhid,-time_chunk,-pm_monitor_id,-pm_filter_id,-campaign) %>%
-  as.data.table()
-
+                -unops,-stove_type_other,-mission_id,-pm_hhid,-time_chunk,-pm_monitor_id,-pm_filter_id,-campaign,-sampleend,-samplestart) %>%
+  as.data.table() 
+# setdiff(unique(preplacement$HHID),unique(ecm_dot_data$HHID))
 
 
 # Excel metadata import
 gravimetric_path <- "../Data/Data from the team/Gravimetric/UNOPS E2E_v2.xlsx"
 gravimetric_data <- grav_import_fun(gravimetric_path)
+
+#Import emissions Excel database 
+meta_emissions <- emissions_import_fun(path_emissions,sheetname='Data',local_tz); assign("meta","meta_emissions", envir=.GlobalEnv)
+saveRDS(meta_emissions,"Processed Data/meta_emissions.RDS")
 meta_emissions<- readRDS("Processed Data/meta_emissions.RDS")
 
 metadata_ambient <- ambient_import_fun(path_other,sheetname='Ambient Sampling')

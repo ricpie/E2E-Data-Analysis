@@ -18,13 +18,9 @@ todays_date <- gsub("-", "", as.character(Sys.Date()))
 
 
 
- if (import==1){
-   
-   #Import emissions Excel database 
-   meta_emissions <- emissions_import_fun(path_emissions,sheetname='Data',local_tz); assign("meta","meta_emissions", envir=.GlobalEnv)
-   saveRDS(meta_emissions,"Processed Data/meta_emissions.RDS")
-   
-   
+if (import==1){
+  
+  
   # TSI Data.  TSI data needs to be manually prepared by only keeping the data from the test of interest.  Multiple tests in the same file will break it.
   #If there is an error with AER, check the emissions databased in the decaystarttime and decayendtime fields - likely an empty row or NA value that is breaking it.
   tsi_meta_qaqc <- ldply(setdiff(file_list_tsi,processed_filelist), tsi_qa_fun, .progress = 'text',meta_emissions=meta_emissions,local_tz) 
@@ -61,6 +57,7 @@ todays_date <- gsub("-", "", as.character(Sys.Date()))
                                                         TRUE ~ sampletype)]
   
   # Beacon data
+  beacon_logger_raw <- readRDS("Processed Data/Beacon_RawData.rds")
   beacon_meta_qaqc <- ldply(setdiff(file_list_beacon,processed_filelist), beacon_qa_fun, .progress = 'text',timezone="UTC") %>% sampletype_fix_function()
   # Import Beacon timeseries, with metadata 
   beacon_time_corrections=data.frame(filename=c("2019-09-19_KE152-KE004-L_1296","2019-09-19_KE152-KE004-L_129asdfsdf"),
@@ -72,8 +69,7 @@ todays_date <- gsub("-", "", as.character(Sys.Date()))
   
   # Build Beacon location time series 
   beacon_logger_data <- rbindlist(lapply(mobenzilist, beacon_deployment_fun,equipment_IDs,beacon_logger_raw,
-                                         CO_calibrated_timeseries,pats_data_timeseries)) %>% sampletype_fix_function()
-  rm(beacon_logger_raw)
+                                         CO_calibrated_timeseries,pats_data_timeseries))  %>% sampletype_fix_function_beacon()
   
   #Calculate SES index with rapid survey data
   predicted_ses = ses_function(mobenzi_rapid)
@@ -107,7 +103,7 @@ todays_date <- gsub("-", "", as.character(Sys.Date()))
   saveRDS(beacon_meta_qaqc,"Processed Data/beacon_meta_qaqc.rds")
   saveRDS(beacon_logger_raw,"Processed Data/Beacon_RawData.rds")
   saveRDS(beacon_logger_data,"Processed Data/beacon_logger_data.rds")
-  
+  rm(beacon_logger_raw)
   
   # Email out summaries
   if (email==1){emailgroup(todays_date)}
@@ -120,20 +116,26 @@ todays_date <- gsub("-", "", as.character(Sys.Date()))
 #Create a wide merged dataset (ECM, Dots, TSI, Lascar, PATS+, Beacon Localization, ECM+Beacon exposure estimate
 #PATS+Beacon exposure estimate, Lascar+Beacon exposure estimate)
 all_merged_list <- all_merge_fun(preplacement,beacon_logger_data,
-                             CO_calibrated_timeseries,tsi_timeseries,pats_data_timeseries,ecm_dot_data)
+                                 CO_calibrated_timeseries,tsi_timeseries,pats_data_timeseries,ecm_dot_data)
 all_merged <- as.data.table(all_merged_list[1])
-all_merged_summary <- as.data.table(all_merged_list[2])
+saveRDS(all_merged,"Processed Data/all_merged.rds")
+all_merged_summary <- distinct(as.data.table(all_merged_list[2]))
 
 for(i in 1:dim(preplacement)[1]){
   plot_deployment(preplacement[i,],beacon_logger_data,
                   pats_data_timeseries,CO_calibrated_timeseries,tsi_timeseries,ecm_dot_data)
-  plot_deployment_merged(all_merged[HHID == preplacement[i,]$HHID])
 }
 
-  #Indirect exposure estimates
+uniqueHHIDs <- unique(all_merged$HHID)
+for(i in 1:length(unique(all_merged$HHID))[1]){
+  plot_deployment_merged(all_merged[HHID == uniqueHHIDs[i]])
+}
+
+
+#Indirect exposure estimates
 model_indirect_exposure(all_merged_summary,all_merged,preplacement,meta_emissions)
-  
-  
+
+
 #Ambient data
 ambient_analysis(CO_calibrated_timeseries,pats_data_timeseries,upasmeta,gravimetric_data) #Try to get ambient met data from Matt or others?
 
@@ -149,26 +151,26 @@ ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/event_durat
 
 #Plot exposures
 scatter_ecm_lpgpercent <- timeseries_plot(ecm_meta_data %>% filter(qc == 'good') 
-                               , y_var = "`PM µgm-3`", facet_var = "pm_location", x_var = 'lpg_percent',size_var = 'non_lpg_cooking') 
+                                          ,y_var = "`PM µgm-3`", facet_var = "pm_location", x_var = 'lpg_percent',size_var = 'non_lpg_cooking') 
 ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/scatter_ecm_lpgpercent.png",plot=last_plot(),dpi=200,device=NULL)
 
 
 dist_ecm_lpgpercent <- timeseries_plot(ecm_meta_data %>% filter(qc == 'good') 
-                                          , y_var = "`PM µgm-3`", facet_var = "pm_location", x_var = 'lpg_percent',size_var = 'non_lpg_cooking') 
+                                       , y_var = "`PM µgm-3`", facet_var = "pm_location", x_var = 'lpg_percent',size_var = 'non_lpg_cooking') 
 ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/dist_ecm_lpgpercent.png",plot=last_plot(),dpi=200,device=NULL)
 
 
 boxplot_ecm_kitchen_cook <- box_plot_facet(ecm_meta_data %>% filter(qc == 'good') 
-                               , y_var = "`PM µgm-3`", facet_var = "pm_location", x_var = "primary_stove", y_units = "µgm-3",title = "ECM PM2.5 concentration" )
+                                           , y_var = "`PM µgm-3`", facet_var = "pm_location", x_var = "primary_stove", y_units = "µgm-3",title = "ECM PM2.5 concentration" )
 ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/boxplot_ecm_kitchen_cook.png",plot=last_plot(),dpi=200,device=NULL)
 
 scatter_ecm_kitchen_cook <- timeseries_plot_simple(pivot_wider(ecm_meta_data,
-                               names_from = pm_location,
-                               values_from = c(`PM µgm-3`,datetime_start,datetime_end,
-                                               sampling_duration,samplerate_minutes,lpg_cooking,non_lpg_cooking,lpg_percent)) %>%
-                     rename(`Cook's PM µgm-3` = `PM µgm-3_Cook`,
-                            `Kitchen PM µgm-3` = `PM µgm-3_Kitchen`),
-                   y_var = "`Cook's PM µgm-3`", x_var = "`Kitchen PM µgm-3`")
+                                                               names_from = pm_location,
+                                                               values_from = c(`PM µgm-3`,datetime_start,datetime_end,
+                                                                               sampling_duration,samplerate_minutes,lpg_cooking,non_lpg_cooking,lpg_percent)) %>%
+                                                     rename(`Cook's PM µgm-3` = `PM µgm-3_Cook`,
+                                                            `Kitchen PM µgm-3` = `PM µgm-3_Kitchen`),
+                                                   y_var = "`Cook's PM µgm-3`", x_var = "`Kitchen PM µgm-3`")
 ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/scatter_ecm_kitchen_cook.png",plot=last_plot(),dpi=200,device=NULL)
 
 ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/scatter_ecm_lpgpercent.png",plot=last_plot(),dpi=200,device=NULL)
@@ -196,7 +198,7 @@ ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/HAP_PM_plot
 # CO_duplicate_analysis(CO_calibrated_timeseries)
 
 #Get the threshold times and room IDs, and compare with beacon localization results
-#beacon_walkthrough()
+walkthrough_results <- beacon_walkthrough(beacon_logger_data,preplacement)
 
 #Analyze intensive household data.
 

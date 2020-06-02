@@ -79,7 +79,7 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',timezon
          sampling_duration = sample_duration
       )
       meta_data = cbind(meta_data,completeness_fl,time_interval_fl,beacon_presence_fl,beacon_time,startup_proc_fl,duration_fl)
-
+      
       meta_data[, flag_total:=sum(completeness_fl,time_interval_fl,beacon_presence_fl,beacon_time,startup_proc_fl,duration_fl), by=.SD]
       
       # as.data.frame(beacon_logger_data)
@@ -92,7 +92,7 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',timezon
          beacon_logger_data_plot$MACloggerid <- paste0(beacon_logger_data_plot$MAC,'; ',beacon_logger_data_plot$loggerID)
          plot_name = gsub(".txt",".png",basename(file))
          plot_name = paste0("QA Reports/Instrument Plots/BL_",gsub(".csv",".png",plot_name))
-
+         
          ggg<- ggplot(beacon_logger_data_plot, aes(y = RSSI, x = datetime, colour=str_wrap(MACloggerid,18))) +
             geom_point(alpha = 0.15) +
             theme_minimal() +
@@ -101,11 +101,11 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',timezon
             theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10)) +
             ggtitle(plot_name) +
             theme(legend.title=element_blank(),axis.title.x = element_blank())
-            # geom_smooth(method = 'loess',span = 60/(sample_duration*1440))
-            
+         # geom_smooth(method = 'loess',span = 60/(sample_duration*1440))
+         
          ggsave(filename=plot_name, plot=ggg,width = 8, height = 5,dpi=200)
          
-         }, error = function(error_condition) {
+      }, error = function(error_condition) {
       }, finally={})
    }
    return(meta_data)    
@@ -121,7 +121,7 @@ beacon_import_fun <- function(file,timezone="UTC",preplacement=preplacement,beac
       
       beacon_logger_data[,MAC := toupper(MAC)] 
       beacon_logger_data[,datetime := ymd_hms(datetime,tz=timezone)]
-
+      
       #Fix time stamps if they are bad.
       if(beacon_logger_data$datetime[1]<as.POSIXct('2019-1-1')){
          newstartdatetime<-beacon_time_corrections$newstartdatetime[grepl(filename$basename,beacon_time_corrections$filename)]
@@ -149,7 +149,8 @@ beacon_import_fun <- function(file,timezone="UTC",preplacement=preplacement,beac
          HHID=filename$HHID,
          loggerID=filename$loggerID,
          qc = filename$flag
-         )
+      )
+      
       #Add some meta_data into the mix
       beacon_logger_data <- tag_timeseries_mobenzi(beacon_logger_data,preplacement,filename)
       beacon_logger_data <- tag_timeseries_emissions(beacon_logger_data,meta_emissions,meta_data,filename)
@@ -159,5 +160,159 @@ beacon_import_fun <- function(file,timezone="UTC",preplacement=preplacement,beac
    }
 }
 
+
+##################################################
+#Function to assign presence
+#Don't care which beacon it is, as long as it is in the inventory
+##################################################
+#Algorithm: Using minute localization, but have two approaches to get there, either using the minute's strongest RSSI, or the strongest minute mean to assigne the room presence
+#Also have a simplified approach that uses only the Kitchen's logger, and if the minute mean signal strength is greater than -60,, 70, or 80, then it assigned the kitchen, else the living room.
+#And if there is no living room sample, or the participant is not home, then ambient is assigned.  In some cases where there was not ambient, the week's mean ambient value was assigned, but this is a large source of uncertainty.
+
+beacon_deployment_fun = function(selected_preplacement,equipment_IDs,beacon_logger_raw,
+                                 CO_calibrated_timeseries,pats_data_timeseries){
+   # selected_preplacement<-mobenzilist[[1]]
+   # selected_preplacement<-preplacement[preplacement$HHID == 'KE162-KE03',][1,]
+   base::message(selected_preplacement$HHID)
+   
+   #Prep instrument IDs... take this part out to functionalize more generally later
+   Beacons_mobenzi = data.frame(loggerID=c(id_slicer_add(selected_preplacement$BeaconID1,5), id_slicer_add(selected_preplacement$BeaconID2,5)))
+   Beacons = merge(Beacons_mobenzi,equipment_IDs,by="loggerID")
+   setnames(Beacons,"BAID","MAC",skip_absent=TRUE)
+   Loggers <- data.frame(loggerID= c(selected_preplacement$BeaconLoggerIDKitchen,selected_preplacement$BeaconLoggerIDSecondary),
+                         location = c('Kitchen',selected_preplacement$RoomTypeSecondary),
+                         HHID = c(selected_preplacement$HHIDnumeric,selected_preplacement$HHIDnumeric))
+   # Loggers = merge(Loggers,dplyr::filter(equipment_IDs,instrument %in% 'BeaconLogger'),by.x='loggerID',by.y='BAID')
+   otherroom <- setdiff(Loggers$location,"Kitchen")
+   
+   #Get beacon data from loggers and beacons of interest
+   beacon_data_temp <- beacon_logger_raw[grepl(paste(unique(Loggers$loggerID),collapse="|"),loggerID),]
+   beacon_data_temp <- beacon_data_temp[grepl(paste(toupper(unique(Beacons$MAC)),collapse="|"),MAC),]  #To select only beacons in the selected_preplacement inventory
+   # beacon_data_temp <- beacon_data_temp[grepl(paste(toupper(unique(equipment_IDs$BAID)),collapse="|"),MAC),]  #To select any beacons in the equipment inventory.  Use this one, as it allows for errors in naming.
+   
+   beacon_data_temp <- beacon_data_temp[datetime>selected_preplacement$WalkThrough1Start & datetime<selected_preplacement$start_datetime+3*86400,]
+   # beacon_data_temp[,nearest_RSSI := round(max(RSSI)), by = c("loggerID","datetime")] 
+   beacon_data_temp[,RSSI_minute_mean := round(mean(RSSI)), by = c("loggerID","datetime")] 
+   beacon_data_temp <- unique(beacon_data_temp, by = c('datetime', 'loggerID'))
+   beacon_data_temp <- merge(beacon_data_temp, Loggers,by = c('loggerID','HHID'))
+   HHIDstr =  paste(strsplit(beacon_data_temp$sampleID[1],"-")[[1]][1:2],collapse = "-")
+   beacon_data_temp <- dcast.data.table(beacon_data_temp,datetime + HHID + qc~ sampletype, value.var = c("location","loggerID","RSSI_minute_mean"))
+   #if there is only one logger in the home,fill it in with repeat action, set all 
+   if(dim(beacon_data_temp)[2]<7){
+      beacon_data_temp = cbind(beacon_data_temp[,1:3],beacon_data_temp[,4],beacon_data_temp[,4],beacon_data_temp[,5],beacon_data_temp[,5],
+                               beacon_data_temp[,6],beacon_data_temp[,6])
+      beacon_data_temp[,4] = "Kitchen"
+      beacon_data_temp[,5] = otherroom
+      if('Kitchen' ==  names(sort(table(beacon_data_temp[,4]),decreasing=TRUE)[1])){
+         beacon_data_temp[,9] = NA
+         beacon_data_temp[,7] = ""
+      } else {
+         beacon_data_temp[,8] = NA
+         beacon_data_temp[,6] = ""
+         
+      }
+   }
+   setnames(beacon_data_temp,c('datetime','HHID','qc','location_kitchen','location_livingroom','loggerID_Kitchen',
+                               'loggerID_LivingRoom', 'RSSI_minute_mean_Kitchen', 'RSSI_minute_mean_LivingRoom'))
+   
+   
+   beacon_data_temp <- dplyr::group_by(beacon_data_temp,datetime) %>%
+      plyr::mutate(location_kitchen = as.character(location_kitchen)) %>% 
+      plyr::mutate(location_livingroom = as.character(otherroom)) %>% 
+      dplyr::mutate(location_nearest = case_when(is.na(RSSI_minute_mean_Kitchen) & is.na(RSSI_minute_mean_LivingRoom) ~ 'Ambient',
+                                                 is.na(RSSI_minute_mean_Kitchen) & !is.na(RSSI_minute_mean_LivingRoom) ~ otherroom,
+                                                 !is.na(RSSI_minute_mean_Kitchen) & is.na(RSSI_minute_mean_LivingRoom) ~ location_kitchen,
+                                                 RSSI_minute_mean_Kitchen < RSSI_minute_mean_LivingRoom ~ otherroom,
+                                                 RSSI_minute_mean_Kitchen > RSSI_minute_mean_LivingRoom ~ location_kitchen,
+                                                 RSSI_minute_mean_Kitchen == RSSI_minute_mean_LivingRoom ~ 'Average',
+                                                 TRUE ~ 'Ambient'),
+                    location_kitchen_threshold = case_when(RSSI_minute_mean_Kitchen > -70 ~ location_kitchen,
+                                                           RSSI_minute_mean_Kitchen < -70 ~ otherroom,
+                                                           is.na(RSSI_minute_mean_Kitchen)  ~ 'Ambient',
+                                                           TRUE ~ 'Ambient'),
+                    location_kitchen_threshold80 = case_when(RSSI_minute_mean_Kitchen > -80 ~ location_kitchen,
+                                                             RSSI_minute_mean_Kitchen < -80 ~ otherroom,
+                                                             is.na(RSSI_minute_mean_Kitchen)  ~ 'Ambient',
+                                                             TRUE ~ 'Ambient'),
+                    HHIDstr = HHIDstr) %>%
+      #If there is only one beacon logger, don't assign location_nearest.
+      dplyr::ungroup() %>%
+      dplyr::mutate(sumKitchen = sum(!is.na(RSSI_minute_mean_Kitchen))) %>%
+      dplyr::mutate(sumLivingRoom = sum(!is.na(RSSI_minute_mean_LivingRoom))) %>%
+      dplyr::mutate(location_nearest = case_when(sumKitchen>1 & sumLivingRoom > 1 ~ location_nearest,
+                                                 TRUE ~ "NA")) %>% 
+      dplyr::select(-sumKitchen,-sumLivingRoom) %>%
+      as.data.table()
+   
+   return(beacon_data_temp)
+}
+
+
+
+beacon_walkthrough_function = function(beacon_logger_data,preplacement){
+   
+   beacon_walkthrough <- dplyr::left_join(beacon_logger_data %>%
+                                             dplyr::mutate(HHIDnumeric = HHID), 
+                                          preplacement %>% 
+                                             dplyr::select('HHID','HHIDnumeric','start_datetime','WalkThrough1Start','WalkThrough1End',
+                                                           'WalkThrough2Start','WalkThrough2End','WalkThrough3Start','WalkThrough3End'),
+                                          by = 'HHIDnumeric') %>%
+      dplyr::mutate(location_walkthrough = case_when(
+         # (datetime > WalkThrough1Start & datetime < WalkThrough1End) ~ 'Startup',
+         (datetime > WalkThrough2Start & datetime < WalkThrough2End) ~ 'Kitchen',
+         (datetime > WalkThrough3Start & datetime < WalkThrough3End) ~ 'Living Room'),
+         # location_nearest = case_when(
+         #    (RSSI_minute_mean_Kitchen > -70 & RSSI_minute_mean_LivingRoom > -70) ~ 'Startup',
+         #    TRUE ~ location_nearest),
+         # location_kitchen_threshold = case_when(
+         #    (RSSI_minute_mean_Kitchen > -70 & RSSI_minute_mean_LivingRoom > -70) ~ 'Startup',
+         #    TRUE ~ location_kitchen_threshold),
+         # location_kitchen_threshold80 = case_when(
+         #    (RSSI_minute_mean_Kitchen > -70 & RSSI_minute_mean_LivingRoom > -70) ~ 'Startup',
+         #    TRUE ~ location_kitchen_threshold80),
+         location_nearest = gsub('Secondary Kitchen','Living Room',location_nearest),
+         location_kitchen_threshold = gsub('Secondary Kitchen','Living Room',location_kitchen_threshold),
+         location_kitchen_threshold80 = gsub('Secondary Kitchen','Living Room',location_kitchen_threshold80)
+      ) %>%
+      dplyr::filter(!is.na(location_walkthrough),
+                    location_nearest != "NA",
+                    location_kitchen_threshold  != "NA",
+                    location_kitchen_threshold80 != "NA",
+                    !is.na(loggerID_Kitchen),
+                    !is.na(loggerID_LivingRoom)) 
+   
+   contable_nearest <- prop.table(table(beacon_walkthrough$location_nearest,beacon_walkthrough$location_walkthrough ), margin=2)*100
+   contable_threshold <- prop.table(table(beacon_walkthrough$location_kitchen_threshold,beacon_walkthrough$location_walkthrough ), margin=2)*100 
+   contable_80 <- prop.table(table(beacon_walkthrough$location_kitchen_threshold80,beacon_walkthrough$location_walkthrough ), margin=2)*100
+   
+   contable_nearest <- prop.table(table(beacon_walkthrough$location_nearest,beacon_walkthrough$location_walkthrough,beacon_walkthrough$HHIDstr ), margin=2)*100
+   Switched: KE510-KE05 , ,  = KE231-KE005, ,    = KE190-KE004, ,  = KE186-KE004
+
+   Even: , ,  = KE507-KE005 , ,  = KE504-KE001, = KE229-KE011, ,, ,  = KE158-KE011, ,  = KE155-KE011, ,  = KE120-KE004, ,  = KE040-KE004, ,  = KE036-KE005, ,  = KE028-KE011, ,  = KE015-KE005
+
+   All kitchen: , ,  = KE502-KE004 , ,  = KE199-KE011
+
+   Bad/little data: , ,  = KE238-KE004
+
+
+   
+   uniqueHHIDs <- unique(beacon_walkthrough$HHIDstr)
+   for(i in 1:length(uniqueHHIDs){
+      plot_deployment_merged(all_merged[HHID == uniqueHHIDs[i]])
+      p2pm <- pivot_longer(all_merged_temp,
+                           cols = starts_with("PATS"),
+                           names_to = "PATS",
+                           names_prefix = "PATS",
+                           values_to = "values",
+                           values_drop_na = TRUE) %>%
+         mutate(PATS = gsub('_',' ',PATS)) %>%
+         ggplot(aes(y = values, x = datetime)) +
+         geom_point(aes(colour = PATS), alpha=0.25) +
+         theme_bw(10) +
+         theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+         scale_y_continuous(limits = c(10,1000)) +
+         # theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))+
+         ylab("PATS ugm-3")
+   }
 
 

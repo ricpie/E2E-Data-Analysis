@@ -31,8 +31,15 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
   
   if(dim(raw_data)[1]==0){
     raw_data <-fread(file, skip = 36,sep=",",fill=TRUE)[,(c(4,5,13,14,15)):=NULL]
-    setnames(raw_data,c('dateTime','V_power','degC_air',	'%RH_air',	'CO_PPM',	'status',	'ref_sigDel',	'low20avg',	'high320avg',	'motion','pm25_conc'),skip_absent=TRUE)
+    setnames(raw_data,c('dateTime','V_power','degC_air',	'%RH_air',	'CO_PPM',	'status',	'ref_sigDel',	'low20avg',	'high320avg',	'motion','PM_Estimate'),skip_absent=TRUE)
+  }else{
+    # setnames(raw_data,c("dateTime","V_power", "degC_sys","degC_air","%RH_air", "degC_CO", "CO_PPM",  "status",  "ref_sigDel","low20avg","high320avg",
+    # "motion","CO_mV","V14","iButton_Temp","PM_Estimate","datetime","sampleID","loggerID","HHID","sampletype","qc",     
+    # "ecm_tags","emission_tags","round_time"))
+    
   }
+  setnames(raw_data, "PM_Estimate", "pm25_conc")
+  
   
   if(badfileflag==1){
     base::message(basename(file), " has no parseable date.")

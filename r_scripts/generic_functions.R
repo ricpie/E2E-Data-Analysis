@@ -76,9 +76,14 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
                   matches = regmatches(HHIDstr, gregexpr("[[:digit:]]+", HHIDstr)),
                   HHIDnumeric =  as.numeric(matches),
                   start_datetime = as.POSIXct(paste(UNOPS_Date,DevicesONTime,sep = " "),tz = "Africa/Nairobi",
-                                              tryFormats = c("%d-%m-%Y %H:%M","%d-%m-%Y %H:%M:%OS","%d-%m-%y %H:%M","%d/%m/%Y %H:%M:%OS"))) #%>%
-  # dplyr::filter("Yes" == UNOPSyn,  !is.na(UNOPS_HH))
-  
+                                              tryFormats = c("%d-%m-%Y %H:%M","%d-%m-%Y %H:%M:%OS","%d-%m-%y %H:%M","%d/%m/%Y %H:%M:%OS"))) %>%
+    dplyr::filter("Yes" == OkEmissions) %>% #,  !is.na(UNOPS_HH))
+    dplyr::mutate(WalkThrough1Start = as.POSIXct(paste0(UNOPS_Date,' ',WalkThrough1Start),tz = "Africa/Nairobi",tryFormats = c("%d-%m-%Y %H:%M")),
+                  WalkThrough1End = as.POSIXct(paste0(UNOPS_Date,' ',WalkThrough1End),tz = "Africa/Nairobi",tryFormats = c("%d-%m-%Y %H:%M")),
+                  WalkThrough2Start = as.POSIXct(paste0(UNOPS_Date,' ',WalkThrough2Start),tz = "Africa/Nairobi",tryFormats = c("%d-%m-%Y %H:%M")),
+                  WalkThrough2End = as.POSIXct(paste0(UNOPS_Date,' ',WalkThrough2End),tz = "Africa/Nairobi",tryFormats = c("%d-%m-%Y %H:%M")),
+                  WalkThrough3Start = as.POSIXct(paste0(UNOPS_Date,' ',WalkThrough3Start),tz = "Africa/Nairobi",tryFormats = c("%d-%m-%Y %H:%M")),
+                  WalkThrough3End = as.POSIXct(paste0(UNOPS_Date,' ',WalkThrough3End),tz = "Africa/Nairobi",tryFormats = c("%d-%m-%Y %H:%M")))
   
   
   #Clean up postplacement HHIDs
@@ -709,6 +714,44 @@ sampletype_fix_function <- function(raw_data){
   return(raw_data)
 }
 
+sampletype_fix_function_beacon <- function(raw_data){
+  raw_data <- dplyr::mutate(as.data.frame(raw_data),
+                            location_nearest =    case_when(
+                              location_nearest == "A"~"Ambient",
+                              location_nearest == "A2"~"Ambient Dup",
+                              location_nearest == "K"~"Kitchen",
+                              location_nearest == "L"~"Living Room",
+                              location_nearest == "C"~"Cook",
+                              location_nearest == "1"~"1m",
+                              location_nearest == "2"~"2m",
+                              location_nearest == "L2"~"Living Room Dup",
+                              location_nearest == "K2"~"Kitchen Dup",
+                              TRUE ~ location_nearest),
+                            location_kitchen_threshold =    case_when(
+                              location_kitchen_threshold == "A"~"Ambient",
+                              location_kitchen_threshold == "A2"~"Ambient Dup",
+                              location_kitchen_threshold == "K"~"Kitchen",
+                              location_kitchen_threshold == "L"~"Living Room",
+                              location_kitchen_threshold == "C"~"Cook",
+                              location_kitchen_threshold == "1"~"1m",
+                              location_kitchen_threshold == "2"~"2m",
+                              location_kitchen_threshold == "L2"~"Living Room Dup",
+                              location_kitchen_threshold == "K2"~"Kitchen Dup",
+                              TRUE ~ location_kitchen_threshold),
+                            location_kitchen_threshold80 =    case_when(
+                              location_kitchen_threshold80 == "A"~"Ambient",
+                              location_kitchen_threshold80 == "A2"~"Ambient Dup",
+                              location_kitchen_threshold80 == "K"~"Kitchen",
+                              location_kitchen_threshold80 == "L"~"Living Room",
+                              location_kitchen_threshold80 == "C"~"Cook",
+                              location_kitchen_threshold80 == "1"~"1m",
+                              location_kitchen_threshold80 == "2"~"2m",
+                              location_kitchen_threshold80 == "L2"~"Living Room Dup",
+                              location_kitchen_threshold80 == "K2"~"Kitchen Dup",
+                              TRUE ~ location_kitchen_threshold80)) %>% 
+    as.data.table()
+  return(raw_data)
+}
 
 plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_timeseries,
                             CO_calibrated_timeseries,tsi_timeseries,ecm_dot_data){
@@ -729,7 +772,7 @@ plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_t
     selected_pats<-sampletype_fix_function(selected_pats)
     
     selected_ecm <- ecm_dot_data[HHID %in% HHIDselected,c("pm25_conc","datetime","sampletype")]
-
+    
     selected_beacon <- beacon_logger_data[HHID %in% HHIDselected,c("location_nearest","location_kitchen_threshold","datetime","nearest_RSSI")]
     # selected_beacon<-sampletype_fix_function(selected_beacon)
     
@@ -755,10 +798,10 @@ plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_t
     p3 <- ggplot(aes(y = pm25_conc, x = datetime), data = selected_ecm) +
       geom_point(aes(colour = sampletype, shape = qc), alpha=0.25) +
       theme_bw(10) +
-    scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
-    theme(legend.title=element_blank(),axis.title.x = element_blank()) +
-    scale_y_continuous(limits = c(0,1000)) +
-    ylab("ECM/MicroPEM ugm-3")
+      scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      scale_y_continuous(limits = c(0,1000)) +
+      ylab("ECM/MicroPEM ugm-3")
     
     p4 <- ggplot(aes(y = nearest_RSSI, x = datetime), data = selected_beacon) +
       geom_point(aes(colour = location_nearest), alpha=0.25)+
@@ -780,7 +823,7 @@ plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_t
     
     # if(!file.exists(plot_name)){
     png(plot_name,width = 1000, height = 800, units = "px")
-
+    
     
     egg::ggarrange(p1, p2,p4,p5, heights = c(0.25, 0.25,.25,.25))
     
@@ -795,77 +838,132 @@ plot_deployment <- function(selected_preplacement,beacon_logger_data,pats_data_t
 
 
 plot_deployment_merged <- function(all_merged_temp){
-  all_merged_temp <- all_merged[HHID == preplacement[i,]$HHID]
+  # all_merged_temp <- all_merged[HHID == uniqueHHIDs[i]]
   tryCatch({
-    # selected_preplacement <- preplacement[i,]
     
+    all_merged_temp_ecm <- pivot_longer(all_merged_temp,
+                                        cols = starts_with("PM25"),
+                                        names_to = "PM25",
+                                        names_prefix = "PM25",
+                                        values_to = "values",
+                                        values_drop_na = TRUE)
     
-    #Use ECM start and stop time to truncate the data.
-    maxdatetimeCO <- CO_calibrated_timeseries[CO_ppm>-1 & HHID %in% HHIDselected,lapply(.SD,max),.SDcols="datetime"]
-    
-    selected_COppm <- CO_calibrated_timeseries[CO_ppm>-1 & HHID %in% HHIDselected,c("CO_ppm","datetime","sampletype","emission_tags","qc")]
-    selected_COppm<-sampletype_fix_function(selected_COppm)
-    
-    selected_pats <- pats_data_timeseries[HHID %in% HHIDselected,c("pm25_conc","datetime","sampletype","emission_tags","qc")]
-    selected_pats<-sampletype_fix_function(selected_pats)
-    
-    # selected_ecm <- ecm_data_timeseries[HHID %in% HHIDselected,c("pm2.5ugm3","datetime","sampletype","emission_tags","qc")]
-    # selected_pats<-sampletype_fix_function(selected_pats)
-    
-    selected_beacon <- beacon_logger_data[HHID %in% HHIDselected,c("location_nearest","location_kitchen_threshold","datetime","nearest_RSSI")]
-    # selected_beacon<-sampletype_fix_function(selected_beacon)
-    
-    selected_tsi <- tsi_timeseries[HHID %in% HHIDselected,c("datetime","loggerID","HHID","qc","emission_tags","CO_ppm","CO2_ppm")]
-    
-    p1 <- ggplot(aes(y = CO_ppm, x = datetime), data = all_merged_temp) + 
-      geom_point(aes(colour = sampletype, shape = qc), alpha=0.25) + 
+    p1pm <- all_merged_temp_ecm %>% filter(PM25 == 'Cook' | PM25 == 'Kitchen') %>%
+      ggplot(aes(y = values, x = datetime)) + 
+      geom_point(aes(colour = PM25), alpha=0.25) + 
       theme_bw(10) +
       theme(legend.title=element_blank(),axis.title.x = element_blank()) +
-      scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
-      scale_y_continuous(limits = c(0,300))   +
-      ggtitle(paste0("HHID KE",HHIDselected)) + 
+      scale_y_continuous(limits = c(0,1000))   +
+      # theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))+
+      ggtitle(all_merged_temp$HHID[1]) + 
+      ylab("ECM ugm-3") 
+    
+    p2pm <- pivot_longer(all_merged_temp,
+                         cols = starts_with("PATS"),
+                         names_to = "PATS",
+                         names_prefix = "PATS",
+                         values_to = "values",
+                         values_drop_na = TRUE) %>%
+      mutate(PATS = gsub('_',' ',PATS)) %>%
+      ggplot(aes(y = values, x = datetime)) +
+      geom_point(aes(colour = PATS), alpha=0.25) +
+      theme_bw(10) +
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      scale_y_continuous(limits = c(10,1000)) +
+      # theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))+
+      ylab("PATS ugm-3")
+    
+    p3pm <- all_merged_temp_ecm %>% filter(PM25 != 'Cook' & PM25 != 'Kitchen') %>%
+      ggplot(aes(y = values, x = datetime)) + 
+      geom_point(aes(colour = PM25), alpha=0.25) + 
+      theme_bw(10) +
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      scale_y_continuous(limits = c(0,1000))   +
+      # theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))+
+      ggtitle(all_merged_temp$HHID[1]) + 
+      ylab("Indirect ugm-3") 
+    
+    all_merged_temp_beacon <- pivot_longer(all_merged_temp,
+                                           cols = starts_with("location"),
+                                           names_to = "location",
+                                           names_prefix = "location",
+                                           values_to = "values",  
+                                           values_drop_na = TRUE) %>%
+      mutate(location = gsub('_',' ',location),
+             locationvalues = location)
+    levels(all_merged_temp_beacon$locationvalues) = 1:length(unique(all_merged_temp_beacon$locationvalues))
+    
+    p4 <- ggplot(aes(y = locationvalues, x = datetime), data = all_merged_temp_beacon) +
+      geom_tile(aes(colour = values,fill=values ), alpha=0.25) +
+      theme_bw(10) +
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      # theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))+
+      ylab("localization by approach")
+    
+    
+    all_merged_temp_sums <- pivot_longer(all_merged_temp,
+                                         cols = starts_with("sums"),
+                                         names_to = "sums",
+                                         names_prefix = "sums",
+                                         values_to = "values",
+                                         values_drop_na = TRUE) %>%
+      mutate(sums = gsub('_',' ',sums),
+             sumsvalues = sums)
+    levels(all_merged_temp_sums$sumsvalues) = 1:length(unique(all_merged_temp_sums$sumsvalues))
+    
+    p5 <- ggplot(aes(y = as.factor(sums), x = datetime), data = all_merged_temp_sums) +
+      geom_tile(aes(colour = values,fill=values), alpha=0.25) +
+      theme_set(theme_bw(10) + theme(legend.background=element_blank())) +
+      theme(legend.background=element_blank()) +
+      
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      # scale_y_continuous(limits = c(20,100)) +
+      # theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))+
+      ylab("Cooking indicator")
+    
+    
+    
+    plot_name = paste0("QA Reports/Instrument Plots/all_merged_pm_",all_merged_temp$HHID[1],".png")
+    png(plot_name,width = 1000, height = 800, units = "px")
+    egg::ggarrange(p1pm, p2pm,p3pm,p4,p5, heights = c(0.2,0.2, 0.2,.2,.2))
+    dev.off()
+    
+    
+    #### Create CO plot
+    all_merged_temp_co <- pivot_longer(all_merged_temp,
+                                       cols = starts_with("CO"),
+                                       names_to = "CO",
+                                       names_prefix = "CO",
+                                       values_to = "values",
+                                       values_drop_na = TRUE) %>%
+      mutate(CO = gsub('_','',CO)) %>%
+      mutate(CO = gsub('ppm','',CO)) 
+    
+    
+    p1co <- all_merged_temp_co %>% filter(CO == 'Cook' | CO == 'Kitchen' | CO == 'LivingRoom') %>%
+      ggplot(aes(y = values, x = datetime)) + 
+      geom_point(aes(colour = CO), alpha=0.25) + 
+      theme_bw(10) +
+      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      scale_y_continuous(limits = c(0,100))   +
+      # theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))+
+      ggtitle(all_merged_temp$HHID[1]) + 
       ylab("CO ppm") 
     
-    p2 <- ggplot(aes(y = pm25_conc, x = datetime), data = selected_pats) +
-      geom_point(aes(colour = sampletype, shape = qc), alpha=0.25) +
+    
+    p2co <- all_merged_temp_co %>% filter(CO != 'Cook' & CO != 'Kitchen' & CO != 'LivingRoom') %>%
+      ggplot(aes(y = values, x = datetime)) + 
+      geom_point(aes(colour = CO), alpha=0.25) + 
       theme_bw(10) +
       theme(legend.title=element_blank(),axis.title.x = element_blank()) +
-      scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
-      scale_y_continuous(limits = c(0,3000)) +
-      ylab("PATS+ ugm-3")
+      scale_y_continuous(limits = c(0,100))   +
+      # theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))+
+      ggtitle(all_merged_temp$HHID[1]) + 
+      ylab("CO ppm indirect") 
     
-    p3 <- ggplot(aes(y = pm25_conc, x = datetime), data = selected_ecm) +
-      geom_point(aes(colour = sampletype, shape = qc), alpha=0.25) +
-      theme_bw(10) +
-    scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
-    theme(legend.title=element_blank(),axis.title.x = element_blank()) +
-    scale_y_continuous(limits = c(0,1000)) +
-    ylab("ECM/MicroPEM ugm-3")
-    
-    p4 <- ggplot(aes(y = nearest_RSSI, x = datetime), data = selected_beacon) +
-      geom_point(aes(colour = location_nearest), alpha=0.25)+
-      theme_bw(10) +
-      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
-      scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
-      # scale_y_continuous(limits = c(0,3000)) +
-      ylab("Localization")
-    
-    p5 <- ggplot(data = selected_tsi,aes(y = CO_ppm, x = datetime, shape = emission_tags, colour = emission_tags,group = qc), alpha=0.25) +
-      geom_point()+
-      theme_bw(10) +
-      scale_y_log10() +
-      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
-      scale_x_datetime(limits=c(mindatetime,maxdatetime)) +
-      ylab("TSI CO2 and CO ppm")
-    
-    plot_name = paste0("QA Reports/Instrument Plots/all_merged_",HHIDselected,".png")
-    
-    # if(!file.exists(plot_name)){
+    plot_name = paste0("QA Reports/Instrument Plots/all_merged_co_",all_merged_temp$HHID[1],".png")
     png(plot_name,width = 1000, height = 800, units = "px")
-    
-    
-    egg::ggarrange(p1, p2,p4,p5, heights = c(0.25, 0.25,.25,.25))
-    
+    egg::ggarrange(p1co, p2co,p4,p5, heights = c(0.25,0.25, 0.25,.25))
     dev.off()
     
     # }
