@@ -43,13 +43,13 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
     }else if(chron(times=raw_data$Time[1])>chron(times='20:00:00')){
       raw_data$datetime <- raw_data$datetime - 60*60*12
     }
-
-    raw_data[,datetime := floor_date(datetime, unit = "minutes")]
     
+    raw_data[,datetime := floor_date(datetime, unit = "minutes")]
+
     #How many samples are invalid? If more than 10%, filename$flag = 'bad'
     fraction_invalid_CO2 = sum(raw_data$CO2_ppm %like% "Invalid")/length(raw_data$CO2_ppm)
     fraction_invalid_CO = sum(raw_data$CO_ppm %like% "Invalid")/length(raw_data$CO_ppm)
-    if(fraction_invalid_CO2>0.1 | fraction_invalid_CO>0.1){filename$flag = 'bad'}
+    if(fraction_invalid_CO2>0.15 | fraction_invalid_CO>0.15){filename$flag = 'bad'}
     
     raw_data$CO2_ppm[raw_data$CO2_ppm %like% "Invalid"] = 5000
     raw_data$CO2_ppm <- as.numeric(raw_data$CO2_ppm)
@@ -63,7 +63,7 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
     dur = difftime(max(raw_data$datetime),min(raw_data$datetime),units='hours')
     
     meta_matched <- dplyr::left_join(filename,meta_emissions,by="HHID") %>% #in case of repeated households, keep the nearest one
-      dplyr::filter(min(abs(difftime(datestart,datetimedecaystart,units='days')))==abs(difftime(datestart,datetimedecaystart,units='days')))
+      dplyr::filter(min(abs(difftime(datestart,Date,units='days')))==abs(difftime(datestart,Date,units='days')))
     
     meta_data <- data.table(
       fullname=filename$fullname,
@@ -113,9 +113,9 @@ tsi_qa_fun <- function(file,local_tz="Africa/Nairobi",output= 'meta_data',meta_e
       
       #Separate chunks of the time series into the pre and post-sample background data, and the sample data.
       meta_data <- merge(meta_data,meta_emissions,by='HHID')   %>%
-        dplyr::filter(min(abs(difftime(datetime_start,datetimedecaystart,units='days')))==abs(difftime(datetime_start,datetimedecaystart,units='days')))
-
-      sampleperiod <-  subset(raw_data,datetime>meta_data$datetime_sample_start & datetime<meta_data$datetime_sample_end) #Emissions sample period
+        dplyr::filter(min(abs(difftime(datetime_start,Date,units='days')))==abs(difftime(datetime_start,Date,units='days')))
+      
+      sampleperiod <-  subset(raw_data,datetime>=meta_data$datetime_sample_start & datetime<=meta_data$datetime_sample_end) #Emissions sample period
       BGi<- subset(raw_data,datetime<meta_data$datetime_sample_start) #initial background period
       BGf<- subset(raw_data,datetime>meta_data$datetimedecayend)#final background period. Playing it safer.
       # BGf<- subset(raw_data,datetime>meta_data$datetime_BGf_start)#final background period
@@ -184,7 +184,7 @@ tsi_qa_fun <- function(file,local_tz="Africa/Nairobi",output= 'meta_data',meta_e
       # meta_data$EF_PM25_BC <- PM25_BC_mgm3*(1/(meta_data$Run_avg_CO_BGS+meta_data$Run_avg_CO2_BGS))*C_per_M3*Mass_Conv *Ultimate_Carbon_g / Ultimate_dryfuel_used_g
       
       #Air exchange rate calculated from CO decay.
-      raw_data_AER <- raw_data[raw_data$datetime<meta_data$datetimedecayend & raw_data$datetime>meta_data$datetimedecaystart,]
+      raw_data_AER <- raw_data[raw_data$datetime<=meta_data$datetimedecayend & raw_data$datetime>=meta_data$datetimedecaystart,]
       meta_data <- AER_fun(file,meta_data,raw_data_AER,output = 'meta_data')
       raw_data[,BGdecay := 0]
       raw_data$BGdecay[raw_data$datetime<meta_data$datetimedecayend & raw_data$datetime>meta_data$datetimedecaystart] = 1 #Points that come after the decay start
@@ -211,9 +211,9 @@ tsi_qa_fun <- function(file,local_tz="Africa/Nairobi",output= 'meta_data',meta_e
           labs(x="", y="ppm")+
           theme_minimal() 
         print(tsiplot)
-        if(!file.exists(plot_name)){
-          ggsave(filename=plot_name,plot=tsiplot,width = 8, height = 6)
-        }
+        # if(!file.exists(plot_name)){
+        ggsave(filename=plot_name,plot=tsiplot,width = 8, height = 6)
+        # }
       }, error = function(error_condition) {
       }, finally={})
       
@@ -241,12 +241,14 @@ tsi_meta_data_fun <- function(file,output='raw_data',local_tz,meta_emissions="me
       raw_data[,HHID := meta_data$HHID]
       raw_data[,sampletype := meta_data$sampletype]
       raw_data[,qc := meta_data$qc]
-      
       raw_data[,Date := NULL]
-      raw_data[,Time := NULL]
-      eturn(rarw_data)
+      raw_data[,Date := NULL]
+      raw_data[,as.Date(raw_data$datetime[1],tz=local_tz)]
+      # raw_data[,as.Date(raw_data$datetime[1],tz=local_tz)]
+      # raw_da
+      
+      #WTF
     }
   }
-}
-
+} 
 
