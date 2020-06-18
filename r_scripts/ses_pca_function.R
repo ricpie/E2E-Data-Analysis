@@ -80,5 +80,20 @@ ses_function <- function(mobenzi_rapid){
   ggbiplot(ses.pca)
   dev.off()
   
+  predicted_ses<- predicted_ses %>% 
+    dplyr::mutate(HHID = case_when(id == 'KE026-KE05 * 792119294' ~ 'KE026-KE00',
+                                   id == 'KE036-KE01 * 716666372' ~ 'KE036-KE00',
+                                   id == 'KE064-KE04 * 727783412' ~ 'KE064-KE00',
+                                   id == 'KE064-KE04 * 729741304' ~ 'KE064-KE00',
+                                   id == 'KE085-KE03 * 700759599' ~ 'KE085-KE00',
+                                   id == 'KE238-KE04 * 790497588' ~ 'KE238-KE00',
+                                   id == 'KE243-KE08 * 701980462' ~ 'KE243-KE00',
+                                   id == 'KE504-KE13 * 724243789' ~ 'KE504-KE00',
+                                   id == 'KE506-KE08 * 721605594' ~ 'KE506-KE00',
+                                   id == 'KE155-KE04 * 0711671566/ 0708598084' ~ 'KE155-KE00',
+                                   id == 'KE001-KE10 * 728819798' ~ 'KE001-KE00', 	
+                                   id == 'KE001-KE10 * 0' ~ 'KE001-KE00', 	
+                                   TRUE ~ HHID))
+  
   return(predicted_ses)
 }

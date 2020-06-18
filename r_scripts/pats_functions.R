@@ -1,7 +1,9 @@
 # fwrite(meta_data, file="r_scripts/pats_dummy_meta_data.csv") 
 dummy_meta_data <- fread('r_scripts/pats_dummy_meta_data.csv')
 
-pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,preplacement,dummy='dummy_meta_data',meta='meta_emissions'){
+pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,preplacement,dummy='dummy_meta_data',meta='meta_emissions',
+                        ecm_data='ecm_data'){
+  
   dummy_meta_data <- get(dummy, envir=.GlobalEnv)
   meta_emissions <- get(meta, envir=.GlobalEnv)
   
@@ -94,7 +96,8 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
       loggerID=filename$loggerID,
       qc = filename$flag,
       samplerate_minutes = sample_timediff/60,
-      sampling_duration = dur
+      sampling_duration = dur,
+      correction_factor = 1
     )
     
     #Add some meta_data into the mix
@@ -103,9 +106,29 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
     raw_data[,loggerID := meta_data$loggerID]
     raw_data[,HHID := as.integer(meta_data$HHID)]
     raw_data[,sampletype := meta_data$sampletype]
+    raw_data[, sampletype := dt_case_when(sampletype == 'K2' ~ 'Kitchen',
+                                          sampletype =='K' ~ 'Kitchen',
+                                          sampletype == '2' ~ '2m',
+                                          sampletype == '1' ~ '1m',
+                                          sampletype == 'A' ~ 'Ambient',
+                                          sampletype == 'L' ~ 'LivingRoom',
+                                          sampletype == 'L2' ~ 'LivingRoom',
+                                          TRUE ~ sampletype)]
     raw_data[,qc := meta_data$qc]
     raw_data <- tag_timeseries_mobenzi(raw_data,preplacement,filename)
     raw_data <- tag_timeseries_emissions(raw_data,meta_emissions,meta_data,filename)
+    raw_data$pm25_conc_unadjusted = raw_data$pm25_conc
+    
+    #correct the data data using grav data.  Need to merge it with real time ecm data first, since the run time may not be equal.
+    raw_data_temp_merge <- na.omit(merge(raw_data,ecm_data,by.x = c('datetime','HHID','sampletype'), 
+                                         by.y = c('time_chunk','pm_hhid_numeric','sampletype')),
+                                   cols=c("pm25_conc.x", "pm25_conc.y"))
+    
+    if(dim(raw_data_temp_merge)[1]>10){
+      correction_factor <- mean(raw_data_temp_merge$pm25_conc.y,na.rm = TRUE)/mean(raw_data_temp_merge$pm25_conc.x,na.rm = TRUE)
+      raw_data[,pm25_conc := raw_data$pm25_conc*correction_factor]
+    }
+    
     # raw_data <- baseline_correction_pats(raw_data)
     
     if(all(output=='meta_data')){return(meta_data)}else
@@ -119,7 +142,7 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
 
 pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",preplacement){
   ingest = tryCatch({
-    ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz,preplacement))
+    ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz,preplacement,dummy='dummy_meta_data',ecm_data=ecm_data))
   }, error = function(e) {
     print('error ingesting')
     ingest = NULL
@@ -159,6 +182,7 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
       
       #Calculate daily average concentration flag
       Daily_avg <- mean(raw_data$pm25_conc,na.rm = TRUE)
+      Daily_avg_unadjusted <- mean(raw_data$pm25_conc_unadjusted,na.rm = TRUE)
       
       Daily_avg_flag <- if(Daily_avg>=10*Daily_avg_threshold || sum(is.na(raw_data$pm25_conc)) > 0){1}else{0}
       Daily_sd <- sd(raw_data$pm25_conc,na.rm = TRUE)
@@ -172,9 +196,9 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
       
       #sample duration
       sample_duration_flag <- if(meta_data$sampling_duration < sample_duration_thresholds[1]/1440 &&
-                                 ("A"==meta_data$sampletype || "C"==meta_data$sampletype ||  "K"==meta_data$sampletype)){1}else{0}
+                                 ("Ambient"==meta_data$sampletype || "Cook"==meta_data$sampletype ||  "Kitchen"==meta_data$sampletype)){1}else{0}
       
-      meta_data = cbind(meta_data, night_hrs_bl,max_1hr_avg,Daily_avg,Daily_sd, max_1hr_avg_flag, Daily_avg_flag,nonresponsive_flag,sample_duration_flag,bl_flag)
+      meta_data = cbind(meta_data, night_hrs_bl,max_1hr_avg,Daily_avg,Daily_sd, Daily_avg_unadjusted,max_1hr_avg_flag, Daily_avg_flag,nonresponsive_flag,sample_duration_flag,bl_flag)
       
       meta_data[, flag_total:=sum(max_1hr_avg_flag, Daily_avg_flag,nonresponsive_flag,sample_duration_flag,bl_flag), by=.SD]
       
@@ -186,21 +210,21 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
       #Plot the PM data and save it
       tryCatch({ 
         #Prepare some text for looking at the ratios of high to low temps.
+        
         plot_name = gsub(".txt",".png",basename(file))
         plot_name = paste0("QA Reports/Instrument Plots/pats_",gsub(".csv",".png",plot_name))
         percentiles <- quantile(raw_data$pm25_conc,c(.05,.95))
         cat_string <- paste("5th % PM (ugm3) = ",as.character(percentiles[1]),
                             ", 95th % PM (ugm3)  = ",as.character(percentiles[2]))
-        if(!file.exists(plot_name)){
-          png(filename=plot_name,width = 550, height = 480, res = 100)
-          plot(raw_data$datetime, raw_data$pm25_conc, main=plot_name,
-               type = "p", xlab = cat_string, ylab="Calibrated PM (ugm3)",prob=TRUE,cex.main = .6,cex = .5)
-          grid(nx = 5, ny = 10, col = "lightgray", lty = "dotted",
-               lwd = par("lwd"), equilogs = TRUE)
-          axis(3, raw_data$datetime, format(raw_data$datetime, "%b %d %y"), cex.axis = .7)
-          
-          dev.off()
-        }
+        
+        png(filename=plot_name,width = 550, height = 480, res = 100)
+        plot(raw_data$datetime, raw_data$pm25_conc, main=plot_name,
+             type = "p", xlab = cat_string, ylab="Calibrated PM (ugm3)",prob=TRUE,cex.main = .6,cex = .5)
+        grid(nx = 5, ny = 10, col = "lightgray", lty = "dotted",
+             lwd = par("lwd"), equilogs = TRUE)
+        axis(3, raw_data$datetime, format(raw_data$datetime, "%b %d %y"), cex.axis = .7)
+        dev.off()
+        
       }, error = function(error_condition) {
       }, finally={})
       
@@ -211,7 +235,7 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
         percentiles <- quantile(raw_data$CO_PPM,c(.05,.95))
         cat_string <- paste("5th % PM (ugm3) = ",as.character(percentiles[1]),
                             ", 95th % PM (ugm3)  = ",as.character(percentiles[2]))
-        if(!file.exists(plot_name) & !is.na(percentiles[1]) & mean(raw_data$CO_PPM)>-1){
+        if(!is.na(percentiles[1]) & mean(raw_data$CO_PPM)>-1){
           png(filename=plot_name,width = 550, height = 480, res = 100)
           plot(raw_data$datetime, raw_data$CO_PPM, main=plot_name,
                type = "p", xlab = cat_string, ylab="Calibrated CO (ppm)",prob=TRUE,cex.main = .6,cex = .5)
@@ -232,7 +256,7 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
 pats_import_fun <- function(file,output='raw_data',local_tz,preplacement,meta='meta_emissions'){
   meta_emissions <- get(meta, envir=.GlobalEnv)
   
-  ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz="Africa/Nairobi",preplacement=preplacement))
+  ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz="Africa/Nairobi",preplacement=preplacement,dummy='dummy_meta_data',ecm_data=ecm_data))
   
   if(is.null(ingest)){return(NULL)}else{
     

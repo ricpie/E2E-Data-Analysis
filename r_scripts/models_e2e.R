@@ -6,12 +6,16 @@
 model_indirect_exposure = function(all_merged_summary,all_merged,preplacement,meta_emissions){
   
   #PM Estimates
-  all_merged_summary_subset <- all_merged_summary %>% 
+  all_merged_summary_subset <- dplyr::group_by(all_merged_summary,HHID) %>%
+    left_join(meta_emissions %>%
+                mutate(HHID = HHID_full,
+                       Date = as.Date(`Start time (Mobenzi Pre-placement)-- 1`)),
+              by = c('HHID','Date')) %>%
     filter(!is.na(pm25_conc_beacon_nearest_ecm)) %>%  print() %>%
     filter(PM25Cook>0) %>% print() %>%
     filter(PM25Kitchen>0) %>% print() %>%
     # filter(pm_compliant>0.4) %>% print() %>%
-    #Filter certain data point if needed.
+    #Filter certain data points if needed.
     # mutate(PM25Cook = case_when(HHID != 'KE509-KE06' ~ PM25Cook)) %>%
     mutate(lnPM25Cook = log(PM25Cook),
            lnPM25Kitchen = log(PM25Kitchen),
@@ -19,9 +23,10 @@ model_indirect_exposure = function(all_merged_summary,all_merged,preplacement,me
            lnPMPATSLivingRoom = log(PATS_LivingRoom),
            lnpm25_conc_beacon_nearest_ecm = log(pm25_conc_beacon_nearest_ecm),
            lnpm25_conc_beacon_nearestthreshold_ecm = log(pm25_conc_beacon_nearestthreshold_ecm),
-           lnpm25_conc_beacon_pats_threshold = log(pm25_conc_beacon_pats_threshold),
-           lnpm25_conc_beacon_pats = log(pm25_conc_beacon_pats)
-           )
+           lnpm25_conc_beacon_nearestthreshold_ecm80 = log(pm25_conc_beacon_nearestthreshold_ecm80)
+           # lnpm25_conc_beacon_pats_threshold = log(pm25_conc_beacon_pats_threshold),
+           # lnpm25_conc_beacon_pats = log(pm25_conc_beacon_pats)
+    )
   
   beacon_ecm_nearest <- ggplot(all_merged_summary_subset, aes(y = PM25Cook, x = pm25_conc_beacon_nearest_ecm, size = pm_compliant)) +
     geom_point(alpha = 0.3) + theme_minimal() +  geom_smooth(method = "lm", formula = 'y ~ x',color = 'black') 
@@ -37,10 +42,10 @@ model_indirect_exposure = function(all_merged_summary,all_merged,preplacement,me
   lnbeacon_ecm_thresh <- ggplot(all_merged_summary_subset, aes(y = lnPM25Cook, x = lnpm25_conc_beacon_nearestthreshold_ecm, size = pm_compliant,label=HHID)) +
     geom_point(alpha = 0.3) + theme_minimal() +  geom_smooth(method = "lm", formula = 'y ~ x',color = 'black') 
   lnbeacon_ecm_thresh_mod <- summary(lm(lnpm25_conc_beacon_nearestthreshold_ecm ~ lnPM25Cook, data = all_merged_summary_subset)) %>% print()
-
+  
   lnbeacon_ecm_thresh_mod80 <- summary(lm(log(pm25_conc_beacon_nearestthreshold_ecm80) ~ lnPM25Cook, data = all_merged_summary_subset)) %>% print()
   
-    
+  
   beacon_pats <- ggplot(all_merged_summary_subset, aes(y = PM25Cook, x = pm25_conc_beacon_pats, size = pm_compliant)) +
     geom_point(alpha = 0.3) + theme_minimal() +  geom_smooth(method = "lm", formula = 'y ~ x',color = 'black') 
   # beacon_pats_mod <- summary(lm(pm25_conc_beacon_pats ~ PM25Cook, data = all_merged_summary_subset)) %>% print()
@@ -108,7 +113,7 @@ model_indirect_exposure = function(all_merged_summary,all_merged,preplacement,me
   
   
   
-  stats_by_location(all_merged_summary
+  # stats_by_location(all_merged_summary
 }
 
 #24h exposure, and exposure during cooking event.  Estimated using fraction of hap measures vs. personal exposure
@@ -121,7 +126,7 @@ model_indirect_ratio = function(all_merged,preplacement){
 #24h exposure, and exposure during cooking event.  Estimated with beacon and hap data vs. personal exposure
 model_indirect_beacon = function(all_merged,preplacement){
   
-
+  
   
 }
 

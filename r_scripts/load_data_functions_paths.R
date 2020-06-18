@@ -11,6 +11,7 @@ source('r_scripts/beacon_functions.R')
 source('r_scripts/generic_functions.R')
 source('r_scripts/ses_pca_function.R')
 source('r_scripts/tsi_functions.R')
+source('r_scripts/models_e2e.R')
 source('r_scripts/plots.r')
 mobenzi_import_fun()
 equipment_IDs_fun()
@@ -65,8 +66,24 @@ pats_meta_qaqc<-readRDS("Processed Data/pats_meta_qaqc.rds")
 # beacon_logger_raw <- readRDS("Processed Data/Beacon_RawData.rds")
 all_merged <- readRDS("Processed Data/all_merged.rds")
 
+# Excel metadata import
+gravimetric_path <- "../Data/Data from the team/Gravimetric/UNOPS E2E_v2.xlsx"
+gravimetric_data <- grav_import_fun(gravimetric_path)
 
-# ecm_data <- readRDS("../Data/analysis-20200421/ecm_data.RDS")
+gravimetric_ecm_path <- "~/Dropbox/UNOPS emissions exposure/Data/CAA Data/EldoretGravimetricData.csv"
+gravimetric_ecm_data <- grav_ECM_import_fun(gravimetric_ecm_path) %>% 
+  dplyr::filter(sampletype == 'Kitchen')
+
+ecm_data <- readRDS("../Data/analysis-20200421/ecm_data.RDS") %>% 
+  dplyr::filter(pm_monitor_type %like% 'Kitchen')
+
+#Merge grav data with ecm data so we can make sure the HHIDs merge correctly (using numeric HHIDs and datetime).  Then will use the grav to perform the corrections.
+ecm_data <- merge(ecm_data,gravimetric_ecm_data,by.x = 'pm_hhid',by.y = 'HHID')
+
+# ecm_data %>% 
+#   group_by(pm_filter_id) %>%
+#   summarise_each(funs(min(., na.rm = TRUE), max(., na.rm = TRUE),mean(., na.rm = TRUE)))
+
 # dot_data <- readRDS("../Data/analysis-20200421/dot_data.RDS")
 ecm_meta_data <- readRDS("Processed Data/ecm_meta_data.rds")
 ecm_dot_data <- readRDS("../Data/analysis-20200421/ecm_dot_data.RDS") %>%
@@ -86,17 +103,13 @@ ecm_dot_data <- readRDS("../Data/analysis-20200421/ecm_dot_data.RDS") %>%
   dplyr::mutate(sampleend = max(datetime[sampletype=='Cook'])) %>%
   dplyr::mutate(sampleend = case_when(
     difftime(sampleend,samplestart,'days')>1 ~samplestart + 86400,
-                                      TRUE ~ sampleend)) %>%
+    TRUE ~ sampleend)) %>%
   dplyr::filter((datetime > min(samplestart,na.rm=TRUE) & datetime < max(sampleend,na.rm=TRUE))) %>%
   dplyr::select(-other_people_use,-meter_name,-meter_id,-notes,-creator_username,-pm_monitor_type,
                 -unops,-stove_type_other,-mission_id,-pm_hhid,-time_chunk,-pm_monitor_id,-pm_filter_id,-campaign,-sampleend,-samplestart) %>%
   as.data.table() 
 # setdiff(unique(preplacement$HHID),unique(ecm_dot_data$HHID))
 
-
-# Excel metadata import
-gravimetric_path <- "../Data/Data from the team/Gravimetric/UNOPS E2E_v2.xlsx"
-gravimetric_data <- grav_import_fun(gravimetric_path)
 
 #Import emissions Excel database 
 meta_emissions <- emissions_import_fun(path_emissions,sheetname='Data',local_tz); assign("meta","meta_emissions", envir=.GlobalEnv)

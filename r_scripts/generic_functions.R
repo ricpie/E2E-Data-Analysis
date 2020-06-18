@@ -433,6 +433,15 @@ emissions_import_fun <- function(path_emissions,sheetname,local_tz){
 }
 
 
+grav_ECM_import_fun <- function(gravimetric_ecm_path){
+  
+  gravimetric_ecm_data <- fread(gravimetric_ecm_path,skip=0)
+  setnames(gravimetric_ecm_data,c("HHID","FilterID","sampletype","Filterugm3","ECMcorfac"))
+
+  return(gravimetric_ecm_data)
+}
+
+
 grav_import_fun <- function(gravimetric_path){
   
   gravimetric_data <- read_excel(gravimetric_path,sheet = 'GRAVI',skip=0)
@@ -492,11 +501,11 @@ AER_fun <- function(file,meta_data,raw_data_AER,output = 'meta_data'){
     #Prepare some text for looking at the ratios of high to low temps.
     plot_name = gsub(".csv",".png",basename(file))
     plot_name = paste0("QA Reports/Instrument Plots/AER_",gsub(".csv",".png",plot_name))
-    aerplot <- ggplot(raw_data_AER,aes(y = time_hours, x = ln_CO2)) +
-      geom_point()+
-      ggtitle(paste0('AER ',basename(file))) + 
+    aerplot <- ggplot(raw_data_AER,aes(y = ln_CO2 , x = time_hours)) +
+      geom_point() +
+      ggtitle(paste0('AER ',basename(file))) +
       geom_smooth(method=lm) +
-      theme(legend.title = element_blank())+
+      theme(legend.title = element_blank()) +
       theme_minimal() 
     print(aerplot)
     ggsave(filename=plot_name,plot=aerplot,width = 8, height = 6)
@@ -542,6 +551,8 @@ baseline_correction_pats <- function(raw_data){
 #ambient analysis (pats, Lascar, UPAS)
 ambient_analysis <- function(CO_calibrated_timeseries,pats_data_timeseries,upasmeta,gravimetric_data){
   ambient_pats_data_timeseries <- pats_data_timeseries["A"==substr(sampletype,1,1),]
+  indoors_pats_data_timeseries <- pats_data_timeseries["A"!=substr(sampletype,1,1),]
+  
   ambient_pats_data_timeseries$instrument <- 'PATS'
   ambient_data_realtime <- CO_calibrated_timeseries["A"==substr(sampletype,1,1),]
   ambient_data_realtime$instrument <- 'Lascar'
@@ -1025,6 +1036,7 @@ tag_timeseries_mobenzi <- function(raw_data,preplacement,filename){
 tag_timeseries_emissions <- function(raw_data,meta_emissions,meta_data,filename){
   #Get the relevant preplacement row, based on HHID and start date.
   raw_data[,emission_tags:="collecting"]
+  raw_data[,emission_startstop:="collecting"]
   
   meta_matched <- dplyr::left_join(meta_data,meta_emissions,by="HHID") %>% #in case of repeated households, keep the nearest one
     dplyr::filter(min(abs(difftime(datetime_start,datetimedecaystart,units='days')))==abs(difftime(datetime_start,datetimedecaystart,units='days')))
@@ -1032,8 +1044,10 @@ tag_timeseries_emissions <- function(raw_data,meta_emissions,meta_data,filename)
   if(dim(meta_matched)[1]>0){
     raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_sample_start,meta_matched$datetime_BGf_start)] ="cooking"
     raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_BGi_start,meta_matched$datetime_sample_start) ] ="BG_initial"
-    raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetime_sample_end,meta_matched$datetime_BGf_start)] ="BG_final"
+    raw_data[,'emission_tags'][raw_data$datetime>meta_matched$datetime_BGf_start] ="BG_final"
     raw_data[,'emission_tags'][raw_data$datetime %between% c(meta_matched$datetimedecaystart,meta_matched$datetimedecayend)] ="Decay"
+    
+    raw_data[,'emission_startstop'][raw_data$datetime %between% c(meta_matched$datetime_sample_start,meta_matched$datetime_BGf_start)] ="cooking"
     
   } else if(raw_data$sampletype[1] %in% 'A'){
     print(paste('Ambient file found ', filename$basename))
@@ -1042,6 +1056,7 @@ tag_timeseries_emissions <- function(raw_data,meta_emissions,meta_data,filename)
   }
   return(raw_data)
 }
+
 
 
 #Get start and stop times of ECM files to use in the deployments
