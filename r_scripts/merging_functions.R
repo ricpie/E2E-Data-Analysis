@@ -10,7 +10,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   #Merge ecm with everything, sequentially
   # ecm_dot_data needs to go wide on dupes and sums
   ecm_dot_data[,(c('other_people_use_n','pm_accel','file','mission_name',
-                   'indoors','shared_cooking_area','pm_rh','pm_temp','dot_temperature','qc')) := NULL]  
+                   'indoors','shared_cooking_area','pm_rh','pm_temp','dot_temperature','qc','samplestart','sampleend')) := NULL]  
   
   #This chunk aggregates data from multiple stoves of the same type into a single stove (e.g. two lpg stoves becomes one, TRUE cooking state is kept if either one is true)
   #Uses the max compliance (will be of the cook), available.
@@ -20,17 +20,18 @@ all_merge_fun = function(preplacement,beacon_logger_data,
     dplyr::arrange(datetime) %>%
     dplyr::group_by(HHID,datetime) %>%
     dplyr::mutate(pm_compliant = max(pm_compliant)) %>%
-    dplyr::ungroup() %>% as.data.table() 
+    dplyr::ungroup() 
   
   #Take the ecm data wide so we can get a single time series, onto which we can merge other data streams.
   wide_ecm_dot_data <- pivot_wider(ecm_dot_data,
                                    names_from = c(sampletype),
-                                   values_from = c(3),
+                                   values_from = c(pm25_conc),
                                    names_prefix = 'PM25') %>%
     pivot_wider(names_from = c(stove_type),
-                values_from = c(4),
+                values_from = c(cooking),
                 names_prefix = 'sums') %>% 
-    select(-sumsNA) %>% as.data.table()
+    dplyr::select(-sumsNA) %>% 
+    as.data.table()
   
   
   # lascar data needs to go wide on location# lascar data needs to go wide on location (sampletype)
@@ -75,7 +76,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   pats_data_timeseries <- readRDS("Processed Data/pats_data_timeseries.rds")[qc == 'good']
   
   pats_data_timeseries[,c('V_power', 'degC_air','%RH_air','CO_PPM','status','ref_sigDel','low20avg','loggerID',
-                          'high320avg','motion','ecm_tags','emission_tags','sampleID','qc','emission_startstop') := NULL]
+                          'high320avg','motion','ecm_tags','emission_tags','sampleID','qc','emission_startstop','OG PM','UPAS ON') := NULL]
   
   pats_data_timeseries[,measure := "pm25_conc"]
   pats_data_timeseries[, sampletype := paste0("PATS_", sampletype)]
@@ -104,12 +105,12 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   # Prep beacon data (only exists for cook)
   beacon_logger_data<- readRDS("Processed Data/beacon_logger_data.rds")[qc == 'good']
   beacon_logger_data[,measure := "beacon"]
-  beacon_logger_data[,c('location_kitchen','location_livingroom','loggerID_Kitchen','qc','loggerID_LivingRoom','HHIDstr','emission_startstop') := NULL]
+  beacon_logger_data[,c('location_kitchen','location_livingroom','loggerID_Kitchen','qc','loggerID_LivingRoom','HHIDstr') := NULL]
   
   # Prep emissions, (tsi) 
-  tsi_timeseries <- as.data.table(readRDS("Processed Data/tsi_timeseries.rds"))#[qc == 'good']
+  tsi_timeseries <- as.data.table(readRDS("Processed Data/tsi_timeseries.rds"))[qc == 'good']
   tsi_timeseries[,measure := "emissions"]
-  tsi_timeseries[,(c('sampleID','sampletype','RH','Temp_C')) := NULL]
+  tsi_timeseries[,(c('sampleID','sampletype','RH','Date')) := NULL]
   
   
   # merge dot, ecm, pats, lascar, tsi data.  preplacement survey not merged here.
@@ -123,19 +124,15 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   all_merged = merge(all_merged,tsi_timeseries, by.x = c("datetime","pm_hhid_numeric"),
                      by.y = c("datetime","HHID"), all.x = T, all.y = F)
   
-  all_merged = all_merged[!is.na(all_merged$PM25Cook),]
-  all_merged = all_merged[!is.nan(all_merged$PM25Cook),]
+  # all_merged = all_merged[!is.na(all_merged$PM25Cook),]
+  # all_merged = all_merged[!is.nan(all_merged$PM25Cook),]
   all_merged <- all_merged[!duplicated(all_merged[,1:22]),]
-  all_merged =all_merged[order(HHID,Date)]
-  all_merged$Date <- na.locf(all_merged$Date,na.rm = FALSE)
   
   
   #If there is no ECM kitchen data, use the PATS kitchen data.  PATS_kitchen data has been adjusted.
-  all_merged <- dplyr::group_by(as.data.table(all_merged),Date,HHID) %>%
-    dplyr::mutate(ECM_kitchen = PM25Kitchen,
-                  PM25Kitchen = case_when(is.na(ECM_kitchen) ~ PATS_Kitchen,
-                                          TRUE ~ ECM_kitchen)) %>%
-    dplyr::ungroup() %>%
+  all_merged <- dplyr::mutate(as.data.table(all_merged),ECM_kitchen = PM25Kitchen,
+                              PM25Kitchen = case_when(is.na(ECM_kitchen) ~ PATS_Kitchen,
+                                                      TRUE ~ ECM_kitchen)) %>%
     as.data.table()
   
   
@@ -146,70 +143,64 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   #If the livingroom is PATS is NAN, use the ambient data
   meanPATSAmbient = mean(all_merged$PATS_Ambient,na.rm = TRUE)
   meanCOAmbient = mean(all_merged$CO_ppmAmbient,na.rm = TRUE)
-  #Indirect using ECM data in kitchen (nearest beacon algo)
+  #Indirect using ECM data in kitchen (nearest beacon algo).  NA locations get NA PM values
   all_merged[, pm25_conc_beacon_nearest_ecm := dt_case_when(location_nearest == 'Kitchen' ~ PM25Kitchen, #PM25 kitchen uses mostly ECM, but some corrected PATS data.
                                                             location_nearest == 'Ambient' & !is.na(PATS_Ambient) ~ PATS_Ambient, 
                                                             location_nearest == 'Ambient' & is.na(PATS_Ambient) ~ meanPATSAmbient,  
-                                                            location_nearest == 'Average'  ~ (PM25Kitchen+PATS_LivingRoom)/2,  
+                                                            location_nearest == 'Average'  ~ mean(c(PM25Kitchen,PATS_LivingRoom),na.rm = TRUE),  
                                                             location_nearest != 'Kitchen' & !is.na(PATS_LivingRoom) ~ PATS_LivingRoom,
-                                                            location_nearest != 'Kitchen' & is.na(PATS_LivingRoom) & !is.na(PATS_Ambient) ~ PATS_Ambient,  #Use ambient if livingroom is NAN.
-                                                            !is.na(PATS_Ambient) ~ PATS_Ambient,
-                                                            is.na(location_nearest) ~ meanPATSAmbient,
-                                                            TRUE ~ meanPATSAmbient)]
+                                                            location_nearest != 'Kitchen' & is.na(PATS_LivingRoom) & !is.na(PATS_Ambient) ~ PATS_Ambient,
+                                                            location_nearest != 'Kitchen' & is.na(PATS_LivingRoom) & is.na(PATS_Ambient) ~ meanPATSAmbient)]
+  # table(all_merged$location_nearest,is.na(all_merged$co_estimate_beacon_nearest),useNA = "ifany")  
   
   #Estimate uses kitchen and living room co, (nearest beacon algo)
   all_merged[, co_estimate_beacon_nearest := dt_case_when(location_nearest == 'Kitchen' ~ CO_ppmKitchen,
                                                           location_nearest == 'Ambient' & !is.na(CO_ppmAmbient) ~ CO_ppmAmbient, 
                                                           location_nearest == 'Ambient' & is.na(CO_ppmAmbient) ~ meanCOAmbient,  
-                                                          location_nearest == 'Average'  ~ (CO_ppmKitchen+CO_ppmLivingRoom)/2,  
+                                                          location_nearest == 'Average'  ~  mean(c(CO_ppmKitchen,CO_ppmLivingRoom),na.rm = TRUE),  
                                                           location_nearest != 'Kitchen' & !is.na(CO_ppmLivingRoom) ~ CO_ppmLivingRoom,
                                                           location_nearest != 'Kitchen' & is.na(CO_ppmLivingRoom) & !is.na(CO_ppmAmbient) ~ CO_ppmAmbient,  #Use ambient if livingroom is NAN.
-                                                          !is.na(CO_ppmAmbient) ~ CO_ppmAmbient,
-                                                          TRUE ~ meanCOAmbient)]  
+                                                          location_nearest != 'Kitchen' & is.na(CO_ppmLivingRoom) & is.na(CO_ppmAmbient) ~ meanCOAmbient)]  #Use ambient if livingroom is NAN.
   
   ####This batch uses kitchen if we have signal greater than x RSSI in the kitchen, otherwise, living room, otherwise ambient
   #Estimate uses kitchen ecm data and living room pats data, and ambient pats if needed.
   all_merged[, pm25_conc_beacon_nearestthreshold_ecm := dt_case_when(location_kitchen_threshold == 'Kitchen' & !is.na(PM25Kitchen) ~ PM25Kitchen,
                                                                      location_kitchen_threshold == 'Ambient' & !is.na(PATS_Ambient) ~ PATS_Ambient, 
                                                                      location_kitchen_threshold == 'Ambient' & is.na(PATS_Ambient) ~ meanPATSAmbient,  
-                                                                     location_kitchen_threshold == 'Average'  ~ (PM25Kitchen+PATS_LivingRoom)/2,  
+                                                                     location_kitchen_threshold == 'Average'  ~ mean(c(PM25Kitchen,PATS_LivingRoom),na.rm = TRUE),  
                                                                      location_kitchen_threshold != 'Kitchen' & !is.na(PATS_LivingRoom) ~ PATS_LivingRoom,
-                                                                     location_kitchen_threshold != 'Kitchen' & is.na(PATS_LivingRoom) & !is.na(PATS_Ambient) ~ PATS_Ambient,  #Use ambient if livingroom is NAN.
-                                                                     !is.na(PATS_Ambient) ~ PATS_Ambient,
-                                                                     is.na(location_kitchen_threshold) ~ meanPATSAmbient,
-                                                                     TRUE ~ meanPATSAmbient)]
+                                                                     location_kitchen_threshold != 'Kitchen' & is.na(PATS_LivingRoom) & !is.na(PATS_Ambient) ~ PATS_Ambient,
+                                                                     location_kitchen_threshold != 'Kitchen' & is.na(PATS_LivingRoom) & is.na(PATS_Ambient) ~ meanPATSAmbient)]
   
   
   all_merged[, pm25_conc_beacon_nearestthreshold_ecm80 := dt_case_when(location_kitchen_threshold80 == 'Kitchen' & !is.na(PM25Kitchen) ~ PM25Kitchen,
                                                                        location_kitchen_threshold80 == 'Ambient' & !is.na(PATS_Ambient) ~ PATS_Ambient, 
                                                                        location_kitchen_threshold80 == 'Ambient' & is.na(PATS_Ambient) ~ meanPATSAmbient,  
-                                                                       location_kitchen_threshold80 == 'Average'  ~ (PM25Kitchen+PATS_LivingRoom)/2,  
+                                                                       location_kitchen_threshold80 == 'Average'  ~ mean(c(PM25Kitchen,PATS_LivingRoom),na.rm = TRUE),  
                                                                        location_kitchen_threshold80 != 'Kitchen' & !is.na(PATS_LivingRoom) ~ PATS_LivingRoom,
-                                                                       location_kitchen_threshold80 != 'Kitchen' & is.na(PATS_LivingRoom) & !is.na(PATS_Ambient) ~ PATS_Ambient,  #Use ambient if livingroom is NAN.
-                                                                       !is.na(PATS_Ambient) ~ PATS_Ambient,
-                                                                       is.na(location_kitchen_threshold80) ~ meanPATSAmbient,
-                                                                       TRUE ~ meanPATSAmbient)]
+                                                                       location_kitchen_threshold80 != 'Kitchen' & is.na(PATS_LivingRoom) & !is.na(PATS_Ambient) ~ PATS_Ambient,
+                                                                       location_kitchen_threshold80 != 'Kitchen' & is.na(PATS_LivingRoom) & is.na(PATS_Ambient) ~ meanPATSAmbient)]  #Use ambient if livingroom is NAN.
   
   
   
   all_merged[, co_estimate_beacon_nearest_threshold := dt_case_when(location_kitchen_threshold == 'Kitchen' ~ CO_ppmKitchen,
                                                                     location_kitchen_threshold == 'Ambient' & !is.na(CO_ppmAmbient) ~ CO_ppmAmbient, 
                                                                     location_kitchen_threshold == 'Ambient' & is.na(CO_ppmAmbient) ~ meanCOAmbient,  
-                                                                    location_kitchen_threshold == 'Average'  ~ (CO_ppmKitchen+CO_ppmLivingRoom)/2,  
+                                                                    location_kitchen_threshold == 'Average'  ~ mean(c(CO_ppmLivingRoom,CO_ppmKitchen),na.rm = TRUE),  
                                                                     location_kitchen_threshold != 'Kitchen' & !is.na(CO_ppmLivingRoom) ~ CO_ppmLivingRoom,
                                                                     location_kitchen_threshold != 'Kitchen' & is.na(CO_ppmLivingRoom) & !is.na(CO_ppmAmbient) ~ CO_ppmAmbient,  #Use ambient if livingroom is NAN.
-                                                                    !is.na(CO_ppmAmbient) ~ CO_ppmAmbient,
-                                                                    TRUE ~ meanCOAmbient)]  
+                                                                    location_kitchen_threshold != 'Kitchen' & is.na(CO_ppmLivingRoom) & is.na(CO_ppmAmbient) ~ meanCOAmbient)]  
   
   all_merged_summary <- dplyr::group_by(all_merged,HHID) %>%
     dplyr::group_by(HHID,Date) %>%
     dplyr::summarise(Start_datetime = min(datetime,na.rm = TRUE),
                      End_datetime = max(datetime,na.rm = TRUE),
                      meanPM25Cook = mean(PM25Cook,na.rm = TRUE),
+                     mean_compliance = mean(pm_compliant,na.rm = TRUE),
                      meanPM25Kitchen = mean(PM25Kitchen,na.rm = TRUE),
                      meanPM25LivingRoom = mean(PATS_LivingRoom,na.rm = TRUE),
                      meanPM25Ambient =  mean(PATS_Ambient,na.rm = TRUE),
-                     meanCO_ppmCook = mean(CO_ppmCook,na.rm = TRUE),  
+                     meanCO_ppmCook = mean(CO_ppmCook,na.rm = TRUE),
                      meanCO_ppmKitchen = mean(CO_ppmKitchen,na.rm = TRUE),
                      meanCO_ppmLivingRoom = mean(CO_ppmLivingRoom,na.rm = TRUE),
                      meanCO_ppmAmbient = mean(CO_ppmAmbient,na.rm = TRUE),
@@ -221,42 +212,45 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                      sum_lpg = sum(sumslpg,na.rm = TRUE),
                      meanpm25_indirect_nearest = mean(pm25_conc_beacon_nearest_ecm,na.rm = TRUE),
                      meanpm25_indirect_nearest_threshold = mean(pm25_conc_beacon_nearestthreshold_ecm,na.rm = TRUE),
+                     meanpm25_indirect_nearest_threshold80 = mean(pm25_conc_beacon_nearestthreshold_ecm80,na.rm = TRUE),
                      meanCO_indirect_nearest = mean(co_estimate_beacon_nearest,na.rm = TRUE),
                      meanCO_indirect_nearest_threshold = mean(co_estimate_beacon_nearest_threshold,na.rm = TRUE),
                      countPM25Kitchen = sum(!is.na(PM25Kitchen)),
                      countPM25Cook = sum(!is.na(PM25Cook)),
+                     countPATS_LivingRoom = sum(!is.na(PATS_LivingRoom)),
+                     countPM25Cook = sum(!is.na(PM25Cook)),
                      countlocation_nearest = sum(!is.na(location_nearest)),
-                     countlocation_nearestthreshold = sum(!is.na(location_kitchen_threshold))
-                     )
-    ) %>%
-    left_join(all_merged %>%
-                dplyr::group_by(HHID,Date,emission_startstop) %>%
-                dplyr::summarise(meanPM25Cook = mean(PM25Cook,na.rm = TRUE),
-                                 meanPM25Kitchen = mean(PM25Kitchen,na.rm = TRUE),
-                                 meanPM25LivingRoom = mean(PATS_LivingRoom,na.rm = TRUE),
-                                 meanPM25Ambient =  mean(PATS_Ambient,na.rm = TRUE),
-                                 meanCO_ppmCook = mean(CO_ppmCook,na.rm = TRUE),
-                                 meanCO_ppmKitchen = mean(CO_ppmKitchen,na.rm = TRUE),
-                                 meanCO_ppmLivingRoom = mean(CO_ppmLivingRoom,na.rm = TRUE),
-                                 meanCO_ppmAmbient = mean(CO_ppmAmbient,na.rm = TRUE),
-                                 sum_TraditionalManufactured_minutes = sum(sumstraditional_manufactured,na.rm = TRUE),
-                                 sum_charcoal_jiko_minutes = sum(`sumscharcoal jiko`,na.rm = TRUE),
-                                 sum_traditional_non_manufactured = sum(sumstraditional_non_manufactured,na.rm = TRUE),
-                                 sum_lpg = sum(sumslpg,na.rm = TRUE),
-                                 meanpm25_indirect_nearest = mean(pm25_conc_beacon_nearest_ecm,na.rm = TRUE),
-                                 meanpm25_indirect_nearest_threshold = mean(pm25_conc_beacon_nearestthreshold_ecm,na.rm = TRUE),
-                                 meanCO_indirect_nearest = mean(co_estimate_beacon_nearest,na.rm = TRUE),
-                                 meanCO_indirect_nearest_threshold = mean(co_estimate_beacon_nearest_threshold,na.rm = TRUE)
-                ) %>%
-                dplyr::filter(emission_startstop == 'cooking'),
-              by = c('HHID','datetime')
-    ) %>%
-    left_join(meta_emissions %>%
-                mutate(HHID = HHID_full,
-                       Date = as.Date(`Start time (Mobenzi Pre-placement)-- 1`)),
-              by = c('HHID','Date'))
-
+                     countlocation_nearestthreshold = sum(!is.na(location_kitchen_threshold))) %>%
+    dplyr::left_join( all_merged %>%
+                        dplyr::group_by(HHID,Date,emission_startstop) %>%
+                        dplyr::summarise(CookingmeanPM25Cook = mean(PM25Cook,na.rm = TRUE),
+                                         CookingmeanPM25Kitchen = mean(PM25Kitchen,na.rm = TRUE),
+                                         CookingmeanPM25LivingRoom = mean(PATS_LivingRoom,na.rm = TRUE),
+                                         CookingmeanPM25Ambient =  mean(PATS_Ambient,na.rm = TRUE),
+                                         CookingmeanCO_ppmCook = mean(CO_ppmCook,na.rm = TRUE),
+                                         CookingmeanCO_ppmKitchen = mean(CO_ppmKitchen,na.rm = TRUE),
+                                         CookingmeanCO_ppmLivingRoom = mean(CO_ppmLivingRoom,na.rm = TRUE),
+                                         CookingmeanCO_ppmAmbient = mean(CO_ppmAmbient,na.rm = TRUE),
+                                         Cookingsum_TraditionalManufactured_minutes = sum(sumstraditional_manufactured,na.rm = TRUE),
+                                         Cookingsum_charcoal_jiko_minutes = sum(`sumscharcoal jiko`,na.rm = TRUE),
+                                         Cookingsum_traditional_non_manufactured = sum(sumstraditional_non_manufactured,na.rm = TRUE),
+                                         Cookingsum_lpg = sum(sumslpg,na.rm = TRUE),
+                                         Cookingmeanpm25_indirect_nearest = mean(pm25_conc_beacon_nearest_ecm,na.rm = TRUE),
+                                         Cookingmeanpm25_indirect_nearest_threshold = mean(pm25_conc_beacon_nearestthreshold_ecm,na.rm = TRUE),
+                                         CookingmeanCO_indirect_nearest = mean(co_estimate_beacon_nearest,na.rm = TRUE),
+                                         CookingmeanCO_indirect_nearest_threshold = mean(co_estimate_beacon_nearest_threshold,na.rm = TRUE)) %>%
+                        dplyr::filter(emission_startstop == 'cooking'),
+                      by = c('HHID','Date')) #  %>%
+  
+  # dplyr::left_join(meta_emissions %>%
+  #             mutate(HHID = HHID_full,
+  #                    Date = as.Date(`Start time (Mobenzi Pre-placement)-- 1`)),
+  #           by = c('HHID','Date'))
+  
   write.xlsx(all_merged_summary,'Processed Data/all_merged_summary_mj.xlsx')
+  
+  
+
   
   
   return(list(all_merged,all_merged_summary))

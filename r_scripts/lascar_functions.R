@@ -256,6 +256,14 @@ lascar_cali_fun <- function(file,output='calibrated_data',local_tz="Africa/Nairo
       if(grepl("LAS|CAS",meta_data$loggerID)){ 
         calibrated_data[,sampletype := meta_data$sampletype]
       }else {calibrated_data[,sampletype := paste0(meta_data$sampletype,"2")]}
+      
+      calibrated_data[, sampletype := dt_case_when(sampletype == 'C2' ~ 'Cook Dup',
+                                                            sampletype =='12' ~ '1m Dup',
+                                                            sampletype == '22' ~ '2m Dup',
+                                                            sampletype =='L22' ~ 'Living Room Dup',
+                                                            sampletype == 'K22' ~ 'Kitchen Dup',           
+                                                            TRUE ~ sampletype)]
+      
       return(calibrated_data)
     }
   }

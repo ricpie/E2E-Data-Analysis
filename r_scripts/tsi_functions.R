@@ -2,6 +2,35 @@
 dummy_meta_data <- fread("r_scripts/tsi_dummy_meta_data.csv")
 
 
+tsi_meta_data_fun <- function(file,output='raw_data',local_tz,meta_emissions="meta_emissions"){
+  print(file)
+  ingest <- tsi_ingest(file,local_tz, output=c('raw_data', 'meta_data'),meta="meta_emissions")
+  
+  if(is.null(ingest)){return(NULL)}
+  
+  meta_data <- ingest$meta_data
+  # if('flags' %in% colnames(meta_data)){
+  #   return(meta_data)
+  # }else{
+  raw_data <- ingest$raw_data
+  
+  #Add some meta_data into the mix
+  raw_data[,sampleID := meta_data$sampleID]
+  raw_data[,loggerID := meta_data$loggerID]
+  raw_data[,HHID := meta_data$HHID]
+  raw_data[,sampletype := meta_data$sampletype]
+  raw_data[,qc := meta_data$qc]
+  raw_data[,Date := NULL]
+  raw_data[,Time := NULL]
+  raw_data[,Date := as.Date(raw_data$datetime[1],tz=local_tz)]
+  # raw_data[,as.Date(raw_data$datetime[1],tz=local_tz)]
+  # raw_da
+  return(raw_data)
+  #WTF
+  
+} 
+
+
 tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='dummy_meta_data',meta="meta_emissions"){
   dummy_meta_data <- get(dummy, envir=.GlobalEnv)
   meta_emissions <- get(meta, envir=.GlobalEnv)
@@ -37,15 +66,15 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
       raw_data$datetime <- paste(raw_data$Date,raw_data$Time)
       raw_data$datetime <- as.POSIXct(raw_data$datetime,tz=local_tz,tryFormats = c("%m/%d/%y %H:%M:%OS","%d/%m/%Y %H:%M:%OS","%d/%m/%y %H:%M:%OS"))
     }
-    #Shift forward time by 12 hours if the time was set up incorrectly.  Adjusting for one TSI in particular, model
+    #Shift forward time by 12 hours if the time was set up incorrectly.  Adjusting for one TSI in particular, model 5004
     if(chron(times=raw_data$Time[1])<chron(times='07:00:00')){
       raw_data$datetime <- raw_data$datetime + 60*60*12
     }else if(chron(times=raw_data$Time[1])>chron(times='20:00:00')){
-      raw_data$datetime <- raw_data$datetime - 60*60*12
+      raw_data$datetime <- raw_data$datetime + 60*60*12
     }
     
     raw_data[,datetime := floor_date(datetime, unit = "minutes")]
-
+    
     #How many samples are invalid? If more than 10%, filename$flag = 'bad'
     fraction_invalid_CO2 = sum(raw_data$CO2_ppm %like% "Invalid")/length(raw_data$CO2_ppm)
     fraction_invalid_CO = sum(raw_data$CO_ppm %like% "Invalid")/length(raw_data$CO_ppm)
@@ -62,8 +91,14 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
     #Sampling duration
     dur = difftime(max(raw_data$datetime),min(raw_data$datetime),units='hours')
     
-    meta_matched <- dplyr::left_join(filename,meta_emissions,by="HHID") %>% #in case of repeated households, keep the nearest one
-      dplyr::filter(min(abs(difftime(datestart,Date,units='days')))==abs(difftime(datestart,Date,units='days')))
+    meta_matched <- merge(filename,meta_emissions,by="HHID") #in case of repeated households, keep the nearest one
+    
+    #Deal with some repeated HHIDs.  If there is a perfect match in the HHID, use it, otherwise use nearest.
+    if(any(meta_matched$HHID_full %like% substr(filename$sampleID,1,10))){
+      meta_matched <- meta_matched[meta_matched$HHID_full %like% substr(filename$sampleID,1,10),]
+    }else{ #use nearest
+      meta_matched<- dplyr::filter(meta_matched,min(abs(difftime(datestart,Date,units='days')))==abs(difftime(datestart,Date,units='days')))
+    }
     
     meta_data <- data.table(
       fullname=filename$fullname,
@@ -85,6 +120,7 @@ tsi_ingest <- function(file, local_tz, output=c('raw_data', 'meta_data'),dummy='
     
     raw_data <- as.data.table(raw_data)
     raw_data[,stovetype := meta_data$stovetype]
+    
     raw_data <- tag_timeseries_emissions(raw_data,meta_emissions,meta_data,filename)
     
   }
@@ -223,32 +259,5 @@ tsi_qa_fun <- function(file,local_tz="Africa/Nairobi",output= 'meta_data',meta_e
 }
 
 
-tsi_meta_data_fun <- function(file,output='raw_data',local_tz,meta_emissions="meta_emissions"){
-  print(file)
-  ingest <- tsi_ingest(file,local_tz, output=c('raw_data', 'meta_data'),meta="meta_emissions")
-  
-  if(is.null(ingest)){return(NULL)}else{
-    
-    meta_data <- ingest$meta_data
-    if('flags' %in% colnames(meta_data)){
-      return(meta_data)
-    }else{
-      raw_data <- ingest$raw_data
-      
-      #Add some meta_data into the mix
-      raw_data[,sampleID := meta_data$sampleID]
-      raw_data[,loggerID := meta_data$loggerID]
-      raw_data[,HHID := meta_data$HHID]
-      raw_data[,sampletype := meta_data$sampletype]
-      raw_data[,qc := meta_data$qc]
-      raw_data[,Date := NULL]
-      raw_data[,Date := NULL]
-      raw_data[,as.Date(raw_data$datetime[1],tz=local_tz)]
-      # raw_data[,as.Date(raw_data$datetime[1],tz=local_tz)]
-      # raw_da
-      
-      #WTF
-    }
-  }
-} 
+
 

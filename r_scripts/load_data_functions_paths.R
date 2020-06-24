@@ -75,14 +75,19 @@ gravimetric_ecm_data <- grav_ECM_import_fun(gravimetric_ecm_path) %>%
   dplyr::filter(sampletype == 'Kitchen')
 
 ecm_data <- readRDS("../Data/analysis-20200421/ecm_data.RDS") %>% 
-  dplyr::filter(pm_monitor_type %like% 'Kitchen')
+  dplyr::mutate(HHID = pm_hhid) %>%
+  dplyr::filter(pm_monitor_type %like% 'Kitchen') %>%
+  dplyr::filter(HHID %in% preplacement$HHID)
+  
 
 #Merge grav data with ecm data so we can make sure the HHIDs merge correctly (using numeric HHIDs and datetime).  Then will use the grav to perform the corrections.
-ecm_data <- merge(ecm_data,gravimetric_ecm_data,by.x = 'pm_hhid',by.y = 'HHID')
-
-# ecm_data %>% 
+# ecm_data <- merge(ecm_data,gravimetric_ecm_data,by.x = c('pm_hhid',by.y = 'HHID')
+# 
+# asdf<-ecm_data %>%
 #   group_by(pm_filter_id) %>%
-#   summarise_each(funs(min(., na.rm = TRUE), max(., na.rm = TRUE),mean(., na.rm = TRUE)))
+#   summarise_each(funs( min(., na.rm = TRUE), max(., na.rm = TRUE),mean(., na.rm = TRUE))) %>%
+#   mutate(time_elapsed = time_chunk_max-time_chunk_min)
+# setdiff(sort(unique(ecm_data$pm_hhid)),sort(gravimetric_ecm_data$HHID))
 
 # dot_data <- readRDS("../Data/analysis-20200421/dot_data.RDS")
 ecm_meta_data <- readRDS("Processed Data/ecm_meta_data.rds")
@@ -98,7 +103,7 @@ ecm_dot_data <- readRDS("../Data/analysis-20200421/ecm_dot_data.RDS") %>%
   # dplyr::filter(HHID != 'KE511-KE06' & HHID != 'KE508-KE12') %>%
   dplyr::filter(HHID %in% preplacement$HHID) %>%
   dplyr::filter(!(HHID == 'KE033-KE03' & sampletype == 'Kitchen')) %>%  #Bad data file.
-  dplyr::group_by(HHID) %>%
+  dplyr::group_by(HHID,Date) %>%
   dplyr::mutate(samplestart = min(datetime[sampletype=='Cook'])) %>%
   dplyr::mutate(sampleend = max(datetime[sampletype=='Cook'])) %>%
   dplyr::mutate(sampleend = case_when(
@@ -106,7 +111,9 @@ ecm_dot_data <- readRDS("../Data/analysis-20200421/ecm_dot_data.RDS") %>%
     TRUE ~ sampleend)) %>%
   dplyr::filter((datetime > min(samplestart,na.rm=TRUE) & datetime < max(sampleend,na.rm=TRUE))) %>%
   dplyr::select(-other_people_use,-meter_name,-meter_id,-notes,-creator_username,-pm_monitor_type,
-                -unops,-stove_type_other,-mission_id,-pm_hhid,-time_chunk,-pm_monitor_id,-pm_filter_id,-campaign,-sampleend,-samplestart) %>%
+                -unops,-stove_type_other,-mission_id,-pm_hhid,-time_chunk,-pm_monitor_id,-pm_filter_id,-campaign) %>%
+  dplyr::mutate(pm_hhid_numeric = case_when(HHID == 'KE001-KE08' ~ 18,
+                          TRUE ~ pm_hhid_numeric)) %>%
   as.data.table() 
 # setdiff(unique(preplacement$HHID),unique(ecm_dot_data$HHID))
 

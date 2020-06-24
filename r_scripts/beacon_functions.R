@@ -172,8 +172,8 @@ beacon_import_fun <- function(file,timezone="UTC",preplacement=preplacement,beac
 
 beacon_deployment_fun = function(selected_preplacement,equipment_IDs,beacon_logger_raw,
                                  CO_calibrated_timeseries,pats_data_timeseries){
-   # selected_preplacement<-mobenzilist[[1]]
-   # selected_preplacement<-preplacement[preplacement$HHID == 'KE026-KE10',][1,]
+   # selected_preplacement<-mobenzilist[[5]]
+   # selected_preplacement<-preplacement[preplacement$HHID == 'KE190-KE04',][1,]
    base::message(selected_preplacement$HHID)
    
    #Prep instrument IDs... take this part out to functionalize more generally later
@@ -242,11 +242,11 @@ beacon_deployment_fun = function(selected_preplacement,equipment_IDs,beacon_logg
                                                  RSSI_minute_mean_Kitchen > RSSI_minute_mean_LivingRoom ~ location_kitchen,
                                                  RSSI_minute_mean_Kitchen == RSSI_minute_mean_LivingRoom ~ 'Average',
                                                  TRUE ~ 'Ambient'),
-                    location_kitchen_threshold = case_when(RSSI_minute_mean_Kitchen > -70 ~ location_kitchen,
+                    location_kitchen_threshold = case_when(RSSI_minute_mean_Kitchen >= -70 ~ location_kitchen,
                                                            RSSI_minute_mean_Kitchen < -70 ~ otherroom,
                                                            is.na(RSSI_minute_mean_Kitchen)  ~ 'Ambient',
                                                            TRUE ~ 'Ambient'),
-                    location_kitchen_threshold80 = case_when(RSSI_minute_mean_Kitchen > -80 ~ location_kitchen,
+                    location_kitchen_threshold80 = case_when(RSSI_minute_mean_Kitchen >= -80 ~ location_kitchen,
                                                              RSSI_minute_mean_Kitchen < -80 ~ otherroom,
                                                              is.na(RSSI_minute_mean_Kitchen)  ~ 'Ambient',
                                                              TRUE ~ 'Ambient'),
@@ -255,8 +255,7 @@ beacon_deployment_fun = function(selected_preplacement,equipment_IDs,beacon_logg
       dplyr::ungroup() %>%
       dplyr::mutate(sumKitchen = sum(!is.na(RSSI_minute_mean_Kitchen))) %>%
       dplyr::mutate(sumLivingRoom = sum(!is.na(RSSI_minute_mean_LivingRoom))) %>%
-      dplyr::mutate(location_nearest = case_when(sumKitchen>1 & sumLivingRoom > 1 ~ location_nearest,
-                                                 TRUE ~ "NA")) %>% 
+      dplyr::mutate(location_nearest = case_when(sumKitchen>1 & sumLivingRoom > 1 ~ location_nearest)) %>% 
       dplyr::select(-sumKitchen,-sumLivingRoom) %>%
       as.data.table()
    

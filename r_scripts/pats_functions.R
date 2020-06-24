@@ -2,7 +2,7 @@
 dummy_meta_data <- fread('r_scripts/pats_dummy_meta_data.csv')
 
 pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,preplacement,dummy='dummy_meta_data',meta='meta_emissions',
-                        ecm_data='ecm_data'){
+                        ecm_dot_data='ecm_dot_data'){
   
   dummy_meta_data <- get(dummy, envir=.GlobalEnv)
   meta_emissions <- get(meta, envir=.GlobalEnv)
@@ -115,13 +115,17 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
                                           sampletype == 'L2' ~ 'LivingRoom',
                                           TRUE ~ sampletype)]
     raw_data[,qc := meta_data$qc]
+    if(substr(raw_data$sampleID[1],1,10) == 'KE001-KE08'){
+      meta_data$HHID = as.integer(18)
+      raw_data[,HHID := as.integer(meta_data$HHID)]
+    }
     raw_data <- tag_timeseries_mobenzi(raw_data,preplacement,filename)
     raw_data <- tag_timeseries_emissions(raw_data,meta_emissions,meta_data,filename)
     raw_data$pm25_conc_unadjusted = raw_data$pm25_conc
     
     #correct the data data using grav data.  Need to merge it with real time ecm data first, since the run time may not be equal.
-    raw_data_temp_merge <- na.omit(merge(raw_data,ecm_data,by.x = c('datetime','HHID','sampletype'), 
-                                         by.y = c('time_chunk','pm_hhid_numeric','sampletype')),
+    raw_data_temp_merge <- na.omit(merge(raw_data,ecm_dot_data,by.x = c('datetime','HHID','sampletype'), 
+                                         by.y = c('datetime','pm_hhid_numeric','sampletype')),
                                    cols=c("pm25_conc.x", "pm25_conc.y"))
     
     if(dim(raw_data_temp_merge)[1]>10){
@@ -142,7 +146,7 @@ pats_ingest <- function(file, output=c('raw_data', 'meta_data'), local_tz,prepla
 
 pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",preplacement){
   ingest = tryCatch({
-    ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz,preplacement,dummy='dummy_meta_data',ecm_data=ecm_data))
+    ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz,preplacement,dummy='dummy_meta_data',ecm_dot_data=ecm_dot_data))
   }, error = function(e) {
     print('error ingesting')
     ingest = NULL
@@ -256,7 +260,7 @@ pats_qa_fun <- function(file,output= 'meta_data',local_tz="Africa/Nairobi",prepl
 pats_import_fun <- function(file,output='raw_data',local_tz,preplacement,meta='meta_emissions'){
   meta_emissions <- get(meta, envir=.GlobalEnv)
   
-  ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz="Africa/Nairobi",preplacement=preplacement,dummy='dummy_meta_data',ecm_data=ecm_data))
+  ingest <- suppressWarnings(pats_ingest(file, output=c('raw_data', 'meta_data'),local_tz="Africa/Nairobi",preplacement=preplacement,dummy='dummy_meta_data',ecm_dot_data=ecm_dot_data))
   
   if(is.null(ingest)){return(NULL)}else{
     

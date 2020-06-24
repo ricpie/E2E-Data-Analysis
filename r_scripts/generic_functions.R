@@ -24,7 +24,9 @@ parse_filename_fun <- function(file){
     num_underscores <- lengths(regmatches(filename$basename, gregexpr("_", filename$basename)))
     if ( num_underscores > 3 |  (is.na(filename$filterID) & num_underscores>3) | is.na(filename$HHID) | filename$fieldworkerID > 25 |
          filename$fieldworkerID < 0) {filename$filename_flag = 1}else{filename$filename_flag = 0}
-    filename
+    
+    filename[which(substr(filename$sampleID[1],1,10) == 'KE001-KE08'),HHID := as.numeric(18)]
+    
     return(filename)
   }, error = function(e) {
     print('Error parsing filename')
@@ -83,7 +85,10 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
                   WalkThrough2Start = as.POSIXct(paste0(UNOPS_Date,' ',WalkThrough2Start),tz = "Africa/Nairobi",tryFormats = c("%d-%m-%Y %H:%M")),
                   WalkThrough2End = as.POSIXct(paste0(UNOPS_Date,' ',WalkThrough2End),tz = "Africa/Nairobi",tryFormats = c("%d-%m-%Y %H:%M")),
                   WalkThrough3Start = as.POSIXct(paste0(UNOPS_Date,' ',WalkThrough3Start),tz = "Africa/Nairobi",tryFormats = c("%d-%m-%Y %H:%M")),
-                  WalkThrough3End = as.POSIXct(paste0(UNOPS_Date,' ',WalkThrough3End),tz = "Africa/Nairobi",tryFormats = c("%d-%m-%Y %H:%M")))
+                  WalkThrough3End = as.POSIXct(paste0(UNOPS_Date,' ',WalkThrough3End),tz = "Africa/Nairobi",tryFormats = c("%d-%m-%Y %H:%M"))) %>%
+    dplyr::mutate(HHIDnumeric = case_when(
+      substr(HHID,1,10) == 'KE001-KE08' ~ as.numeric(18),
+      TRUE ~ HHIDnumeric))
   
   
   #Clean up postplacement HHIDs
@@ -429,7 +434,13 @@ emissions_import_fun <- function(path_emissions,sheetname,local_tz){
   
   matches <- regmatches(meta_emissions$HHID_full, gregexpr("[[:digit:]]+", meta_emissions$HH_ID))
   meta_emissions$HHID =  as.numeric(matches)
-  meta_emissions
+  meta_emissions <- meta_emissions %>% 
+    dplyr::mutate(HHID = case_when(
+      substr(HHID_full,1,10) == 'KE001-KE08' ~ as.numeric(18),
+      TRUE ~ HHID)
+    )
+  
+  return(meta_emissions)
 }
 
 
@@ -437,7 +448,7 @@ grav_ECM_import_fun <- function(gravimetric_ecm_path){
   
   gravimetric_ecm_data <- fread(gravimetric_ecm_path,skip=0)
   setnames(gravimetric_ecm_data,c("HHID","FilterID","sampletype","Filterugm3","ECMcorfac"))
-
+  
   return(gravimetric_ecm_data)
 }
 
