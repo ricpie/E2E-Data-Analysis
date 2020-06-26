@@ -1,10 +1,27 @@
 
 ses_function <- function(mobenzi_rapid){
   
+  mobenzi_rapid <- mobenzi_rapid %>% 
+    dplyr::mutate(id = paste(HHID,Phone)) %>%
+    dplyr::mutate(HHID = case_when(id == 'KE026-KE05 792119294' ~ 'KE026-KE00',
+                                   id == 'KE036-KE01 716666372' ~ 'KE036-KE00',
+                                   id == 'KE064-KE04 727783412' ~ 'KE064-KE00',
+                                   id == 'KE064-KE04 729741304' ~ 'KE064-KE00',
+                                   id == 'KE085-KE03 700759599' ~ 'KE085-KE00',
+                                   id == 'KE238-KE04 790497588' ~ 'KE238-KE00',
+                                   id == 'KE243-KE08 701980462' ~ 'KE243-KE00',
+                                   id == 'KE048-KE05 726752777' ~ 'KE048-KE00',
+                                   id == 'KE504-KE13 724243789' ~ 'KE504-KE00',
+                                   id == 'KE506-KE08 721605594' ~ 'KE506-KE00',
+                                   id == 'KE155-KE04 0711671566/ 0708598084' ~ 'KE155-KE00',
+                                   id == 'KE001-KE10 728819798' ~ 'KE001-KE00', 	
+                                   id == 'KE001-KE10 0' ~ 'KE001-KE00', 	
+                                   TRUE ~ HHID))
+  
+  
   #Prep the categorical variables and reshape to make them into numeric/binary values.
   #The binary variables are given a value of 1 for 'having something', and 0 for not having something, for consistency.
-  rapid_ses_categorical<-   dplyr::mutate(mobenzi_rapid, id = paste(HHID,Phone)) %>%
-    dplyr::select(c('id','EducationHighest',#'HeadofHouseholdIncome',
+  rapid_ses_categorical<-  dplyr::select(mobenzi_rapid,c('id','EducationHighest',#'HeadofHouseholdIncome',
                     # 'C3_Farmsownland(whetherthatlandisownedorrented)','C3_Daylabourer(farminganotherperson’sland,builder,dailyworkeretc.)',
                     # 'C3_Governmentemployee(doctor,nurse,police,teacheretc.)','C3_Employeeinabusiness(Factory/industrialworker,worksinashop,receptionist,securityguard,etc.)','C3_Hasownbusiness(businessman,ownsashop,traderetc.)','C3_Craftsperson(tailor,carpenter,seamstressetc.)','C3_Runthehousehold/Careforfamily','C3_Retired','C3_Othertypeofjob','C3_Currentlyunemployed/nothing',
                     # 'Income','WaterAccessYN',
@@ -23,9 +40,10 @@ ses_function <- function(mobenzi_rapid){
     as.data.frame() 
   
   #Prep the binary variables.  Join with the categorical ones.
-  rapid_ses_binary<-   dplyr::mutate(mobenzi_rapid, id = paste(HHID,Phone)) %>%
-    dplyr::select(c('id','OwnorRent',
-                    'C6_Animal(s)(cows,sheep,goatsetc.)','C6_Cellphone','C6_Smartphone','C6_Radio','C6_Hi-Fi/CD-player','C6_Solarconnection','C6_ElectricityConnection','C6_TV','C6_SatelliteTV','C6_Refrigerator/fridge/freezer','C6_Shower/bathwithinhouse','C6_Land','C6_Bicycle','C6_Moped/Motorcycle','C6_Pick-uptruck','C6_Car','C6_Computer','C6_Washingmachine',
+  rapid_ses_binary<-  dplyr::select(mobenzi_rapid,c('id','OwnorRent',
+                    'C6_Animal(s)(cows,sheep,goatsetc.)','C6_Cellphone','C6_Smartphone','C6_Radio','C6_Hi-Fi/CD-player','C6_Solarconnection','C6_ElectricityConnection',
+                    'C6_TV','C6_SatelliteTV','C6_Refrigerator/fridge/freezer','C6_Shower/bathwithinhouse',
+                    'C6_Land','C6_Bicycle','C6_Moped/Motorcycle','C6_Pick-uptruck','C6_Car','C6_Computer','C6_Washingmachine',
                     'C6_Tractor',
                     'SepticorFlushingToiletInside','LatrineinCompound','UseLPG'
                     #'MostUsedFuel','D6_Electricity','D6_Kerosene','D6_Cookinggas/LPG','D6_Charcoalunprocessed','D6_Charcoalbriquettes/pellets','D6_Wood','D6_Agriculturalorcropresidue/grass/',
@@ -60,6 +78,9 @@ ses_function <- function(mobenzi_rapid){
   png(filename='Results/SES PCA/PCA_scree.png',width = 550, height = 480, res = 100)
   fviz_eig(ses.pca)
   dev.off()
+  rapid_ses_binary$HHID = mobenzi_rapid$HHID
+  saveRDS(rapid_ses_binary,"Results/SES PCA/rapid_survey_SES_data.rds")
+  
   
   #Get SES prediction from the first PC.  Large negative is rich, large positive is poor.
   predicted_ses <- data.frame(score = predict(ses.pca, rapid_ses_binary)[,1]) %>%
@@ -74,26 +95,12 @@ ses_function <- function(mobenzi_rapid){
     dplyr::group_by(pca_quantile) %>%
     summarise_all(list(mean = mean, stdev = sd)) %>%
     write.xlsx('Results/SES PCA/PCA_AssetIndex.xlsx')
-  
+
   
   png(filename='Results/SES PCA/PCA_biplot.png',width = 550, height = 480, res = 100)
   ggbiplot(ses.pca)
   dev.off()
   
-  predicted_ses<- predicted_ses %>% 
-    dplyr::mutate(HHID = case_when(id == 'KE026-KE05 * 792119294' ~ 'KE026-KE00',
-                                   id == 'KE036-KE01 * 716666372' ~ 'KE036-KE00',
-                                   id == 'KE064-KE04 * 727783412' ~ 'KE064-KE00',
-                                   id == 'KE064-KE04 * 729741304' ~ 'KE064-KE00',
-                                   id == 'KE085-KE03 * 700759599' ~ 'KE085-KE00',
-                                   id == 'KE238-KE04 * 790497588' ~ 'KE238-KE00',
-                                   id == 'KE243-KE08 * 701980462' ~ 'KE243-KE00',
-                                   id == 'KE504-KE13 * 724243789' ~ 'KE504-KE00',
-                                   id == 'KE506-KE08 * 721605594' ~ 'KE506-KE00',
-                                   id == 'KE155-KE04 * 0711671566/ 0708598084' ~ 'KE155-KE00',
-                                   id == 'KE001-KE10 * 728819798' ~ 'KE001-KE00', 	
-                                   id == 'KE001-KE10 * 0' ~ 'KE001-KE00', 	
-                                   TRUE ~ HHID))
   
   return(predicted_ses)
 }

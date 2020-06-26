@@ -44,13 +44,7 @@ file_list_beacon <- list.files(beaconfilepath, pattern='.csv|.CSV', full.names =
 
 
 #Load data
-predicted_ses<-readRDS("Processed Data/predicted_ses.rds")
-preplacement <- as.data.table(readRDS("Processed Data/preplacement.rds"))
-preplacement <- merge(predicted_ses,preplacement,by="HHID",all.y = TRUE)
-saveRDS(preplacement,"Processed Data/ses_preplacement.rds")
-
 postplacement <- readRDS("Processed Data/postplacement.rds")
-mobenzi_indepth <- readRDS("Processed Data/mobenzi_indepth.rds")
 mobenzi_rapid <- readRDS("Processed Data/mobenzi_rapid.rds")
 equipment_IDs <- readRDS("Processed Data/equipment_IDs.rds")
 lascar_cali_coefs <- readRDS("Processed Data/lascar_calibration_coefs.rds")
@@ -63,6 +57,18 @@ beacon_meta_qaqc<-readRDS("Processed Data/beacon_meta_qaqc.rds")
 lascar_meta<-readRDS("Processed Data/lascar_meta.rds")
 tsi_meta_qaqc<-readRDS("Processed Data/tsi_meta_qaqc.rds")
 pats_meta_qaqc<-readRDS("Processed Data/pats_meta_qaqc.rds")
+
+#Import preplacement survey and merge with SES results from rapid survey, and with in-depth survey results
+#Calculate SES index with rapid survey data
+predicted_ses = ses_function(mobenzi_rapid)
+saveRDS(predicted_ses,"Processed Data/predicted_ses.rds")
+preplacement <- as.data.table(readRDS("Processed Data/preplacement.rds"))
+preplacement <- merge(predicted_ses,preplacement,by="HHID",all.y = TRUE)
+preplacement <- preplacement[!duplicated(preplacement[5:30]),]
+mobenzi_indepth <- readRDS("Processed Data/mobenzi_indepth.rds")
+preplacementtest <- merge(preplacement[,c(1,2,10:12)],mobenzi_indepth[,c(1:5,363)],by="HHID",all.y = FALSE)
+saveRDS(preplacement,"Processed Data/ses_preplacement.rds")
+
 # beacon_logger_raw <- readRDS("Processed Data/Beacon_RawData.rds")
 all_merged <- readRDS("Processed Data/all_merged.rds")
 

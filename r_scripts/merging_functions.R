@@ -90,7 +90,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   pats_data_timeseries_hap <- pats_data_timeseries[HHID!='777' & HHID!='888']
   pats_data_timeseries_ambient <- pats_data_timeseries[HHID=='777'
                                                        ][,pm25_concAmbient:=pm25_conc
-                                                         ][,c('measure','HHID','pm25_conc','sampletype'):=NULL]
+                                                         ][,c('measure','HHID','pm25_conc','sampletype','pm25_conc_unadjusted'):=NULL]
   rm(pats_data_timeseries)
   
   wide_pats_data <- dcast.data.table(pats_data_timeseries_hap,datetime + HHID ~ sampletype, value.var = c("pm25_conc"))

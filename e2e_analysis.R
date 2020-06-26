@@ -67,10 +67,6 @@ if (import==1){
                                          CO_calibrated_timeseries,pats_data_timeseries))  %>% 
     sampletype_fix_function_beacon() 
   
-  #Calculate SES index with rapid survey data
-  predicted_ses = ses_function(mobenzi_rapid)
-  saveRDS(predicted_ses,"Processed Data/predicted_ses.rds")
-  
   
   #Check filenames of other instruments:
   # filename_otherinstruments <- rbindlist(lapply(c(file_list_PATS), FUN=parse_filename_fun))

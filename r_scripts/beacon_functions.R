@@ -268,7 +268,7 @@ beacon_deployment_fun = function(selected_preplacement,equipment_IDs,beacon_logg
 beacon_walkthrough_function = function(beacon_logger_data,preplacement){
    
    #This should not be needed, as Noelle will provide a clean list of rapid survey SES values that correspond with Mobenzi preplacement survey, but for the time being...
-   preplacement_nodupes <-preplacement[!duplicated(preplacement[5:30]),]
+   preplacement_nodupes <- preplacement[!duplicated(preplacement[5:30]),]
    
    beacon_walkthrough <- dplyr::left_join(beacon_logger_data %>%
                                              dplyr::mutate(HHIDnumeric = HHID), 
