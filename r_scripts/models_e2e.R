@@ -6,7 +6,8 @@
 model_indirect_exposure = function(all_merged_summary,all_merged,preplacement,meta_emissions){
   
   #PM Estimates
-  all_merged_summary_subset <- dplyr::group_by(all_merged_summary,HHID) %>%
+  all_merged_summary_subset <- all_merged_summary %>% dplyr::ungroup() %>%
+    dplyr::group_by(HHID) %>%
     left_join(meta_emissions %>%
                 mutate(HHID = HHID_full,
                        Date = as.Date(`Start time (Mobenzi Pre-placement)-- 1`)), #This doesn't work, the Dates are not always the same for the emissions... check on this.

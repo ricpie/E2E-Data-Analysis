@@ -66,7 +66,7 @@ preplacement <- as.data.table(readRDS("Processed Data/preplacement.rds"))
 preplacement <- merge(predicted_ses,preplacement,by="HHID",all.y = TRUE)
 preplacement <- preplacement[!duplicated(preplacement[5:30]),]
 mobenzi_indepth <- readRDS("Processed Data/mobenzi_indepth.rds")
-preplacementtest <- merge(preplacement[,c(1,2,10:12)],mobenzi_indepth[,c(1:5,363)],by="HHID",all.y = FALSE)
+# preplacementtest <- merge(preplacement[,c(1,2,10:12)],mobenzi_indepth[,c(1:5,363)],by="HHID",all.y = FALSE)
 saveRDS(preplacement,"Processed Data/ses_preplacement.rds")
 
 # beacon_logger_raw <- readRDS("Processed Data/Beacon_RawData.rds")

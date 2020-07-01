@@ -88,7 +88,7 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',timezon
       tryCatch({ 
          #Prepare some text for looking at the ratios of high to low temps.
          equipment_IDs$MAC <- equipment_IDs$BAID
-         beacon_logger_data_plot <- merge(beacon_logger_data_plot,equipment_IDs,by='MAC',all.x = TRUE)
+         beacon_logger_data_plot <- merge(beacon_logger_data_plot,equipment_IDs[!duplicated(equipment_IDs$MAC),],by='MAC',all.x = TRUE)
          beacon_logger_data_plot$MACloggerid <- paste0(beacon_logger_data_plot$MAC,'; ',beacon_logger_data_plot$loggerID)
          plot_name = gsub(".txt",".png",basename(file))
          plot_name = paste0("QA Reports/Instrument Plots/BL_",gsub(".csv",".png",plot_name))
@@ -114,7 +114,7 @@ beacon_qa_fun = function(file, dummy='dummy_meta_data',mobeezi='mobenzi',timezon
 
 beacon_import_fun <- function(file,timezone="UTC",preplacement=preplacement,beacon_time_corrections){
    base::message(file)
-   beacon_logger_data = fread(file,col.names = c('datetime',"MAC","RSSI"),skip = 1)
+   beacon_logger_data = fread(file,col.names = c("datetime","MAC","RSSI"),skip = 1)
    filename <- parse_filename_fun(file)
    
    if(all(is.na(filename$sampleID)) | dim(beacon_logger_data)[1]<5){return(NULL)}else{

@@ -45,11 +45,11 @@ if (import==1){
   lascar_meta <- ldply(setdiff(c(file_list_lascar,file_list_pats),processed_filelist), 
                        lascar_qa_fun, .progress = 'text',local_tz=local_tz,preplacement=preplacement)  %>% sampletype_fix_function()
   # Time series Lascar - get full time series of calibrated data, with metadata.
-  #Need to add truncation function.
+  # Truncation is employed with the tagging approach - any non-tagged points are not from during the deployments
   CO_calibrated_timeseries <- as.data.table(ldply(setdiff(c(file_list_lascar,file_list_pats),processed_filelist), 
                                                   lascar_cali_fun, .progress = 'text',local_tz=local_tz,preplacement=preplacement)  %>%
                                               sampletype_fix_function())
-  calibrated_data <- calibrated_data[!sampletype %like% c('NA|TESTP2|NA2|X2'),][!is.na(sampletype),]
+  CO_calibrated_timeseries <- CO_calibrated_timeseries[!sampletype %like% c('NA|TESTP2|NA2|X2'),][!is.na(sampletype),]
   
   
   # Beacon data
@@ -115,15 +115,10 @@ all_merged_summary <- distinct(as.data.table(all_merged_list[2]))
 saveRDS(all_merged_summary,"Processed Data/all_merged_summary.rds")
 rm(all_merged_list)
 
-# for(i in 1:dim(preplacement)[1]){
-#   plot_deployment(preplacement[i,],beacon_logger_data,
-#                   pats_data_timeseries,CO_calibrated_timeseries,tsi_timeseries,ecm_dot_data)
-# }
-
-uniqueHHIDs <- unique(all_merged$HHID)
-for(i in 1:length(unique(all_merged$HHID))[1]){
-  plot_deployment_merged(all_merged[HHID == uniqueHHIDs[i]])
-}
+#Plot deployments
+all_merged %>%
+  group_by(HHID,Date) %>%
+  do(plot_deployment_merged(.))
 
 
 #Indirect exposure estimates
@@ -133,63 +128,11 @@ model_indirect_exposure(all_merged_summary,all_merged,preplacement,meta_emission
 #Ambient data
 ambient_analysis(CO_calibrated_timeseries,pats_data_timeseries,upasmeta,gravimetric_data) #Try to get ambient met data from Matt or others?
 
-#Plot kitchen volume distributions
-kitchen_volume_plot <- box_plot(meta_emissions, y_var = "roomvolume", fill_var = "qc", x_var = "stovetype", y_units = "m^3",title = "kitchen volume")
-ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/kitchen_volume_plot.png",plot=last_plot(),dpi=200,device=NULL)
-
-#Plot ventilation rate distributions
-
-#Plot event duration distributions
-event_duration_plot <- box_plot(meta_emissions, y_var = "eventduration", fill_var = "qc", x_var = "stovetype", y_units = "Minutes",title = "event duration")
-ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/event_duration_plot.png",plot=last_plot(),dpi=200,device=NULL)
-
-#Plot exposures
-scatter_ecm_lpgpercent <- timeseries_plot(ecm_meta_data %>% filter(qc == 'good') 
-                                          ,y_var = "`PM µgm-3`", facet_var = "pm_location", x_var = 'lpg_percent',size_var = 'non_lpg_cooking') 
-ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/scatter_ecm_lpgpercent.png",plot=last_plot(),dpi=200,device=NULL)
-
-
-dist_ecm_lpgpercent <- timeseries_plot(ecm_meta_data %>% filter(qc == 'good') 
-                                       , y_var = "`PM µgm-3`", facet_var = "pm_location", x_var = 'lpg_percent',size_var = 'non_lpg_cooking') 
-ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/dist_ecm_lpgpercent.png",plot=last_plot(),dpi=200,device=NULL)
-
-
-boxplot_ecm_kitchen_cook <- box_plot_facet(ecm_meta_data %>% filter(qc == 'good') 
-                                           , y_var = "`PM µgm-3`", facet_var = "pm_location", x_var = "primary_stove", y_units = "µgm-3",title = "ECM PM2.5 concentration" )
-ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/boxplot_ecm_kitchen_cook.png",plot=last_plot(),dpi=200,device=NULL)
-
-scatter_ecm_kitchen_cook <- timeseries_plot_simple(pivot_wider(ecm_meta_data,
-                                                               names_from = pm_location,
-                                                               values_from = c(`PM µgm-3`,datetime_start,datetime_end,
-                                                                               sampling_duration,samplerate_minutes,lpg_cooking,non_lpg_cooking,lpg_percent)) %>%
-                                                     rename(`Cook's PM µgm-3` = `PM µgm-3_Cook`,
-                                                            `Kitchen PM µgm-3` = `PM µgm-3_Kitchen`),
-                                                   y_var = "`Cook's PM µgm-3`", x_var = "`Kitchen PM µgm-3`")
-ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/scatter_ecm_kitchen_cook.png",plot=last_plot(),dpi=200,device=NULL)
-
-ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/scatter_ecm_lpgpercent.png",plot=last_plot(),dpi=200,device=NULL)
-
-
-#Plot kitchen concentration distributions
-HAP_CO_plot <- box_plot(lascar_meta  %>% as.data.frame() %>% left_join(meta_emissions,by="HHID")
-                        , y_var = "eventduration", fill_var = "stovetype", x_var = "sampletype", y_units = "ppm",title = "CO concentration" )
-ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/HAP_CO_plot.png",plot=last_plot(),dpi=200,device=NULL)
-
-HAP_PM_plot <- box_plot(pats_meta_qaqc %>% sampletype_fix_function() %>% as.data.frame() %>% left_join(meta_emissions,by="HHID")
-                        , y_var = "eventduration", fill_var = "stovetype", x_var = "sampletype", y_units = "µgm-3",title = "PATS+ PM concentration" )
-ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/HAP_PM_plot.png",plot=last_plot(),dpi=200,device=NULL)
-
-
-#######Modeling
-
 
 
 ######QAQC/bonus analyses
 #Measured cooking with the SUMs, compared with the logged cooking time during emissions
 
-#Compare PATS with ECM results
-
-# CO_duplicate_analysis(CO_calibrated_timeseries)
 
 #Get the threshold times and room IDs, and compare with beacon localization results
 walkthrough_results <- beacon_walkthrough_function(beacon_logger_data,preplacement)

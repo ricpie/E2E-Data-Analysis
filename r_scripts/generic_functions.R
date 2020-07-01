@@ -304,6 +304,8 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
     dplyr::mutate(HHID = case_when(SubmissionId == 'ef03a2b1-c343-4d31-a08b-9266cd6545a0' ~ 'KE502-KE01',
                                    SubmissionId == 'a772a091-f97a-409d-ae08-6eadb8c12c6e' ~ 'KE507-KE06',
                                    SubmissionId == '996b457f-3b0f-4ccc-bbc3-a6df7d67f067' ~ 'KE510-KE09',
+                                   SubmissionId == '66264b55-1c5b-4d91-9f8b-28c796ab7cc5' ~ 'KE048-KE05',
+                                   SubmissionId == '0dc10cbb-ba22-4356-80de-06b9e9b08963' ~ 'KE001-KE08',
                                    TRUE ~ as.character(HHID)))
   
   
@@ -331,7 +333,19 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
                    HHID = gsub('-KE011','-KE11',HHID),
                    HHID = gsub('-KE013','-KE13',HHID),
                    HHID = gsub('KE01-KE118','KE118-KE01',HHID),
-                   HHID = gsub('KEKE','KE',HHID)) 
+                   HHID = gsub('KEKE','KE',HHID))  %>%
+    # dplyr::filter(Air.quality.measurements %like% 'Yes') %>% #should not be necessary due to joining.
+    dplyr::select(-Participant.Name,-Fieldworker.Id,-Handset.Asset.Code,
+                  -Household.Study.ID,-Handset.Identifier,-Duration..seconds.,-Language,-Head.Name,-Refusal,-Received,-Modified.By,-Complete,-Consent,-Staff.Code,-Modified.On) 
+  
+  mobenzi_indepth <- data.frame(lapply(mobenzi_indepth, FUN = function(x) gsub("Translate to French: ", "", x))) %>%
+    dplyr::filter(Submission.Id != "f0c178cb-1f1d-4762-86e2-d53c01721db3", #Resolved KE001-KE07
+                  Submission.Id != "347578db-ed13-4d57-87dc-fe96d4f3fa77",	#Resolved with phone number
+                  Submission.Id != "dbdc338a-4a26-42ba-b5e0-1ab4e8e6788e",	#Resolved with GPS from rapid survey and phone number from rapid survey agrees with preplacement survey.  No preplacement GPS.
+                  Submission.Id != "c66e4549-9fe8-4470-b9a4-05035c8be03b", #Resolved with phone number	
+                  Submission.Id != "863e7ee6-c60d-4678-88d6-339ad318339c", #Resolved with phone number	
+                  Submission.Id != "b05df693-8132-4b45-a286-5978ec726b20"	) #Resolved by seeing that the indepth and preplacement GPS and HHID agreed, while the rapid survey actually did not.  Need to figure out the rapid survey issue.
+  
   
   saveRDS(mobenzi_indepth,"Processed Data/mobenzi_indepth.rds")
   saveRDS(mobenzi_rapid,"Processed Data/mobenzi_rapid.rds")
@@ -407,8 +421,8 @@ ambient_import_fun <- function(path_other,sheetname){
   meta_ambient
 }
 
-emissions_import_fun <- function(path_emissions,sheetname,local_tz){
-  meta_emissions <- read_excel(path_emissions,sheet = sheetname,skip=2)#[,c(1:12)]
+emissions_import_fun <- function(path_emissions,sheetname='Data',local_tz){
+  meta_emissions <- read_excel(path_emissions,sheet = 'Data',skip=2)#[,c(1:12)]
   meta_emissions <- meta_emissions[!is.na(meta_emissions$`Date [m/d/y]`) & !is.na(meta_emissions$HH_ID)
                                    & !is.na(meta_emissions$`Sample START [hh:mm:ss]`),]
   meta_emissions$Date <- as.POSIXct(meta_emissions$`Date [m/d/y]`,tz=local_tz,tryFormats = c("%Y-%m-%d","%d-%m-%Y"))
@@ -424,7 +438,7 @@ emissions_import_fun <- function(path_emissions,sheetname,local_tz){
   meta_emissions$datetimedecaystart<-as.POSIXct(paste(meta_emissions$Date,datetimedecaystart,sep = " "),tz = local_tz)
   datetimedecayend <- strftime(as.character(meta_emissions$datetimedecayend), format="%H:%M:%S",tz="UTC")
   meta_emissions$datetimedecayend <- as.POSIXct(paste(meta_emissions$Date,datetimedecayend,sep = " "),tz = local_tz)
-  meta_emissions$roomvolume <- meta_emissions$`Room length (longest) (m)`*meta_emissions$`Room height (m)`*meta_emissions$`Room width (shortest) (m)`
+  meta_emissions$roomvolume <- meta_emissions$`Kitchen Volume (m3)`
   meta_emissions$`# walls with open eaves`[is.na(meta_emissions$`# walls with open eaves`)] = 0
   meta_emissions$`# walls with open eaves` <- as.factor(meta_emissions$`# walls with open eaves`)
   meta_emissions$stovetype <- meta_emissions$`Stove Type...14`
@@ -945,7 +959,7 @@ plot_deployment_merged <- function(all_merged_temp){
     
     
     
-    plot_name = paste0("QA Reports/Instrument Plots/all_merged_pm_",all_merged_temp$HHID[1],".png")
+    plot_name = paste0("QA Reports/Instrument Plots/all_merged_pm_",all_merged_temp$HHID[1],"_",all_merged_temp$Date[1],".png")
     png(plot_name,width = 1000, height = 800, units = "px")
     egg::ggarrange(p1pm, p2pm,p3pm,p4,p5, heights = c(0.2,0.2, 0.2,.2,.2))
     dev.off()
@@ -1022,16 +1036,20 @@ truncate_timeseries <- function(raw_data,startdatetime,enddatetime){
 #Good.
 tag_timeseries_mobenzi <- function(raw_data,preplacement,filename){
   #Get the relevant preplacement row, based on HHID and start date.
+  # raw_data = beacon_logger_data #For debug
   raw_data[,ecm_tags:="collecting"]
+  raw_data[,HHID_full:="ambient"]
   
   if(raw_data$sampletype[1] %in% c('C','L','K','C2','L2','K2')){
-    preplacement$HHID <- preplacement$HHIDnumeric
-    preplacement_matched <- merge(raw_data[1,],preplacement, by="HHID") %>%
-      dplyr::filter(datetime-start_datetime<1)
-    ECM_end = preplacement_matched$start_datetime+86400
+    preplacement_matched <- merge(raw_data[1,],preplacement, by.x="HHID",by.y="HHIDnumeric") %>%
+      dplyr::filter(abs(difftime(datetime,start_datetime,units='days')) <1 )
+    ECM_end = preplacement_matched$start_datetime[1]+86400
     
     if(dim(preplacement_matched)[1]>0){ #If there is a match
-      raw_data[,ecm_tags := ifelse(datetime>preplacement_matched$start_datetime & datetime<ECM_end,'deployed',ecm_tags)]
+      raw_data[,ecm_tags := ifelse(datetime>preplacement_matched$start_datetime[1] & datetime<ECM_end,'deployed',ecm_tags)]
+      raw_data[,ecm_tags := ifelse(datetime<preplacement_matched$start_datetime[1],'pre-deployment',ecm_tags)]
+      raw_data[,HHID_full:=preplacement_matched$HHID.y[1]]
+      
       if(abs(raw_data$datetime[1]-max(raw_data$datetime,na.rm=TRUE))>2){      
         raw_data[,ecm_tags := ifelse(datetime > ECM_end,'intensive',ecm_tags)]
       }
