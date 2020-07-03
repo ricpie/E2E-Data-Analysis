@@ -304,9 +304,13 @@ beacon_walkthrough_function = function(beacon_logger_data,preplacement){
       dplyr::select(-location_kitchen,-location_livingroom)
    
    contable_nearest <- prop.table(table(beacon_walkthrough$location_nearest,beacon_walkthrough$location_correct ), margin=2)*100
+   contable_nearest <- table(beacon_walkthrough$location_nearest,beacon_walkthrough$location_correct )
+   length(unique(beacon_walkthrough$HHID.y))
+   
+   contable_threshold <- prop.table(table(beacon_walkthrough$location_kitchen_threshold,beacon_walkthrough$location_correct ), margin=2)*100 
    contable_threshold <- prop.table(table(beacon_walkthrough$location_kitchen_threshold,beacon_walkthrough$location_correct ), margin=2)*100 
    contable_80 <- prop.table(table(beacon_walkthrough$location_kitchen_threshold80,beacon_walkthrough$location_correct ), margin=2)*100
-   
+   cbind(contable_80,contable_threshold)
    contable_nearest_byHH <- prop.table(table(beacon_walkthrough$location_nearest,beacon_walkthrough$location_correct,beacon_walkthrough$HHIDstr ), margin=2)*100
    # Switched: KE510-KE05 , ,  = KE231-KE005, ,    = KE190-KE004, ,  = KE186-KE004
    # 

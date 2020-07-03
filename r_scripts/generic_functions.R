@@ -1040,9 +1040,9 @@ tag_timeseries_mobenzi <- function(raw_data,preplacement,filename){
   raw_data[,ecm_tags:="collecting"]
   raw_data[,HHID_full:="ambient"]
   
-  if(raw_data$sampletype[1] %in% c('C','L','K','C2','L2','K2')){
+  if(raw_data$sampletype[1] %in% c('C','L','K','C2','L2','K2','Cook','LivingRoom','Kitchen','Living Room Dup','Kitchen Dup','1m','2m')){
     preplacement_matched <- merge(raw_data[1,],preplacement, by.x="HHID",by.y="HHIDnumeric") %>%
-      dplyr::filter(abs(difftime(datetime,start_datetime,units='days')) <1 )
+      dplyr::filter(abs(difftime(datetime,start_datetime,units='days')) <1.5 )
     ECM_end = preplacement_matched$start_datetime[1]+86400
     
     if(dim(preplacement_matched)[1]>0){ #If there is a match

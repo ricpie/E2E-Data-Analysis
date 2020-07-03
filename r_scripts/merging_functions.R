@@ -61,9 +61,9 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   CO_calibrated_timeseries_hap <- CO_calibrated_timeseries[HHID!='777' & HHID!='888']
   CO_calibrated_timeseries_ambient <- CO_calibrated_timeseries[HHID=='777'
                                                                ][,CO_ppmAmbient:=CO_ppm
-                                                                 ][,c('measure','HHID','CO_ppm','sampletype','emission_tags'):=NULL]
+                                                                 ][,c('measure','HHID','CO_ppm','sampletype','emission_tags','HHID_full'):=NULL]
   
-  wide_co_data <- dcast.data.table(CO_calibrated_timeseries_hap,datetime + HHID ~ sampletype, value.var = c("CO_ppm"))
+  wide_co_data <- dcast.data.table(CO_calibrated_timeseries_hap,datetime + HHID + HHID_full~ sampletype, value.var = c("CO_ppm"))
   
   #Merge house/personal time serires with ambient data (based on date time only, not HHID)
   wide_co_data = merge(wide_co_data,CO_calibrated_timeseries_ambient, by.x = c("datetime"),
@@ -81,7 +81,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   pats_data_timeseries[, sampletype := paste0("PATS_", sampletype)]
   
   #Group data from duplicates into a mean value.
-  pats_data_timeseries <-  dplyr::group_by(pats_data_timeseries,HHID,sampletype,datetime) %>%
+  pats_data_timeseries <-  dplyr::group_by(pats_data_timeseries,HHID_full,sampletype,datetime) %>%
     dplyr::mutate(pm25_conc = mean(pm25_conc)) %>%
     dplyr::filter(row_number()==1) %>%
     dplyr::ungroup()  %>% as.data.table() 
@@ -89,10 +89,10 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   pats_data_timeseries_hap <- pats_data_timeseries[HHID!='777' & HHID!='888']
   pats_data_timeseries_ambient <- pats_data_timeseries[HHID=='777'
                                                        ][,pm25_concAmbient:=pm25_conc
-                                                         ][,c('measure','HHID','pm25_conc','sampletype','pm25_conc_unadjusted'):=NULL]
+                                                         ][,c('measure','HHID','pm25_conc','sampletype','pm25_conc_unadjusted','HHID_full'):=NULL]
   rm(pats_data_timeseries)
   
-  wide_pats_data <- dcast.data.table(pats_data_timeseries_hap,datetime + HHID ~ sampletype, value.var = c("pm25_conc"))
+  wide_pats_data <- dcast.data.table(pats_data_timeseries_hap,datetime + HHID + HHID_full ~ sampletype, value.var = c("pm25_conc"))
   
   #Merge house/personal time serires with ambient data (based on date time only, not HHID)
   wide_pats_data = merge(wide_pats_data,pats_data_timeseries_ambient, by.x = c("datetime"),
@@ -108,31 +108,35 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   beacon_logger_data <- beacon_logger_data[!duplicated(beacon_logger_data),]
   
   # Prep emissions, (tsi) 
-  tsi_timeseries <- as.data.table(readRDS("Processed Data/tsi_timeseries.rds"))[qc == 'good']
+  tsi_timeseries <- as.data.table(readRDS("Processed Data/tsi_timeseries.rds"))
   # tsi_timeseries[,measure := "emissions"]
   tsi_timeseries[,(c('sampleID','sampletype','RH','Date')) := NULL]
   
   
   # merge dot, ecm, pats, lascar, tsi data.  preplacement survey not merged here.
   # merge and analyze intensive samples
-  all_merged = merge(wide_pats_data,wide_co_data, by.x = c("datetime","HHID"),
+  all_merged = merge(wide_pats_data,wide_co_data, by.x = c("datetime","HHID_full"),
+                     by.y = c("datetime","HHID_full"), all.x = T, all.y = F)
+  all_merged = merge(all_merged,beacon_logger_data, by.x = c("datetime","HHID.x"),
                      by.y = c("datetime","HHID"), all.x = T, all.y = F)
-  all_merged = merge(all_merged,beacon_logger_data, by.x = c("datetime","HHID"),
+  all_merged = merge(all_merged,tsi_timeseries, by.x = c("datetime","HHID.x"),
                      by.y = c("datetime","HHID"), all.x = T, all.y = F)
-  all_merged = merge(all_merged,tsi_timeseries, by.x = c("datetime","HHID"),
-                     by.y = c("datetime","HHID"), all.x = T, all.y = F)
-  all_merged <- merge(all_merged,wide_ecm_dot_data, by.x = c("datetime","HHID"),
-                      by.y = c("datetime","pm_hhid_numeric"), all.x = T, all.y = F)
+  all_merged <- merge(all_merged,wide_ecm_dot_data, by.x = c("datetime","HHID_full"),
+                      by.y = c("datetime","HHID"), all.x = T, all.y = F)
   
   #If there is no ECM kitchen data, use the PATS kitchen data.  PATS_kitchen data has been adjusted.
   all_merged <- dplyr::mutate(as.data.table(all_merged),ECM_kitchen = PM25Kitchen,
                               PM25Kitchen = case_when(is.na(ECM_kitchen) ~ PATS_Kitchen,
                                                       TRUE ~ ECM_kitchen)) %>%
-    dplyr::rename(HHIDnumeric = HHID,
-                  HHID = HHID.y) %>%
+    dplyr::rename(HHIDnumeric = HHID.x,
+                  HHID = HHID_full) %>%
     dplyr::rowwise() %>% mutate(PM25_kitch_lr_mean = mean(c(PM25Kitchen,PATS_LivingRoom),na.rm=T),
                                 CO_kitch_lr_mean =  mean(c(CO_ppmKitchen,CO_ppmLivingRoom),na.rm=T)) %>%
-    # dplyr::filter(HHID_full %like% 'ambient') %>%
+    dplyr::mutate(HHID = case_when(HHIDnumeric == 152 ~ "KE152-KE04",
+                                   HHIDnumeric == 157 ~ "KE157-KE06",
+                                   HHIDnumeric == 85 ~ "KE085-KE03",
+                                   TRUE ~ HHID)) %>%
+    dplyr::select(-HHID.y) %>%
     as.data.table()
   
   
@@ -215,6 +219,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
     dplyr::summarise(Start_datetime = min(datetime,na.rm = TRUE),
                      End_datetime = max(datetime,na.rm = TRUE),
                      meanPM25Cook = mean(PM25Cook,na.rm = TRUE),
+                     tsiCO2ppm = mean(CO2_ppm,na.rm = TRUE),
                      mean_compliance = mean(pm_compliant,na.rm = TRUE),
                      meanPM25Kitchen = mean(PM25Kitchen,na.rm = TRUE),
                      meanPM25LivingRoom = mean(PATS_LivingRoom,na.rm = TRUE),
@@ -269,7 +274,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                         dplyr::filter(emission_startstop == 'cooking'),
                       by = c('HHID','Date'))   %>%
     dplyr::left_join(all_merged_intensive %>%
-                        dplyr::group_by(HHID,Date) %>%
+                        dplyr::group_by(HHID) %>%
                         dplyr::summarise(Intensive_meanPM25Kitchen = mean(PATS_Kitchen,na.rm = TRUE),
                                          Intensive_N_PM25Kitchen = sum(!is.na(PATS_Kitchen)),
                                          Intensive_meanPM25LivingRoom = mean(PATS_LivingRoom,na.rm = TRUE),
@@ -285,9 +290,35 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                                          Intensive_sum_traditional_non_manufactured = sum(sumstraditional_non_manufactured,na.rm = TRUE),
                                          Intensive_N_sum_traditional_non_manufactured = sum(!is.na(sumstraditional_non_manufactured)),
                                          Intensive_sum_lpg = sum(sumslpg,na.rm = TRUE),
-                                         Intensive_N_sum_lpg = sum(!is.na(sumslpg))) %>%
-                       dplyr::filter(!is.na(Date)),
-                      by = c('HHID','Date')) 
+                                         Intensive_N_sum_lpg = sum(!is.na(sumslpg))),#%>%
+                       # dplyr::filter(!is.na(Date)),
+                      by = c('HHID')) #%>%
+    #Add a few additional columns relevant to 24h data and emissions
+    # dplyr::left_join( all_merged %>%
+    #                     dplyr::group_by(HHID,Date,emission_startstop) %>%
+    #                     dplyr::summarise(
+    #                                      CookingmeanPM25Kitchen = mean(PM25Kitchen,na.rm = TRUE),
+    #                                      CookingmeanPM25Kitchen1m = mean(PATS_1m,na.rm = TRUE),
+    #                                      CookingmeanPM25Kitchen2m = mean(PATS_2m,na.rm = TRUE),
+    #                                      CookingmeanPM25LivingRoom = mean(PATS_LivingRoom,na.rm = TRUE),
+    #                                      CookingmeanPM25Ambient =  mean(PATS_Ambient,na.rm = TRUE),
+    #                                      CookingmeanCO_ppmCook = mean(CO_ppmCook,na.rm = TRUE),
+    #                                      CookingmeanCO_ppmKitchen = mean(CO_ppmKitchen,na.rm = TRUE),
+    #                                      CookingmeanCO_ppmKitchen1m = mean(CO_ppm1m,na.rm = TRUE),
+    #                                      CookingmeanCO_ppmKitchen2m = mean(CO_ppm2m,na.rm = TRUE),
+    #                                      CookingmeanCO_ppmLivingRoom = mean(CO_ppmLivingRoom,na.rm = TRUE),
+    #                                      CookingmeanCO_ppmAmbient = mean(CO_ppmAmbient,na.rm = TRUE),
+    #                                      Cookingsum_TraditionalManufactured_minutes = sum(sumstraditional_manufactured,na.rm = TRUE),
+    #                                      Cookingsum_charcoal_jiko_minutes = sum(`sumscharcoal jiko`,na.rm = TRUE),
+    #                                      Cookingsum_traditional_non_manufactured = sum(sumstraditional_non_manufactured,na.rm = TRUE),
+    #                                      Cookingsum_lpg = sum(sumslpg,na.rm = TRUE),
+    #                                      Cookingmeanpm25_indirect_nearest = mean(pm25_conc_beacon_nearest_ecm,na.rm = TRUE),
+    #                                      Cookingmeanpm25_indirect_nearest_threshold = mean(pm25_conc_beacon_nearestthreshold_ecm,na.rm = TRUE),
+    #                                      CookingmeanCO_indirect_nearest = mean(co_estimate_beacon_nearest,na.rm = TRUE),
+    #                                      CookingmeanCO_indirect_nearest_threshold = mean(co_estimate_beacon_nearest_threshold,na.rm = TRUE)) %>%
+    #                     dplyr::filter(emission_startstop == 'cooking'),
+    #                   by = c('HHID','Date')) 
+    
   
   # dplyr::left_join(meta_emissions %>%
   #             mutate(HHID = HHID_full,
