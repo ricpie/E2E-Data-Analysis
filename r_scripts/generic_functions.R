@@ -306,6 +306,7 @@ mobenzi_import_fun <- function(output=c('mobenzi_indepth', 'mobenzi_rapid','prep
                                    SubmissionId == '996b457f-3b0f-4ccc-bbc3-a6df7d67f067' ~ 'KE510-KE09',
                                    SubmissionId == '66264b55-1c5b-4d91-9f8b-28c796ab7cc5' ~ 'KE048-KE05',
                                    SubmissionId == '0dc10cbb-ba22-4356-80de-06b9e9b08963' ~ 'KE001-KE08',
+                                   SubmissionId == 'd1dbcd5d-99af-4ae8-aa68-66e59b18b5c9' ~ 'KE157-KE00',
                                    TRUE ~ as.character(HHID)))
   
   
