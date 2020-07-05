@@ -21,7 +21,7 @@ local_tz = "Africa/Nairobi"
 
 #Load paths
 path_other <- "../Data/Data from the team/Excel databases/Other databases.xlsx"
-path_emissions <- "../Data/Data from the team/Excel databases/2019 E2E Emissions database_v2.xlsx"
+path_emissions <- "../Data/Data from the team/Excel databases/2019 E2E Emissions database_v4.xlsx"
 emissions_import_fun(path_emissions,'Data',local_tz)
 
 tsifilepath <- "Processed Data/Cleaned TSI Data" #the corrected files should be placed here.

@@ -7,7 +7,7 @@
 all_merge_fun = function(preplacement,beacon_logger_data,
                          CO_calibrated_timeseries,tsi_timeseries,pats_data_timeseries,ecm_dot_data){
   
-  #Merge ecm with everything, sequentially
+  #####ECM data prep
   # ecm_dot_data needs to go wide on dupes and sums
   ecm_dot_data[,(c('other_people_use_n','pm_accel','file','mission_name',
                    'indoors','shared_cooking_area','pm_rh','pm_temp','dot_temperature','qc','samplestart','sampleend')) := NULL]  
@@ -34,6 +34,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
     as.data.table()
   
   
+  #####Lascar data prep
   # lascar data needs to go wide on location# lascar data needs to go wide on location (sampletype)
   # remove a few cols
   CO_calibrated_timeseries <- readRDS("Processed Data/CO_calibrated_timeseries.rds")[qc == 'good']
@@ -48,7 +49,6 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                                                         sampletype == 'Ambient Dup' ~ 'Ambient',
                                                         sampletype == 'Kitchen Dup' ~ 'Kitchen',           
                                                         TRUE ~ sampletype)]
-  CO_calibrated_timeseries[,measure := "COppm"]
   CO_calibrated_timeseries[, sampletype := paste0("CO_ppm", sampletype)]
   
   #Use averages if there are duplicates
@@ -57,11 +57,10 @@ all_merge_fun = function(preplacement,beacon_logger_data,
     dplyr::filter(row_number()==1) %>%
     dplyr::ungroup() %>% as.data.table() 
   
-  
   CO_calibrated_timeseries_hap <- CO_calibrated_timeseries[HHID!='777' & HHID!='888']
   CO_calibrated_timeseries_ambient <- CO_calibrated_timeseries[HHID=='777'
                                                                ][,CO_ppmAmbient:=CO_ppm
-                                                                 ][,c('measure','HHID','CO_ppm','sampletype','emission_tags','HHID_full'):=NULL]
+                                                                 ][,c('HHID','CO_ppm','sampletype','emission_tags','HHID_full'):=NULL]
   
   wide_co_data <- dcast.data.table(CO_calibrated_timeseries_hap,datetime + HHID + HHID_full~ sampletype, value.var = c("CO_ppm"))
   
@@ -71,7 +70,9 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   rm(CO_calibrated_timeseries,CO_calibrated_timeseries_ambient,CO_calibrated_timeseries_hap)
   
   
-  #Import and prep PATS data
+  
+  #####PATS data prep
+
   pats_data_timeseries <- readRDS("Processed Data/pats_data_timeseries.rds")[qc == 'good']
   
   pats_data_timeseries[,c('V_power', 'degC_air','%RH_air','CO_PPM','status','ref_sigDel','low20avg','loggerID',
@@ -101,20 +102,24 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   rm(pats_data_timeseries_ambient,pats_data_timeseries_hap)
   
   
-  # Prep beacon data (only exists for cook)
+  
+  #####Prep beacon data (only exists for cook)
+  
   beacon_logger_data<- readRDS("Processed Data/beacon_logger_data.rds")[qc == 'good']
   # beacon_logger_data[,measure := "beacon"]
   beacon_logger_data[,c('location_kitchen','location_livingroom','loggerID_Kitchen','qc','loggerID_LivingRoom','HHIDstr','measure') := NULL]
   beacon_logger_data <- beacon_logger_data[!duplicated(beacon_logger_data),]
   
-  # Prep emissions, (tsi) 
+  
+  #####Prep emissions, (tsi) 
+  
   tsi_timeseries <- as.data.table(readRDS("Processed Data/tsi_timeseries.rds"))
   # tsi_timeseries[,measure := "emissions"]
   tsi_timeseries[,(c('sampleID','sampletype','RH','Date')) := NULL]
   
   
-  # merge dot, ecm, pats, lascar, tsi data.  preplacement survey not merged here.
-  # merge and analyze intensive samples
+  #####Merge dot, ecm, pats, lascar, tsi data.  Preplacement survey not merged here.
+
   all_merged = merge(wide_pats_data,wide_co_data, by.x = c("datetime","HHID_full"),
                      by.y = c("datetime","HHID_full"), all.x = T, all.y = F)
   all_merged = merge(all_merged,beacon_logger_data, by.x = c("datetime","HHID.x"),
@@ -232,23 +237,31 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                      meanCO2_ppmEmissions = mean(CO2_ppm,na.rm = TRUE),
                      sum_TraditionalManufactured_minutes = sum(sumstraditional_manufactured,na.rm = TRUE),
                      sum_charcoal_jiko_minutes = sum(`sumscharcoal jiko`,na.rm = TRUE),
-                     sum_traditional_non_manufactured = sum(sumstraditional_non_manufactured,na.rm = TRUE),
-                     sum_lpg = sum(sumslpg,na.rm = TRUE),
+                     sum_traditional_non_manufactured_minutes = sum(sumstraditional_non_manufactured,na.rm = TRUE),
+                     sum_lpg_minutes = sum(sumslpg,na.rm = TRUE),
                      meanpm25_indirect_nearest = mean(pm25_conc_beacon_nearest_ecm,na.rm = TRUE),
                      meanpm25_indirect_nearest_threshold = mean(pm25_conc_beacon_nearestthreshold_ecm,na.rm = TRUE),
                      meanpm25_indirect_nearest_threshold80 = mean(pm25_conc_beacon_nearestthreshold_ecm80,na.rm = TRUE),
                      meanCO_indirect_nearest = mean(co_estimate_beacon_nearest,na.rm = TRUE),
                      meanCO_indirect_nearest_threshold = mean(co_estimate_beacon_nearest_threshold,na.rm = TRUE),
-                     sum_TraditionalManufactured_minutes = sum(sumstraditional_manufactured,na.rm = TRUE),
-                     sum_charcoal_jiko_minutes = sum(`sumscharcoal jiko`,na.rm = TRUE),
-                     sum_traditional_non_manufactured = sum(sumstraditional_non_manufactured,na.rm = TRUE),
-                     sum_lpg = sum(sumslpg,na.rm = TRUE),
+                     na_TraditionalManufactured_minutes = sum(is.na(sumstraditional_manufactured)),
+                     na_charcoal_jiko_minutes = sum(is.na(`sumscharcoal jiko`)),
+                     na_traditional_non_manufactured = sum(is.na(sumstraditional_non_manufactured)),
+                     na_lpg = sum(is.na(sumslpg),na.rm = TRUE),
                      countPM25Kitchen = sum(!is.na(PM25Kitchen)),
                      countPM25Cook = sum(!is.na(PM25Cook)),
                      countPATS_LivingRoom = sum(!is.na(PATS_LivingRoom)),
                      countPM25Cook = sum(!is.na(PM25Cook)),
                      countlocation_nearest = sum(!is.na(location_nearest)),
                      countlocation_nearestthreshold = sum(!is.na(location_kitchen_threshold))) %>%
+    dplyr::mutate(sum_TraditionalManufactured_minutes = case_when(na_TraditionalManufactured_minutes<0.8*1440 ~ sum_TraditionalManufactured_minutes,
+                                                                  T ~ as.integer(NA)),
+                  sum_charcoal_jiko_minutes = case_when(na_charcoal_jiko_minutes<0.8*1440 ~ sum_charcoal_jiko_minutes,
+                                                        T ~ as.integer(NA)),
+                  sum_traditional_non_manufactured_minutes = case_when(na_traditional_non_manufactured<0.8*1440 ~ sum_traditional_non_manufactured_minutes,
+                                                                       T ~ as.integer(NA)),
+                  sum_lpg_minutes = case_when(na_lpg<0.8*1440 ~ sum_lpg_minutes,
+                                              T ~ as.integer(NA)))     %>%
     dplyr::left_join( all_merged %>%
                         dplyr::group_by(HHID,Date,emission_startstop) %>%
                         dplyr::summarise(CookingmeanPM25Cook = mean(PM25Cook,na.rm = TRUE),

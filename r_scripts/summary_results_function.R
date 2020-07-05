@@ -5,52 +5,86 @@ summary_results_function = function(meta_emissions,all_merged,preplacement,tsi_m
   
   give.n <- function(x){return(c(y = 0, label = length(x)))}
   give.median <- function(x){return(c(y =median(x)+3, label = round(median(x),digits=2)))}
+  f <- function(x) {
+    r <- quantile(x, probs = c(0.05, 0.25, 0.5, 0.75, 0.95))
+    names(r) <- c("ymin", "lower", "middle", "upper", "ymax")
+    r}
   
-  kitchen_volume_plot <- ggplot(meta_emissions, aes(y=roomvolume,x=1)) +
-    geom_boxplot(alpha = 0.25) +
-    geom_jitter(height = 0,width = 0.2,alpha = 0.2) +
-    theme_minimal() +
-    ylab("m^3") + xlab("") + theme( axis.text.x = element_blank()) +
-    geom_text(aes(y = max(roomvolume),x=.7 ,label = paste("Median=",round(median(roomvolume),1))),size=3) +
-    geom_text(aes(y = max(roomvolume)*.95,x=.7 ,label = paste("SD=",round(sd(roomvolume),1))),size=3) +
-    geom_text(aes(y = max(roomvolume)*.9,x=.7 ,label = paste("n=",length(roomvolume))),size=3) +
-    ggtitle('Kitchen Volume')
-  #Plot kitchen volume distributions
-  
-  ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/kitchen_volume_plot.png",plot=last_plot(),dpi=200,device=NULL)
-  
-  #Plot ventilation rate distributions
-  
-  aer_plot <- ggplot(tsi_meta_qaqc[!is.na(tsi_meta_qaqc$AERslope),], aes(y=-AERslope,x=1)) +
-    geom_boxplot(alpha = 0.25) +
-    geom_jitter(height = 0,width = 0.2,alpha = 0.2) +
-    theme_minimal() +
-    ylab("AER (changes/hour)") + xlab("")  + theme( axis.text.x = element_blank()) +
-    geom_text(aes(y = max(-AERslope),x=.7 ,label = paste("Median=",round(median(-AERslope),1))),size=3) +
-    geom_text(aes(y = max(-AERslope)*.95,x=.7 ,label = paste("SD=",round(sd(-AERslope),1))),size=3) +
-    geom_text(aes(y = max(-AERslope)*.9,x=.7 ,label = paste("n=",length(-AERslope))),size=3) +
-    ggtitle('Air Exchange Rate from TSI')
-  ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/aer_tsi_plot.png",plot=last_plot(),dpi=200,device=NULL)
   
   #Plot event duration distributions
-  meta_emissions_summarized = summarise(group_by(meta_emissions, stovetype), 
-                             medeventduration = median(eventduration),
-                             sdeventduration = sd(eventduration),
-                             maxeventduration = max(eventduration),
-                             n_eventduration = length(eventduration)) %>% dplyr::ungroup() %>%
-    mutate(maxeventduration = max(maxeventduration))
+  event_summary = meta_emissions %>% 
+    dplyr::mutate(maxmax = max(eventduration,na.rm=T)) %>%
+    dplyr::group_by(stovetype) %>% 
+    dplyr::summarise(means=round(mean(eventduration,na.rm = T),1),
+                     sd=round(sd(eventduration,na.rm = T),1),
+                     max=max(maxmax),
+                     n=n())
+  event_duration <- ggplot(meta_emissions, aes(y=eventduration,x=0)) +
+    facet_grid( ~ stovetype,scales = "free", space = "free", labeller = label_wrap_gen(width = 12, multi_line = TRUE)) +
+    geom_boxplot(alpha = 0.25) +
+    stat_summary(fun.data = f,geom="boxplot")+
+    geom_jitter(height = 0,width = 0.2,alpha = 0.2) +
+    theme_minimal() +
+    theme(text=element_text(size=16), axis.text.x = element_blank()) +
+    ylab("Minutes")  +xlab("")+ 
+    ggtitle('Cooking event duration') + 
+    facet_grid( ~ stovetype,scales = "free", space = "free", labeller = label_wrap_gen(width = 12, multi_line = TRUE)) +
+    geom_text(data=event_summary,aes(y = max,x=0,label=paste0("mean= ", means)), size=5,nudge_y =1) +
+    geom_text(data=event_summary,aes(y = max*.93,x=0,label=paste0("sd= ",sd)) ,size=5,nudge_y =1) + 
+    geom_text(data=event_summary,aes(y = max*.85,x=0,label=paste0("n= ", n)), size=5,nudge_y =1)
   
-    aer_plot <- ggplot(meta_emissions, aes(y=eventduration,x=0)) +
-      facet_grid( ~ stovetype,scales = "free", space = "free", labeller = label_wrap_gen(width = 12, multi_line = TRUE)) +
-      geom_boxplot(alpha = 0.25) +
-      geom_jitter(height = 0,width = 0.2,alpha = 0.2) +
-      theme_minimal() +
-      ylab("Minutes")  +xlab("")+ theme( axis.text.x = element_blank()) +
-      geom_text(data=meta_emissions_summarized,aes(y = maxeventduration, x=-.2 ,label = paste("Median=",round(medeventduration,1))),size=3) +
-      geom_text(data=meta_emissions_summarized,aes(y = maxeventduration*.95, x=-.2 ,label = paste("SD=",round(sdeventduration,1))),size=3) +
-      geom_text(data=meta_emissions_summarized,aes(y = maxeventduration*.9, x=-.2 ,label = paste("n=",round(n_eventduration,1))),size=3) +
-      ggtitle('Cooking event duration')
-  ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/event_duration_plot.png",plot=last_plot(),dpi=200,device=NULL)
+  
+  volume_summary = meta_emissions %>% 
+    dplyr::mutate(maxmax = max(`Kitchen Volume (m3)...270`,na.rm=T)) %>%
+    dplyr::group_by(stovetype) %>% 
+    dplyr::summarise(means=round(mean(`Kitchen Volume (m3)...270`,na.rm = T),1),
+                     sd=round(sd(`Kitchen Volume (m3)...270`,na.rm = T),1),
+                     max=max(maxmax),
+                     n=n())
+  volume_plot <- ggplot(meta_emissions, aes(y=`Kitchen Volume (m3)...270`,x=1)) +
+    geom_boxplot(alpha = 0.25) +
+    stat_summary(fun.data = f,geom="boxplot")+
+    geom_jitter(height = 0,width = 0.2,alpha = 0.2) +
+    theme_minimal() +
+    theme(text=element_text(size=16), axis.text.x = element_blank()) +
+    ylab(expression(M^3)) + xlab("") +
+    ggtitle('Kitchen Volume') +
+    facet_grid( ~ stovetype,scales = "free", space = "free", labeller = label_wrap_gen(width = 12, multi_line = TRUE)) +
+    geom_text(data=volume_summary,aes(y = max,x=1,label=paste0("mean= ", means)), size=5,nudge_y =1) +
+    geom_text(data=volume_summary,aes(y = max*.93,x=1,label=paste0("sd= ",sd)) ,size=5,nudge_y =1) + 
+    geom_text(data=volume_summary,aes(y = max*.85,x=1,label=paste0("n= ", n)), size=5,nudge_y =1)
+  
+  
+  aer_summary = meta_emissions %>% 
+    dplyr::mutate(maxmax = max(ACH...271,na.rm=T)) %>%
+    dplyr::group_by(stovetype) %>% 
+    dplyr::summarise(means=round(mean(ACH...271,na.rm = T),1),
+                     sd=round(sd(ACH...271,na.rm = T),1),
+                     max=max(maxmax),
+                     n=n())
+  aer_plot <- ggplot(meta_emissions, aes(y=ACH...271,x=1)) +
+    facet_grid( ~ stovetype,scales = "free", space = "free", labeller = label_wrap_gen(width = 12, multi_line = TRUE)) +
+    geom_boxplot(alpha = 0.25) +
+    stat_summary(fun.data = f,geom="boxplot")+
+    geom_jitter(height = 0,width = 0.2,alpha = 0.2) +
+    theme_minimal() +
+    theme(text=element_text(size=16), axis.text.x = element_blank()) +
+    ylab("ACH (changes/hour)") + xlab("")  +
+    ggtitle('Air Exchange Rate') + 
+    facet_grid( ~ stovetype,scales = "free", space = "free", labeller = label_wrap_gen(width = 12, multi_line = TRUE)) +
+    geom_text(data=aer_summary,aes(y = max,x=1,label=paste0("mean= ", means)), size=5,nudge_y =1) +
+    geom_text(data=aer_summary,aes(y = max*.93,x=1,label=paste0("sd= ",sd)) ,size=5,nudge_y =1) + 
+    geom_text(data=aer_summary,aes(y = max*.85,x=1,label=paste0("n= ", n)), size=5,nudge_y =1)
+  
+  
+  plot_name = paste0("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/ACH_duration_volume_dist.jpeg")
+  
+  jpeg(plot_name,width = 1000, height = 800, units = "px",quality=100)
+
+  egg::ggarrange(aer_plot,volume_plot,event_duration, heights = c(0.3, 0.3,.3))
+  
+  dev.off()
+  
   
   #Plot exposures
   scatter_ecm_lpgpercent <- timeseries_plot(ecm_meta_data %>% filter(qc == 'good') 
