@@ -72,7 +72,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   
   
   #####PATS data prep
-
+  
   pats_data_timeseries <- readRDS("Processed Data/pats_data_timeseries.rds")[qc == 'good']
   
   pats_data_timeseries[,c('V_power', 'degC_air','%RH_air','CO_PPM','status','ref_sigDel','low20avg','loggerID',
@@ -119,7 +119,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   
   
   #####Merge dot, ecm, pats, lascar, tsi data.  Preplacement survey not merged here.
-
+  
   all_merged = merge(wide_pats_data,wide_co_data, by.x = c("datetime","HHID_full"),
                      by.y = c("datetime","HHID_full"), all.x = T, all.y = F)
   all_merged = merge(all_merged,beacon_logger_data, by.x = c("datetime","HHID.x"),
@@ -283,60 +283,61 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                                          Cookingmeanpm25_indirect_nearest = mean(pm25_conc_beacon_nearest_ecm,na.rm = TRUE),
                                          Cookingmeanpm25_indirect_nearest_threshold = mean(pm25_conc_beacon_nearestthreshold_ecm,na.rm = TRUE),
                                          CookingmeanCO_indirect_nearest = mean(co_estimate_beacon_nearest,na.rm = TRUE),
-                                         CookingmeanCO_indirect_nearest_threshold = mean(co_estimate_beacon_nearest_threshold,na.rm = TRUE)) %>%
-                        dplyr::filter(emission_startstop == 'cooking'),
+                                         CookingmeanCO_indirect_nearest_threshold = mean(co_estimate_beacon_nearest_threshold,na.rm = TRUE),
+                                         Cookingna_TraditionalManufactured_minutes = sum(is.na(sumstraditional_manufactured)),
+                                         Cookingna_charcoal_jiko_minutes = sum(is.na(`sumscharcoal jiko`)),
+                                         Cookingna_traditional_non_manufactured = sum(is.na(sumstraditional_non_manufactured)),
+                                         Cookingna_lpg = sum(is.na(sumslpg))) %>%
+                        dplyr::mutate(Cookingsum_TraditionalManufactured_minutes = case_when(Cookingna_TraditionalManufactured_minutes<1 ~ Cookingsum_TraditionalManufactured_minutes,
+                                                                                      T ~ as.integer(NA)),
+                                      Cookingsum_charcoal_jiko_minutes = case_when(Cookingna_charcoal_jiko_minutes<1 ~ Cookingsum_charcoal_jiko_minutes,
+                                                                            T ~ as.integer(NA)),
+                                      Cookingsum_traditional_non_manufactured = case_when(Cookingna_traditional_non_manufactured<1 ~ Cookingsum_traditional_non_manufactured,
+                                                                                           T ~ as.integer(NA)),
+                                      Cookingsum_lpg = case_when(Cookingna_lpg<1 ~ Cookingsum_lpg,
+                                                                  T ~ as.integer(NA))) %>%
+                        dplyr::filter(emission_startstop == 'cooking') %>%
+                        dplyr::select(-Cookingna_TraditionalManufactured_minutes,-Cookingna_charcoal_jiko_minutes,-Cookingna_traditional_non_manufactured,Cookingna_lpg)
+                        ,
                       by = c('HHID','Date'))   %>%
     dplyr::left_join(all_merged_intensive %>%
-                        dplyr::group_by(HHID) %>%
-                        dplyr::summarise(Intensive_meanPM25Kitchen = mean(PATS_Kitchen,na.rm = TRUE),
-                                         Intensive_N_PM25Kitchen = sum(!is.na(PATS_Kitchen)),
-                                         Intensive_meanPM25LivingRoom = mean(PATS_LivingRoom,na.rm = TRUE),
-                                         Intensive_N_PM25LivingRoom = sum(!is.na(PATS_LivingRoom)),
-                                         Intensive_meanCO_ppmKitchen = mean(CO_ppmKitchen,na.rm = TRUE),
-                                         Intensive_N_CO_ppmKitchen = sum(!is.na(CO_ppmKitchen)),
-                                         Intensive_meanCO_ppmLivingRoom = mean(CO_ppmLivingRoom,na.rm = TRUE),
-                                         Intensive_N_CO_ppmLivingRoom = sum(!is.na(CO_ppmLivingRoom)),
-                                         Intensive_sum_TraditionalManufactured_minutes = sum(sumstraditional_manufactured,na.rm = TRUE),
-                                         Intensive_N_sumstraditional_manufactured = sum(!is.na(sumstraditional_manufactured)),
-                                         Intensive_sum_charcoal_jiko_minutes = sum(`sumscharcoal jiko`,na.rm = TRUE),
-                                         Intensive_N_sum_charcoal_jiko = sum(!is.na(`sumscharcoal jiko`)),
-                                         Intensive_sum_traditional_non_manufactured = sum(sumstraditional_non_manufactured,na.rm = TRUE),
-                                         Intensive_N_sum_traditional_non_manufactured = sum(!is.na(sumstraditional_non_manufactured)),
-                                         Intensive_sum_lpg = sum(sumslpg,na.rm = TRUE),
-                                         Intensive_N_sum_lpg = sum(!is.na(sumslpg))),#%>%
-                       # dplyr::filter(!is.na(Date)),
-                      by = c('HHID')) #%>%
-    #Add a few additional columns relevant to 24h data and emissions
-    # dplyr::left_join( all_merged %>%
-    #                     dplyr::group_by(HHID,Date,emission_startstop) %>%
-    #                     dplyr::summarise(
-    #                                      CookingmeanPM25Kitchen = mean(PM25Kitchen,na.rm = TRUE),
-    #                                      CookingmeanPM25Kitchen1m = mean(PATS_1m,na.rm = TRUE),
-    #                                      CookingmeanPM25Kitchen2m = mean(PATS_2m,na.rm = TRUE),
-    #                                      CookingmeanPM25LivingRoom = mean(PATS_LivingRoom,na.rm = TRUE),
-    #                                      CookingmeanPM25Ambient =  mean(PATS_Ambient,na.rm = TRUE),
-    #                                      CookingmeanCO_ppmCook = mean(CO_ppmCook,na.rm = TRUE),
-    #                                      CookingmeanCO_ppmKitchen = mean(CO_ppmKitchen,na.rm = TRUE),
-    #                                      CookingmeanCO_ppmKitchen1m = mean(CO_ppm1m,na.rm = TRUE),
-    #                                      CookingmeanCO_ppmKitchen2m = mean(CO_ppm2m,na.rm = TRUE),
-    #                                      CookingmeanCO_ppmLivingRoom = mean(CO_ppmLivingRoom,na.rm = TRUE),
-    #                                      CookingmeanCO_ppmAmbient = mean(CO_ppmAmbient,na.rm = TRUE),
-    #                                      Cookingsum_TraditionalManufactured_minutes = sum(sumstraditional_manufactured,na.rm = TRUE),
-    #                                      Cookingsum_charcoal_jiko_minutes = sum(`sumscharcoal jiko`,na.rm = TRUE),
-    #                                      Cookingsum_traditional_non_manufactured = sum(sumstraditional_non_manufactured,na.rm = TRUE),
-    #                                      Cookingsum_lpg = sum(sumslpg,na.rm = TRUE),
-    #                                      Cookingmeanpm25_indirect_nearest = mean(pm25_conc_beacon_nearest_ecm,na.rm = TRUE),
-    #                                      Cookingmeanpm25_indirect_nearest_threshold = mean(pm25_conc_beacon_nearestthreshold_ecm,na.rm = TRUE),
-    #                                      CookingmeanCO_indirect_nearest = mean(co_estimate_beacon_nearest,na.rm = TRUE),
-    #                                      CookingmeanCO_indirect_nearest_threshold = mean(co_estimate_beacon_nearest_threshold,na.rm = TRUE)) %>%
-    #                     dplyr::filter(emission_startstop == 'cooking'),
-    #                   by = c('HHID','Date')) 
-    
-  
-  # dplyr::left_join(meta_emissions %>%
-  #             mutate(HHID = HHID_full,
-  #                    Date = as.Date(`Start time (Mobenzi Pre-placement)-- 1`)),
-  #           by = c('HHID','Date'))
+                       dplyr::group_by(HHID) %>%
+                       dplyr::summarise(Intensive_meanPM25Kitchen = mean(PATS_Kitchen,na.rm = TRUE),
+                                        Intensive_N_PM25Kitchen = sum(!is.na(PATS_Kitchen)),
+                                        Intensive_meanPM25LivingRoom = mean(PATS_LivingRoom,na.rm = TRUE),
+                                        Intensive_N_PM25LivingRoom = sum(!is.na(PATS_LivingRoom)),
+                                        Intensive_meanCO_ppmKitchen = mean(CO_ppmKitchen,na.rm = TRUE),
+                                        Intensive_N_CO_ppmKitchen = sum(!is.na(CO_ppmKitchen)),
+                                        Intensive_meanCO_ppmLivingRoom = mean(CO_ppmLivingRoom,na.rm = TRUE),
+                                        Intensive_N_CO_ppmLivingRoom = sum(!is.na(CO_ppmLivingRoom)),
+                                        Intensive_sum_TraditionalManufactured_minutes = sum(sumstraditional_manufactured,na.rm = TRUE),
+                                        Intensive_N_sumstraditional_manufactured = sum(!is.na(sumstraditional_manufactured)),
+                                        Intensive_sum_charcoal_jiko_minutes = sum(`sumscharcoal jiko`,na.rm = TRUE),
+                                        Intensive_N_sum_charcoal_jiko = sum(!is.na(`sumscharcoal jiko`)),
+                                        Intensive_sum_traditional_non_manufactured = sum(sumstraditional_non_manufactured,na.rm = TRUE),
+                                        Intensive_N_sum_traditional_non_manufactured = sum(!is.na(sumstraditional_non_manufactured)),
+                                        Intensive_sum_lpg = sum(sumslpg,na.rm = TRUE),
+                                        Intensive_N_sum_lpg = sum(!is.na(sumslpg)),
+                                        Intensivena_TraditionalManufactured_minutes = sum(is.na(sumstraditional_manufactured)),
+                                        Intensivena_charcoal_jiko_minutes = sum(is.na(`sumscharcoal jiko`)),
+                                        Intensivena_traditional_non_manufactured = sum(is.na(sumstraditional_non_manufactured)),
+                                        Intensivena_lpg = sum(is.na(sumslpg))) %>%
+                       dplyr::mutate(Intensive_sum_TraditionalManufactured_minutes = case_when(Intensivena_TraditionalManufactured_minutes<0.8*1440 ~ Intensive_sum_TraditionalManufactured_minutes,
+                                                                                               T ~ as.integer(NA)),
+                                     Intensive_sum_charcoal_jiko_minutes = case_when(Intensivena_charcoal_jiko_minutes<0.8*1440 ~ Intensive_sum_charcoal_jiko_minutes,
+                                                                                     T ~ as.integer(NA)),
+                                     Intensive_sum_traditional_non_manufactured = case_when(Intensivena_traditional_non_manufactured<0.8*1440 ~ Intensive_sum_traditional_non_manufactured,
+                                                                                            T ~ as.integer(NA)),
+                                     Intensive_sum_lpg = case_when(Intensivena_lpg<0.8*1440 ~ Intensive_sum_lpg,
+                                                                   T ~ as.integer(NA))) %>%
+                       dplyr::select(-Intensivena_TraditionalManufactured_minutes,-Intensivena_charcoal_jiko_minutes,-Intensivena_traditional_non_manufactured,Intensivena_lpg),
+                     # dplyr::filter(!is.na(Date)),
+                     by = c('HHID')) %>%
+    dplyr::left_join(meta_emissions %>%
+                       dplyr::select(stovetype,HHID_full,`Start time (Mobenzi Pre-placement)-- 1`) %>%
+                       dplyr::mutate(HHID = HHID_full,
+                                     Date = as.Date(`Start time (Mobenzi Pre-placement)-- 1`)),
+                     by = c('HHID','Date'))
   
   write.xlsx(all_merged_summary,'Processed Data/all_merged_summary_mj.xlsx')
   
