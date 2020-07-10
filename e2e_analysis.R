@@ -103,6 +103,9 @@ if (import==1){
 }
 # writeLines(c(file_list_beacon,file_list_tsi,file_list_upas,file_list_lascar,file_list_caa), con="Processed Data/processed_filelist.R")
 
+#Ambient data
+ambient_analysis(CO_calibrated_timeseries,pats_data_timeseries,upasmeta,gravimetric_data) #Try to get ambient met data from Matt or others?
+
 
 #Create a wide merged dataset (ECM, Dots, TSI, Lascar, PATS+, Beacon Localization, ECM+Beacon exposure estimate
 #PATS+Beacon exposure estimate, Lascar+Beacon exposure estimate)
@@ -123,11 +126,6 @@ all_merged %>%
 
 #Indirect exposure estimates
 model_indirect_exposure(all_merged_summary,all_merged,preplacement,meta_emissions)
-
-
-#Ambient data
-ambient_analysis(CO_calibrated_timeseries,pats_data_timeseries,upasmeta,gravimetric_data) #Try to get ambient met data from Matt or others?
-
 
 
 ######QAQC/bonus analyses
