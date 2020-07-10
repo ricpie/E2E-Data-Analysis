@@ -1,9 +1,13 @@
+###NOTES
+# the primary stove recode is not correct
+# manufactured == charcoal
+# resolve either by tossing the stove_class variable
+# or using the primary_stove variable
+
 options(width=system("tput cols", intern=TRUE))
 
 library(data.table)
 library(ggplot2)
-
-#change beacon to nearest
 
 #helper(s)
 return_cols_like <- function(dataframe, like, invert = FALSE){
@@ -129,11 +133,51 @@ unops_ap[, trad_mins := trad_non_man_mins]
 unops_ap[, all_stv_mins := trad_non_man_mins + trad_man_mins + bms_mins + jiko_mins]
 unops_ap[, primary_stove := as.factor(primary_stove)]
 
+#summary tables (pre-interpolation: skip lines 98-106 above)
+unops_long <- melt.data.table(unops_ap, id.var = c('hhid', 'primary_stove', 'day_of_week', 'stove_class'))
+unops_long[, unique(variable)]
+unops_long <- unops_long[!variable %like% "_log"]
+
+unops_summary_by_stove <- unops_long[,
+	list(
+		mean = round(mean(value, na.rm = T),2),
+		sd = round(sd(value, na.rm = T),2),
+		min = round(min(value, na.rm = T),2),
+		q25 = round(quantile(value, 0.25, na.rm = T),2),
+		median = round(median(value, na.rm=T),2),
+		q75 = round(quantile(value, 0.75, na.rm = T),2),
+		max = round(max(value, 0.75, na.rm = T,2)),
+		n = length(value[!is.na(value)])
+		),
+	by = 'variable,stove_class'
+]
+
+unops_summary_overall <- unops_long[,
+	list(
+		mean = round(mean(value, na.rm = T),2),
+		sd = round(sd(value, na.rm = T),2),
+		min = round(min(value, na.rm = T),2),
+		q25 = round(quantile(value, 0.25, na.rm = T),2),
+		median = round(median(value, na.rm=T),2),
+		q75 = round(quantile(value, 0.75, na.rm = T),2),
+		max = round(max(value, 0.75, na.rm = T,2)),
+		n = length(value[!is.na(value)])
+		),
+	by = 'variable'
+]
+
+# writexl::write_xlsx(list(overall = unops_summary_overall, by_stove_class = unops_summary_by_stove), '~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/model_descriptive_summary_tables.xlsx')
+
+# unops_summary[order(stove_class,variable)]
+
+
+
 ##############################
 ##########MODEL RUNS##########
 ##############################
 library(leaps) #model selection
 library(performance) #for pretty plots and some rapid modeling diagnostics
+library(olsrr) #part and partial correlations
 
 #generate matrix for subsequent regressions
 predict_lm_subsets <- function(object, newdata, id ,...) {
@@ -151,7 +195,8 @@ unops_ap[, kef_predicted := 0.742]
 unops_ap[, kef_exposure_predicted := kit_pm * 0.742]
 
 unops_lpg <- unops_ap[stove_class == 'lpg']
-unops_bms <- unops_ap[stove_class != 'lpg']
+unops_bms <- unops_ap[primary_stove %like% 'Manufactured|manufactured']
+# unops_chrcl <- unops_ap[primary_stove %like% 'Manufactured']
 
 
 ###########################
@@ -164,7 +209,7 @@ folds <- sample(1:k, nrow(unops_ap), replace = TRUE)
 cv_errors <- matrix(NA, k, n_vars, dimnames = list(NULL, paste(1:n_vars)))
 
 for(j in 1:k){
-	best_subset <-  regsubsets(cook_pm_log ~ stove_class + all_stv_mins + kit_pm + lr_pm + amb_pm + cook_co + kit_co + lr_co + kit_vol + door_win_area + ses + aer + bcn_pm_near, data = unops_ap[folds != j, ], nvmax = n_vars)
+	best_subset <-  regsubsets(cook_pm_log ~ primary_stove + all_stv_mins + kit_pm + lr_pm + amb_pm + cook_co + kit_co + lr_co + kit_vol + door_win_area + ses + aer + bcn_pm_near, data = unops_ap[folds != j, ], nvmax = n_vars)
 
 	for(i in 1:n_vars){
   		pred_x <- exp(predict_lm_subsets(best_subset, unops_ap[folds == j, ], id = i))
@@ -178,7 +223,7 @@ mean_cv_errors <- as.data.table(colMeans(cv_errors, na.rm=TRUE))
 mean_cv_errors[, covariates := 1:nrow(mean_cv_errors)]
 qplot(covariates, V1, data=mean_cv_errors[covariates > 3]) + geom_line() + geom_point()
 
-final_subset_lm <-  regsubsets(cook_pm_log ~ stove_class + all_stv_mins + kit_pm + lr_pm + amb_pm + cook_co + kit_co + lr_co + kit_vol + door_win_area + ses + aer + bcn_pm_near, data = unops_ap, nvmax = n_vars)
+final_subset_lm <-  regsubsets(cook_pm_log ~ primary_stove + all_stv_mins + kit_pm + lr_pm + amb_pm + cook_co + kit_co + lr_co + kit_vol + door_win_area + ses + aer + bcn_pm_near, data = unops_ap, nvmax = n_vars)
 coef(final_subset_lm, 7)
 
 unops_ap[, all_beacon := exp(predict_lm_subsets(final_subset_lm, unops_ap, id = 7))]
@@ -195,8 +240,8 @@ ggplot(aes(cook_pm, all_beacon), data=unops_ap) +
 	geom_abline(linetype = 'dashed') 
 
 Metrics::rmse(unops_ap$cook_pm, unops_ap$all_beacon)
-all_beacon <- lm(cook_pm_log ~  stove_class + cook_co + kit_co + lr_co + kit_vol + aer + bcn_pm_near, data = unops_ap)
- 
+all_beacon <- lm(cook_pm_log ~  primary_stove + cook_co + kit_co + lr_co + kit_vol + bcn_pm_near, data = unops_ap)
+
 ###########################
 ########### KEF ###########
 ###########################
@@ -255,6 +300,7 @@ ggplot(aes(cook_pm, kef_exposure_predicted), data=unops_ap[kef_exposure_predicte
 ###########################
 ########### LMS ###########
 ###########################
+unops_ap[, return_cols_like(unops_ap, "lmf_[0-9]{1,}") := NULL]
 
 # primary stove only
 # kitchen_pm only
@@ -262,77 +308,83 @@ ggplot(aes(cook_pm, kef_exposure_predicted), data=unops_ap[kef_exposure_predicte
 # kef
 # primary stove + ses
 
-lmf_1 <- lm(cook_pm_log ~ primary_stove, data = unops_ap)
-unops_ap[, lmf_1:=exp(predict(lmf_1))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_1))
+# lmf_1 <- lm(cook_pm_log ~ primary_stove, data = unops_ap)
+# unops_ap[, lmf_1:=exp(predict(lmf_1))]
+# with(unops_ap, Metrics::rmse(cook_pm, lmf_1))
 
+#Summary table model 2
 lmf_2 <- lm(cook_pm_log ~ kit_pm, data = unops_ap)
 unops_ap[, lmf_2:=exp(predict(lmf_2))]
 with(unops_ap, Metrics::rmse(cook_pm, lmf_2))
 
-lmf_3 <- lm(cook_pm_log ~ bcn_pm_near, data = unops_ap)
-unops_ap[, lmf_3:=exp(predict(lmf_3))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_3))
+# lmf_3 <- lm(cook_pm_log ~ bcn_pm_near, data = unops_ap)
+# unops_ap[, lmf_3:=exp(predict(lmf_3))]
+# with(unops_ap, Metrics::rmse(cook_pm, lmf_3))
 
-lmf_4 <- lm(cook_pm_log ~ all_stv_mins, data = unops_ap)
-unops_ap[, lmf_4:=exp(predict(lmf_4))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_4))
+# lmf_4 <- lm(cook_pm_log ~ all_stv_mins, data = unops_ap)
+# unops_ap[, lmf_4:=exp(predict(lmf_4))]
+# with(unops_ap, Metrics::rmse(cook_pm, lmf_4))
 
-lmf_5 <- lm(cook_pm_log ~ kef, data = unops_ap)
+# lmf_5 <- lm(cook_pm_log ~ kef, data = unops_ap)
+# unops_ap[, lmf_5:=exp(predict(lmf_5))]
+# with(unops_ap, Metrics::rmse(cook_pm, lmf_5))
+
+#Summary Table Model 1
+lmf_1 <- lm(cook_pm_log ~ primary_stove + ses + kit_vol, data = unops_ap)
+unops_ap[, lmf_1:=exp(predict(lmf_1))]
+with(unops_ap, Metrics::rmse(cook_pm, lmf_1))
+
+# lmf_7 <- lm(cook_pm_log ~ primary_stove + trad_mins, data = unops_ap)
+# unops_ap[, lmf_7:=exp(predict(lmf_7))]
+# with(unops_ap, Metrics::rmse(cook_pm, lmf_7))
+
+# lmf_8 <- lm(cook_pm_log ~ primary_stove + trad_mins + ses, data = unops_ap)
+# unops_ap[, lmf_8:=exp(predict(lmf_8))]
+# with(unops_ap, Metrics::rmse(cook_pm, lmf_8))
+
+# lmf_9 <- lm(cook_pm_log ~ kit_pm + primary_stove, data = unops_ap)
+# unops_ap[, lmf_9:=exp(predict(lmf_9))]
+# with(unops_ap, Metrics::rmse(cook_pm, lmf_9))
+
+#summary table model 5
+lmf_5 <- lm(cook_pm_log ~ kit_pm + primary_stove + ses + kit_vol, data = unops_ap)
 unops_ap[, lmf_5:=exp(predict(lmf_5))]
 with(unops_ap, Metrics::rmse(cook_pm, lmf_5))
 
-lmf_6 <- lm(cook_pm_log ~ primary_stove + ses + kit_vol, data = unops_ap)
+#summary table model 3
+lmf_3 <- lm(cook_pm_log ~ kit_pm + kit_co, data = unops_ap)
+unops_ap[, lmf_3:=exp(predict(lmf_3))]
+with(unops_ap, Metrics::rmse(cook_pm, lmf_3))
+
+# lmf_12 <- lm(cook_pm_log ~ kit_pm + kit_co + primary_stove, data = unops_ap)
+# unops_ap[, lmf_12:=exp(predict(lmf_12))]
+# with(unops_ap, Metrics::rmse(cook_pm, lmf_12))
+
+#summary table model 6
+lmf_6 <- lm(cook_pm_log ~ kit_pm + kit_co + primary_stove + ses + kit_vol, data = unops_ap)
 unops_ap[, lmf_6:=exp(predict(lmf_6))]
 with(unops_ap, Metrics::rmse(cook_pm, lmf_6))
 
-lmf_7 <- lm(cook_pm_log ~ primary_stove + trad_mins, data = unops_ap)
-unops_ap[, lmf_7:=exp(predict(lmf_7))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_7))
+# lmf_14 <- lm(cook_pm_log ~ primary_stove + kit_pm + cook_co + kit_co + lr_co + kit_vol, data = unops_ap)
+# unops_ap[, lmf_14:=exp(predict(lmf_14))]
+# with(unops_ap, Metrics::rmse(cook_pm, lmf_14))
 
-lmf_8 <- lm(cook_pm_log ~ primary_stove + trad_mins + ses, data = unops_ap)
-unops_ap[, lmf_8:=exp(predict(lmf_8))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_8))
+# lmf_15 <- lm(cook_pm_log ~ bcn_pm_near + primary_stove, data = unops_ap)
+# unops_ap[, lmf_15:=exp(predict(lmf_15))]
+# with(unops_ap, Metrics::rmse(cook_pm, lmf_15))
 
-lmf_9 <- lm(cook_pm_log ~ kit_pm + primary_stove, data = unops_ap)
-unops_ap[, lmf_9:=exp(predict(lmf_9))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_9))
+#summary table model 4
+lmf_4 <- lm(cook_pm_log ~ bcn_pm_near + primary_stove + ses + kit_vol, data = unops_ap)
+unops_ap[, lmf_4:=exp(predict(lmf_4))]
+with(unops_ap, Metrics::rmse(cook_pm, lmf_4))
 
-lmf_10 <- lm(cook_pm_log ~ kit_pm + primary_stove + ses + kit_vol, data = unops_ap)
-unops_ap[, lmf_10:=exp(predict(lmf_10))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_10))
+# lmf_17 <- lm(cook_pm_log ~ kit_pm + lr_pm + amb_pm + primary_stove + ses, data = unops_ap)
+# unops_ap[, lmf_17:=exp(predict(lmf_17))]
+# with(unops_ap, Metrics::rmse(cook_pm, lmf_17))
 
-lmf_11 <- lm(cook_pm_log ~ kit_pm + kit_co, data = unops_ap)
-unops_ap[, lmf_11:=exp(predict(lmf_11))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_11))
-
-lmf_12 <- lm(cook_pm_log ~ kit_pm + kit_co + primary_stove, data = unops_ap)
-unops_ap[, lmf_12:=exp(predict(lmf_12))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_12))
-
-lmf_13 <- lm(cook_pm_log ~ kit_pm + kit_co + primary_stove + ses + kit_vol, data = unops_ap)
-unops_ap[, lmf_13:=exp(predict(lmf_13))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_13))
-
-lmf_14 <- lm(cook_pm_log ~ primary_stove + kit_pm + cook_co + kit_co + lr_co + kit_vol, data = unops_ap)
-unops_ap[, lmf_14:=exp(predict(lmf_14))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_14))
-
-lmf_15 <- lm(cook_pm_log ~ bcn_pm_near + primary_stove, data = unops_ap)
-unops_ap[, lmf_15:=exp(predict(lmf_15))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_15))
-
-lmf_16 <- lm(cook_pm_log ~ bcn_pm_near + primary_stove + ses + kit_vol, data = unops_ap)
-unops_ap[, lmf_16:=exp(predict(lmf_16))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_16))
-
-lmf_17 <- lm(cook_pm_log ~ kit_pm + lr_pm + amb_pm + primary_stove + ses, data = unops_ap)
-unops_ap[, lmf_17:=exp(predict(lmf_17))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_17))
-
-lmf_18 <- lm(cook_pm_log ~ kit_co, data = unops_ap)
-unops_ap[, lmf_18:=exp(predict(lmf_18))]
-with(unops_ap, Metrics::rmse(cook_pm, lmf_18))
+# lmf_18 <- lm(cook_pm_log ~ cook_co + kit_co, data = unops_ap)
+# unops_ap[, lmf_18:=exp(predict(lmf_18))]
+# with(unops_ap, Metrics::rmse(cook_pm, lmf_18))
 
 model_overview <- function(model, dt){
 	form <- formula(get(model))
@@ -351,13 +403,23 @@ model_overview <- function(model, dt){
 	)
 }
 
-overview_of_lm_all <- do.call('rbind', lapply(c('all_beacon', paste('lmf_', 1:18, sep = "")), model_overview, 'unops_ap'))
+overview_of_lm_all <- do.call('rbind', lapply(c(paste('lmf_', 1:6, sep = ""), 'all_beacon'), model_overview, 'unops_ap'))
 
-as.data.table(compare_performance(all_beacon, lmf_1, lmf_2, lmf_3, lmf_4, lmf_5, lmf_6, lmf_7, lmf_8, lmf_9, lmf_10, lmf_11, lmf_12, lmf_13, lmf_14, lmf_15, lmf_16, lmf_17, lmf_18, rank = TRUE))
+overview_of_lm_all
+
+data.table(names=names(coef(all_beacon)), coef=coef(all_beacon))
+
+# as.data.table(compare_performance(all_beacon, lmf_1, lmf_2, lmf_3, lmf_4, lmf_5, lmf_6, rank = TRUE))
+	#lmf_7, lmf_8, lmf_9, lmf_10, lmf_11, lmf_12, lmf_13, lmf_14, lmf_15, lmf_16, lmf_17, lmf_18, rank = TRUE))
 
 all_long <- melt.data.table(unops_ap[, c('cook_pm', 'kef_exposure_predicted', 'all_beacon', return_cols_like(unops_ap, 'lmf_')), with = F], id.var = 'cook_pm')
 
 ggplot(aes(cook_pm, value), data = all_long[value<1250]) + theme_bw() + facet_wrap( ~ variable, scales = 'free_y') + geom_smooth(method = 'lm') + geom_point()
+ols_correlations(lmf_1)
+ols_correlations(all_beacon)
+
+## Partial is the correlation between the variable and COP after removing the effect of other variables from both the variable and COP; semi-partial is the correlation after removing the effect of other variables from COP.
+
 
 ###########################
 #### STRATIFIED MODELS ####
@@ -445,9 +507,7 @@ ggplot(aes(cook_pm, lpg_beacon), data=unops_lpg) +
 	scale_x_continuous(limits = c(0, 150), breaks = seq(0,150,50)) + 
 	scale_y_continuous(limits = c(0, 150), breaks = seq(0,150,50)) + 
 	geom_smooth(method = 'lm', fill = 'skyblue', alpha = 0.1) + 
-	geom_abline(linetype = 'dashed') + 
-	ggtitle(expression("Relationship between predicted and measured personal exposures to PM"[2.5]))
-
+	geom_abline(linetype = 'dashed')
 Metrics::rmse(unops_lpg$cook_pm, unops_lpg$lpg_beacon)
 lpg_beacon <- lm(cook_pm_log ~ lr_pm + cook_co + kit_co + lr_co + ses + bcn_pm_near, data = unops_lpg)
 
@@ -464,61 +524,61 @@ lpg_2 <- lm(cook_pm_log ~ kit_pm, data = unops_lpg)
 unops_lpg[, lpg_2:=exp(predict(lpg_2))]
 with(unops_lpg, Metrics::rmse(cook_pm, lpg_2))
 
-lpg_3 <- lm(cook_pm_log ~ bcn_pm_near, data = unops_lpg)
-unops_lpg[, lpg_3:=exp(predict(lpg_3))]
-with(unops_lpg, Metrics::rmse(cook_pm, lpg_3))
+# lpg_3 <- lm(cook_pm_log ~ bcn_pm_near, data = unops_lpg)
+# unops_lpg[, lpg_3:=exp(predict(lpg_3))]
+# with(unops_lpg, Metrics::rmse(cook_pm, lpg_3))
 
-lpg_4 <- lm(cook_pm_log ~ all_stv_mins, data = unops_lpg)
-unops_lpg[, lpg_4:=exp(predict(lpg_4))]
-with(unops_lpg, Metrics::rmse(cook_pm, lpg_4))
+# lpg_4 <- lm(cook_pm_log ~ all_stv_mins, data = unops_lpg)
+# unops_lpg[, lpg_4:=exp(predict(lpg_4))]
+# with(unops_lpg, Metrics::rmse(cook_pm, lpg_4))
 
-lpg_5 <- lm(cook_pm_log ~ kef, data = unops_lpg)
-unops_lpg[, lpg_5:=exp(predict(lpg_5))]
-with(unops_lpg, Metrics::rmse(cook_pm, lpg_5))
+# lpg_5 <- lm(cook_pm_log ~ kef, data = unops_lpg)
+# unops_lpg[, lpg_5:=exp(predict(lpg_5))]
+# with(unops_lpg, Metrics::rmse(cook_pm, lpg_5))
 
-lpg_6 <- lm(cook_pm_log ~ ses + kit_vol, data = unops_lpg)
-unops_lpg[, lpg_6:=exp(predict(lpg_6))]
-with(unops_lpg, Metrics::rmse(cook_pm, lpg_6))
+lpg_1 <- lm(cook_pm_log ~ ses + kit_vol, data = as.data.frame(unops_lpg))
+unops_lpg[, lpg_1:=exp(predict(lpg_1))]
+with(unops_lpg, Metrics::rmse(cook_pm, lpg_1))
 
-lpg_7 <- lm(cook_pm_log ~ trad_mins, data = unops_lpg)
-unops_lpg[, lpg_7:=exp(predict(lpg_7))]
-with(unops_lpg, Metrics::rmse(cook_pm, lpg_7))
+# lpg_7 <- lm(cook_pm_log ~ trad_mins, data = unops_lpg)
+# unops_lpg[, lpg_7:=exp(predict(lpg_7))]
+# with(unops_lpg, Metrics::rmse(cook_pm, lpg_7))
 
-lpg_8 <- lm(cook_pm_log ~ trad_mins + ses, data = unops_lpg)
-unops_lpg[, lpg_8:=exp(predict(lpg_8))]
-with(unops_lpg, Metrics::rmse(cook_pm, lpg_8))
+# lpg_8 <- lm(cook_pm_log ~ trad_mins + ses, data = unops_lpg)
+# unops_lpg[, lpg_8:=exp(predict(lpg_8))]
+# with(unops_lpg, Metrics::rmse(cook_pm, lpg_8))
 
 # m9 <- lm(cook_pm_log ~ kit_pm + primary_stove, data = unops_lpg)
 # unops_lpg[, m9:=exp(predict(m9))]
 # with(unops_lpg, Metrics::rmse(cook_pm, m9))
 
-lpg_10 <- lm(cook_pm_log ~ kit_pm + ses + kit_vol, data = unops_lpg)
-unops_lpg[, lpg_10:=exp(predict(lpg_10))]
-with(unops_lpg, Metrics::rmse(cook_pm, lpg_10))
+lpg_5 <- lm(cook_pm_log ~ kit_pm + ses + kit_vol, data = unops_lpg)
+unops_lpg[, lpg_5:=exp(predict(lpg_5))]
+with(unops_lpg, Metrics::rmse(cook_pm, lpg_5))
 
-lpg_11 <- lm(cook_pm_log ~ kit_pm + kit_co, data = unops_lpg)
-unops_lpg[, lpg_11:=exp(predict(lpg_11))]
-with(unops_lpg, Metrics::rmse(cook_pm, lpg_11))
+lpg_3 <- lm(cook_pm_log ~ kit_pm + kit_co, data = unops_lpg)
+unops_lpg[, lpg_3:=exp(predict(lpg_3))]
+with(unops_lpg, Metrics::rmse(cook_pm, lpg_3))
 
-lpg_13 <- lm(cook_pm_log ~ kit_pm + kit_co + ses + kit_vol, data = unops_lpg)
-unops_lpg[, lpg_13:=exp(predict(lpg_13))]
-with(unops_lpg, Metrics::rmse(cook_pm, lpg_13))
+lpg_6 <- lm(cook_pm_log ~ kit_pm + kit_co + ses + kit_vol, data = unops_lpg)
+unops_lpg[, lpg_6:=exp(predict(lpg_6))]
+with(unops_lpg, Metrics::rmse(cook_pm, lpg_6))
 
-lpg_14 <- lm(cook_pm_log ~ kit_pm + cook_co + kit_co + lr_co + kit_vol, data = unops_lpg)
-unops_lpg[, lpg_14:=exp(predict(lpg_14))]
-with(unops_lpg, Metrics::rmse(cook_pm, lpg_14))
+# lpg_14 <- lm(cook_pm_log ~ kit_pm + cook_co + kit_co + lr_co + kit_vol, data = unops_lpg)
+# unops_lpg[, lpg_14:=exp(predict(lpg_14))]
+# with(unops_lpg, Metrics::rmse(cook_pm, lpg_14))
 
-lpg_15 <- lm(cook_pm_log ~ bcn_pm_near, data = unops_lpg)
-unops_lpg[, lpg_15:=exp(predict(lpg_15))]
-with(unops_lpg, Metrics::rmse(cook_pm, lpg_15))
+# lpg_15 <- lm(cook_pm_log ~ bcn_pm_near, data = unops_lpg)
+# unops_lpg[, lpg_15:=exp(predict(lpg_15))]
+# with(unops_lpg, Metrics::rmse(cook_pm, lpg_15))
 
-lpg_16 <- lm(cook_pm_log ~ bcn_pm_near + ses + kit_vol, data = unops_lpg)
-unops_lpg[, lpg_16:=exp(predict(lpg_16))]
-with(unops_lpg, Metrics::rmse(cook_pm, lpg_16))
+lpg_4 <- lm(cook_pm_log ~ bcn_pm_near + ses + kit_vol, data = unops_lpg)
+unops_lpg[, lpg_4:=exp(predict(lpg_4))]
+with(unops_lpg, Metrics::rmse(cook_pm, lpg_4))
 
-lpg_17 <- lm(cook_pm_log ~ kit_pm + lr_pm + amb_pm + ses, data = unops_lpg)
-unops_lpg[, lpg_17:=exp(predict(lpg_17))]
-with(unops_lpg, Metrics::rmse(cook_pm, lpg_17))
+# lpg_17 <- lm(cook_pm_log ~ kit_pm + lr_pm + amb_pm + ses, data = unops_lpg)
+# unops_lpg[, lpg_17:=exp(predict(lpg_17))]
+# with(unops_lpg, Metrics::rmse(cook_pm, lpg_17))
 
 model_overview <- function(model, dt){
 	form <- formula(get(model))
@@ -537,12 +597,18 @@ model_overview <- function(model, dt){
 	)
 }
 
-overview_of_lm_lpg <- do.call('rbind', lapply(c('lpg_beacon', 'lpg_no_beacon', paste('lpg_', c(2:8, 10:11, 13:17), sep = "")), model_overview, 'unops_lpg'))
-as.data.table(compare_performance(lpg_beacon, lpg_no_beacon, lpg_2, lpg_3, lpg_4, lpg_5, lpg_6, lpg_7, lpg_8, lpg_10, lpg_11, lpg_13, lpg_14, lpg_15, lpg_16, lpg_17, rank = TRUE))
+overview_of_lm_lpg <- do.call('rbind', lapply(c(paste('lpg_', c(1:6), sep = ""), 'lpg_beacon', 'lpg_no_beacon'), model_overview, 'unops_lpg'))
+
+overview_of_lm_lpg
+
+# as.data.table(compare_performance(lpg_beacon, lpg_no_beacon, lpg_2, lpg_3, lpg_4, lpg_5, lpg_6, lpg_7, lpg_8, lpg_10, lpg_11, lpg_13, lpg_14, lpg_15, lpg_16, lpg_17, rank = TRUE))
 
 all_lpg_long <- melt.data.table(unops_lpg[, c('kef_exposure_predicted', 'cook_pm', 'lpg_beacon', 'lpg_no_beacon', return_cols_like(unops_lpg, 'lpg_')), with = F], id.var = 'cook_pm')
 
 ggplot(aes(cook_pm, value), data = all_lpg_long) + theme_bw() + facet_wrap( ~ variable, scales = 'free_y') + geom_smooth(method = 'lm') + geom_point()
+
+ols_correlations(lm(cook_pm_log ~ ses + kit_vol, data = as.data.frame(unops_lpg)))
+ols_correlations(lpg_beacon)
 
 
 ###########################
@@ -550,6 +616,9 @@ ggplot(aes(cook_pm, value), data = all_lpg_long) + theme_bw() + facet_wrap( ~ va
 ###########################
 ######## NO BEACON ########
 ###########################
+unops_bms[, return_cols_like(unops_bms, "lmf_[0-9]{1,}") := NULL]
+unops_bms[, return_cols_like(unops_bms, "all_beacon") := NULL]
+
 # k-fold CV parameters
 k <- 10
 n_vars <- 11
@@ -557,7 +626,7 @@ folds <- sample(1:k, nrow(unops_bms), replace = TRUE)
 cv_errors <- matrix(NA, k, n_vars, dimnames = list(NULL, paste(1:n_vars)))
 
 for(j in 1:k){
-	best_subset <-  regsubsets(cook_pm_log ~  kit_pm + lr_pm + amb_pm + cook_co + kit_co + lr_co + trad_mins + kit_vol + door_win_area + ses + aer, data = unops_bms[folds != j, ], nvmax = n_vars)
+	best_subset <-  regsubsets(cook_pm_log ~  primary_stove + kit_pm + lr_pm + amb_pm + cook_co + kit_co + lr_co + trad_mins + kit_vol + door_win_area + ses + aer, data = unops_bms[folds != j, ], nvmax = n_vars)
 
 	for(i in 1:n_vars){
   		pred_x <- exp(predict_lm_subsets(best_subset, unops_bms[folds == j, ], id = i))
@@ -568,8 +637,8 @@ cv_errors
 mean_cv_errors <- colMeans(cv_errors, na.rm=TRUE)
 plot(mean_cv_errors, type = "b")
 
-final_subset_lm <-  regsubsets(cook_pm_log ~ kit_pm + lr_pm + amb_pm + cook_co + kit_co + lr_co + trad_mins + kit_vol + door_win_area + ses + aer, data = unops_bms, nvmax = n_vars)
-coef(final_subset_lm, 6)
+final_subset_lm <-  regsubsets(cook_pm_log ~ primary_stove + kit_pm + lr_pm + amb_pm + cook_co + kit_co + lr_co + trad_mins + kit_vol + door_win_area + ses + aer, data = unops_bms, nvmax = n_vars)
+coef(final_subset_lm, 7)
 
 unops_bms[, biomass_no_beacon := exp(predict_lm_subsets(final_subset_lm, unops_bms, id = 6))]
 
@@ -585,7 +654,7 @@ ggplot(aes(cook_pm, biomass_no_beacon), data=unops_bms) +
 	geom_abline(linetype = 'dashed')
 
 Metrics::rmse(unops_bms$cook_pm, unops_bms$biomass_no_beacon)
-biomass_no_beacon <- lm(cook_pm_log ~ kit_pm + cook_co + kit_co + trad_mins + kit_vol + aer, data = unops_bms)
+biomass_no_beacon <- lm(cook_pm_log ~ primary_stove + lr_pm + kit_co + lr_co + kit_vol + door_win_area, data = unops_bms)
 
 
 ###########################
@@ -628,7 +697,7 @@ ggplot(aes(cook_pm, biomass_beacon), data=unops_bms) +
 	geom_abline(linetype = 'dashed')
 
 Metrics::rmse(unops_bms$cook_pm, unops_bms$biomass_beacon)
-biomass_beacon <- lm(cook_pm_log ~ cook_co + kit_co + trad_mins + kit_vol + aer + bcn_pm_near, data = unops_bms)
+biomass_beacon <- lm(cook_pm_log ~ lr_pm + cook_co + kit_co + lr_co + kit_vol + bcn_pm_near, data = unops_bms)
 
 ###########################
 ########### LMS ###########
@@ -643,61 +712,57 @@ bms_2 <- lm(cook_pm_log ~ kit_pm, data = unops_bms)
 unops_bms[, bms_2:=exp(predict(bms_2))]
 with(unops_bms, Metrics::rmse(cook_pm, bms_2))
 
-bms_3 <- lm(cook_pm_log ~ bcn_pm_near, data = unops_bms)
-unops_bms[, bms_3:=exp(predict(bms_3))]
-with(unops_bms, Metrics::rmse(cook_pm, bms_3))
+# bms_3 <- lm(cook_pm_log ~ bcn_pm_near, data = unops_bms)
+# unops_bms[, bms_3:=exp(predict(bms_3))]
+# with(unops_bms, Metrics::rmse(cook_pm, bms_3))
 
-bms_4 <- lm(cook_pm_log ~ all_stv_mins, data = unops_bms)
-unops_bms[, bms_4:=exp(predict(bms_4))]
-with(unops_bms, Metrics::rmse(cook_pm, bms_4))
+# bms_4 <- lm(cook_pm_log ~ all_stv_mins, data = unops_bms)
+# unops_bms[, bms_4:=exp(predict(bms_4))]
+# with(unops_bms, Metrics::rmse(cook_pm, bms_4))
 
-bms_5 <- lm(cook_pm_log ~ kef, data = unops_bms)
-unops_bms[, bms_5:=exp(predict(bms_5))]
-with(unops_bms, Metrics::rmse(cook_pm, bms_5))
+# bms_5 <- lm(cook_pm_log ~ kef, data = unops_bms)
+# unops_bms[, bms_5:=exp(predict(bms_5))]
+# with(unops_bms, Metrics::rmse(cook_pm, bms_5))
 
-bms_6 <- lm(cook_pm_log ~ ses + kit_vol, data = unops_bms)
-unops_bms[, bms_6:=exp(predict(bms_6))]
-with(unops_bms, Metrics::rmse(cook_pm, bms_6))
+bms_1 <- lm(cook_pm_log ~ ses + kit_vol, data = unops_bms)
+unops_bms[, bms_1:=exp(predict(bms_1))]
+with(unops_bms, Metrics::rmse(cook_pm, bms_1))
 
-bms_7 <- lm(cook_pm_log ~ trad_mins, data = unops_bms)
-unops_bms[, bms_7:=exp(predict(bms_7))]
-with(unops_bms, Metrics::rmse(cook_pm, bms_7))
+# bms_7 <- lm(cook_pm_log ~ trad_mins, data = unops_bms)
+# unops_bms[, bms_7:=exp(predict(bms_7))]
+# with(unops_bms, Metrics::rmse(cook_pm, bms_7))
 
-bms_8 <- lm(cook_pm_log ~ trad_mins + ses, data = unops_bms)
-unops_bms[, bms_8:=exp(predict(bms_8))]
-with(unops_bms, Metrics::rmse(cook_pm, bms_8))
+# bms_8 <- lm(cook_pm_log ~ trad_mins + ses, data = unops_bms)
+# unops_bms[, bms_8:=exp(predict(bms_8))]
+# with(unops_bms, Metrics::rmse(cook_pm, bms_8))
 
 # m9 <- lm(cook_pm_log ~ kit_pm + primary_stove, data = unops_lpg)
 # unops_lpg[, m9:=exp(predict(m9))]
 # with(unops_lpg, Metrics::rmse(cook_pm, m9))
 
-bms_10 <- lm(cook_pm_log ~ kit_pm + ses + kit_vol, data = unops_bms)
-unops_bms[, bms_10:=exp(predict(bms_10))]
-with(unops_bms, Metrics::rmse(cook_pm, bms_10))
+bms_5 <- lm(cook_pm_log ~ kit_pm + ses + kit_vol, data = unops_bms)
+unops_bms[, bms_5:=exp(predict(bms_5))]
+with(unops_bms, Metrics::rmse(cook_pm, bms_5))
 
-bms_11 <- lm(cook_pm_log ~ kit_pm + kit_co, data = unops_bms)
-unops_bms[, bms_11:=exp(predict(bms_11))]
-with(unops_bms, Metrics::rmse(cook_pm, bms_11))
+bms_3 <- lm(cook_pm_log ~ kit_pm + kit_co, data = unops_bms)
+unops_bms[, bms_3:=exp(predict(bms_3))]
+with(unops_bms, Metrics::rmse(cook_pm, bms_3))
 
-bms_13 <- lm(cook_pm_log ~ kit_pm + kit_co + ses + kit_vol, data = unops_bms)
-unops_bms[, bms_13:=exp(predict(bms_13))]
-with(unops_bms, Metrics::rmse(cook_pm, bms_13))
+bms_6 <- lm(cook_pm_log ~ kit_pm + kit_co + ses + kit_vol, data = unops_bms)
+unops_bms[, bms_6:=exp(predict(bms_6))]
+with(unops_bms, Metrics::rmse(cook_pm, bms_6))
 
-bms_14 <- lm(cook_pm_log ~ kit_pm + cook_co + kit_co + lr_co + kit_vol, data = unops_bms)
-unops_bms[, bms_14:=exp(predict(bms_14))]
-with(unops_bms, Metrics::rmse(cook_pm, bms_14))
+# bms_14 <- lm(cook_pm_log ~ kit_pm + cook_co + kit_co + lr_co + kit_vol, data = unops_bms)
+# unops_bms[, bms_14:=exp(predict(bms_14))]
+# with(unops_bms, Metrics::rmse(cook_pm, bms_14))
 
-bms_15 <- lm(cook_pm_log ~ bcn_pm_near, data = unops_bms)
-unops_bms[, bms_15:=exp(predict(bms_15))]
-with(unops_bms, Metrics::rmse(cook_pm, bms_15))
+# bms_15 <- lm(cook_pm_log ~ bcn_pm_near, data = unops_bms)
+# unops_bms[, bms_15:=exp(predict(bms_15))]
+# with(unops_bms, Metrics::rmse(cook_pm, bms_15))
 
-bms_16 <- lm(cook_pm_log ~ bcn_pm_near + ses + kit_vol, data = unops_bms)
-unops_bms[, bms_16:=exp(predict(bms_16))]
-with(unops_bms, Metrics::rmse(cook_pm, bms_16))
-
-bms_17 <- lm(cook_pm_log ~ kit_pm + lr_pm + amb_pm + ses, data = unops_bms)
-unops_bms[, bms_17:=exp(predict(bms_17))]
-with(unops_bms, Metrics::rmse(cook_pm, bms_17))
+bms_4 <- lm(cook_pm_log ~ bcn_pm_near + ses + kit_vol, data = unops_bms)
+unops_bms[, bms_4:=exp(predict(bms_4))]
+with(unops_bms, Metrics::rmse(cook_pm, bms_4))
 
 model_overview <- function(model, dt){
 	form <- formula(get(model))
@@ -716,14 +781,15 @@ model_overview <- function(model, dt){
 	)
 }
 
-overview_of_lm_bms <- do.call('rbind', lapply(c('biomass_beacon', 'biomass_no_beacon', paste('bms_', c(2:8, 10:11, 13:17), sep = "")), model_overview, 'unops_bms'))
-as.data.table(compare_performance(biomass_beacon, biomass_no_beacon, bms_2, bms_3, bms_4, bms_5, bms_6, bms_7, bms_8, bms_10, bms_11, bms_13, bms_14, bms_15, bms_16, bms_17, rank = TRUE))
+overview_of_lm_bms <- do.call('rbind', lapply(c(paste('bms_', c(1:6), sep = ""), 'biomass_beacon', 'biomass_no_beacon'), model_overview, 'unops_bms'))
+overview_of_lm_bms
+# as.data.table(compare_performance(biomass_beacon, biomass_no_beacon, bms_2, bms_3, bms_4, bms_5, bms_6, bms_7, bms_8, bms_10, bms_11, bms_13, bms_14, bms_15, bms_16, bms_17, rank = TRUE))
 
 all_bms_long <- melt.data.table(unops_bms[, c('kef_exposure_predicted', 'cook_pm', 'biomass_beacon', 'biomass_no_beacon', return_cols_like(unops_bms, 'bms_')), with = F], id.var = 'cook_pm')
 
-ggplot(aes(cook_pm, value), data = all_lpg_long) + theme_bw() + facet_wrap( ~ variable, scales = 'free_y') + geom_smooth(method = 'lm') + geom_point()
+ggplot(aes(cook_pm, value), data = all_bms_long) + theme_bw() + facet_wrap( ~ variable, scales = 'free_y') + geom_smooth(method = 'lm') + geom_point()
 
 
 #Summary
-unops_ap[, list(mean = mean(cook_pm), sd = sd(cook_pm))]
-unops_ap[, list(mean = mean(cook_pm), sd = sd(cook_pm)), by = 'stove_class']
+unops_ap[, list(mean = mean(cook_pm), sd = sd(cook_pm), n = length(cook_pm))]
+unops_ap[, list(mean = mean(cook_pm), sd = sd(cook_pm), n = length(cook_pm)), by = 'primary_stove']

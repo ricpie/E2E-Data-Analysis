@@ -67,7 +67,8 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   #Merge house/personal time serires with ambient data (based on date time only, not HHID)
   wide_co_data = merge(wide_co_data,CO_calibrated_timeseries_ambient, by.x = c("datetime"),
                        by.y = c("datetime"), all.x = T, all.y = F,)
-  rm(CO_calibrated_timeseries,CO_calibrated_timeseries_ambient,CO_calibrated_timeseries_hap)
+  rm(CO_calibrated_timeseries)
+  # rm(CO_calibrated_timeseries_ambient,CO_calibrated_timeseries_hap)
   
   
   
@@ -99,7 +100,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   wide_pats_data = merge(wide_pats_data,pats_data_timeseries_ambient, by.x = c("datetime"),
                          by.y = c("datetime"), all.x = T, all.y = F,)
   setnames(wide_pats_data, "pm25_concAmbient", "PATS_Ambient")
-  rm(pats_data_timeseries_ambient,pats_data_timeseries_hap)
+  # rm(pats_data_timeseries_ambient,pats_data_timeseries_hap)
   
   
   
@@ -141,6 +142,9 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                                    HHIDnumeric == 157 ~ "KE157-KE06",
                                    HHIDnumeric == 85 ~ "KE085-KE03",
                                    TRUE ~ HHID)) %>%
+    dplyr::mutate(stovetype = case_when(HHID %like% "KE157-KE06" ~ "Chipkube",
+                                        HHID %like% "KE238-KE06" ~ "Chipkube",
+                                        TRUE ~ stovetype)) %>%
     dplyr::select(-HHID.y) %>%
     as.data.table()
   
@@ -289,16 +293,16 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                                          Cookingna_traditional_non_manufactured = sum(is.na(sumstraditional_non_manufactured)),
                                          Cookingna_lpg = sum(is.na(sumslpg))) %>%
                         dplyr::mutate(Cookingsum_TraditionalManufactured_minutes = case_when(Cookingna_TraditionalManufactured_minutes<1 ~ Cookingsum_TraditionalManufactured_minutes,
-                                                                                      T ~ as.integer(NA)),
+                                                                                             T ~ as.integer(NA)),
                                       Cookingsum_charcoal_jiko_minutes = case_when(Cookingna_charcoal_jiko_minutes<1 ~ Cookingsum_charcoal_jiko_minutes,
-                                                                            T ~ as.integer(NA)),
+                                                                                   T ~ as.integer(NA)),
                                       Cookingsum_traditional_non_manufactured = case_when(Cookingna_traditional_non_manufactured<1 ~ Cookingsum_traditional_non_manufactured,
-                                                                                           T ~ as.integer(NA)),
+                                                                                          T ~ as.integer(NA)),
                                       Cookingsum_lpg = case_when(Cookingna_lpg<1 ~ Cookingsum_lpg,
-                                                                  T ~ as.integer(NA))) %>%
+                                                                 T ~ as.integer(NA))) %>%
                         dplyr::filter(emission_startstop == 'cooking') %>%
                         dplyr::select(-Cookingna_TraditionalManufactured_minutes,-Cookingna_charcoal_jiko_minutes,-Cookingna_traditional_non_manufactured,Cookingna_lpg)
-                        ,
+                      ,
                       by = c('HHID','Date'))   %>%
     dplyr::left_join(all_merged_intensive %>%
                        dplyr::group_by(HHID) %>%
@@ -337,9 +341,57 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                        dplyr::select(stovetype,HHID_full,`Start time (Mobenzi Pre-placement)-- 1`) %>%
                        dplyr::mutate(HHID = HHID_full,
                                      Date = as.Date(`Start time (Mobenzi Pre-placement)-- 1`)),
-                     by = c('HHID','Date'))
+                     by = c('HHID','Date')) %>%
+    dplyr::mutate(stovetype = case_when(HHID %like% "KE157-KE06" ~ "Chipkube",
+                                        HHID %like% "KE238-KE06" ~ "Chipkube",
+                                        TRUE ~ stovetype))
   
-  write.xlsx(all_merged_summary,'Processed Data/all_merged_summary_mj.xlsx')
+  
+  
+  # Summary stats on Personal exposure PM2.5, kitchen PM2.5 from ECM, kitchen PM2.5 from PATs, LR PM2.5 PATS, ambient grav and ambient pats, sums usage, all the same for CO, all the same for intensive
+  #Use the instrument-wise data, making sure to keep only qc = good.
+  
+  #Ugliest code I've ever written.
+  summaryfun_ugly = function(summario){
+    summary_means =  summario %>% summarise(across(where(is.numeric), ~ round(mean(.x,na.rm = TRUE),2)))
+    summary_sd =  summario %>% summarise(across(where(is.numeric), ~ round(sd(.x,na.rm = TRUE),2)))
+    summary_min =  summario %>% summarise(across(where(is.numeric), ~ round(min(.x,na.rm = TRUE),2)))
+    summary_q25 =  summario %>% summarise(across(where(is.numeric), ~ round(quantile(.x,.25,na.rm = TRUE),2)))
+    summary_med =  summario %>% summarise(across(where(is.numeric), ~ round(quantile(.x,.5,na.rm = TRUE),2)))
+    summary_q75 =  summario %>% summarise(across(where(is.numeric), ~ round(quantile(.x,.75,na.rm = TRUE),2)))
+    summary_max =  summario %>% summarise(across(where(is.numeric), ~ round(max(.x,na.rm = TRUE),2)))
+    summary_n =  summario %>% summarise(across(where(is.numeric), ~ round(length(.[!is.na(.)]),2)))
+    alltogethernow = rbind(summary_means,summary_sd,summary_min,summary_q25,summary_med,summary_q75,summary_max,summary_n) %>%
+      dplyr::mutate(rownames = c(rep('means',dim(summary_means)[1]),rep('sd',dim(summary_means)[1]),rep('min',dim(summary_means)[1]),rep('q25',dim(summary_means)[1]),
+                                 rep('med',dim(summary_means)[1]),rep('q75',dim(summary_means)[1]),rep('max',dim(summary_means)[1]),rep('n',dim(summary_means)[1])))
+  }
+  
+  by_instrument_summary_24hr = summaryfun_ugly(dplyr::group_by(all_merged_summary,stovetype) %>%
+                                                 dplyr::select(HHID:meanCO_indirect_nearest_threshold)) %>%
+    dplyr::arrange(stovetype)
+  
+  by_instrument_summary_intensive = summaryfun_ugly(dplyr::group_by(all_merged_summary,stovetype) %>%
+                                                      dplyr::select(Intensive_meanPM25Kitchen:HHID_full) %>%
+                                                      dplyr::filter(Intensive_N_PM25Kitchen > 2000)) %>%
+    dplyr::arrange(stovetype)
+  
+  emissions_summary = summaryfun_ugly(dplyr::mutate(tsi_timeseries,emission_startstop = as.character(emission_startstop)) %>%
+                                        dplyr::filter(emission_startstop %like% "cooking") %>%
+                                        dplyr::group_by(stovetype)) %>%
+    dplyr::arrange(stovetype)
+  
+  pm_ambient_summary = summaryfun_ugly(pats_data_timeseries_ambient)
+  co_ambient_summary = summaryfun_ugly(CO_calibrated_timeseries_ambient)
+  
+  write.xlsx(list(all_merged_summary=all_merged_summary,
+                  by_instrument_summary_24hr=by_instrument_summary_24hr,
+                  by_instrument_summary_intensive=by_instrument_summary_intensive,
+                  emissions_summary=emissions_summary,
+                  co_ambient_summary=co_ambient_summary,
+                  pm_ambient_summary=pm_ambient_summary),'Results/all_merged_summary_mj.xlsx')
+  
+  
+  
   
   return(list(all_merged,all_merged_summary))
 }
