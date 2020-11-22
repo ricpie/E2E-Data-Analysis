@@ -125,7 +125,11 @@ summary_results_function = function(meta_emissions,all_merged,all_merged_summary
   ggsave("Results/boxmodel_pm.png",plot=last_plot(),width = 13, height = 6,dpi=300,device=NULL)
   
   
+<<<<<<< HEAD
   ####Plot exposures
+=======
+  #Plot exposures
+>>>>>>> 2ff39953189fc6f71ea5cb97e2c3ff15bd8a1fb8
   scatter_ecm_lpgpercent <- timeseries_plot(ecm_meta_data %>% filter(qc == 'good') 
                                             ,y_var = "`PM µgm-3`", facet_var = "pm_location", x_var = 'lpg_percent',size_var = 'non_lpg_cooking') 
   ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/scatter_ecm_lpgpercent.png",plot=last_plot(),dpi=200,device=NULL)
@@ -149,6 +153,9 @@ summary_results_function = function(meta_emissions,all_merged,all_merged_summary
                                                      y_var = "`Cook's PM µgm-3`", x_var = "`Kitchen PM µgm-3`")
   ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/scatter_ecm_kitchen_cook.png",plot=last_plot(),dpi=200,device=NULL)
   
+<<<<<<< HEAD
   
   
+=======
+>>>>>>> 2ff39953189fc6f71ea5cb97e2c3ff15bd8a1fb8
 }
