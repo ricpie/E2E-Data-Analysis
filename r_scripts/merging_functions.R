@@ -19,8 +19,9 @@ all_merge_fun = function(preplacement,beacon_logger_data,
     dplyr::filter(row_number()==1) %>%
     dplyr::arrange(datetime) %>%
     dplyr::group_by(HHID,datetime) %>%
-    dplyr::mutate(pm_compliant = max(pm_compliant)) %>%
+    dplyr::mutate(pm_compliant = max(pm_compliant,na.rm=TRUE)) %>% #max to ensure that the compliance is grabbed from the cook's ecm not the kitchen
     dplyr::ungroup() 
+  
   
   #Take the ecm data wide so we can get a single time series, onto which we can merge other data streams.
   wide_ecm_dot_data <- pivot_wider(ecm_dot_data,
@@ -67,7 +68,8 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   #Merge house/personal time serires with ambient data (based on date time only, not HHID)
   wide_co_data = merge(wide_co_data,CO_calibrated_timeseries_ambient, by.x = c("datetime"),
                        by.y = c("datetime"), all.x = T, all.y = F,)
-  rm(CO_calibrated_timeseries,CO_calibrated_timeseries_ambient,CO_calibrated_timeseries_hap)
+  rm(CO_calibrated_timeseries)
+  # rm(CO_calibrated_timeseries_ambient,CO_calibrated_timeseries_hap)
   
   
   
@@ -99,7 +101,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   wide_pats_data = merge(wide_pats_data,pats_data_timeseries_ambient, by.x = c("datetime"),
                          by.y = c("datetime"), all.x = T, all.y = F,)
   setnames(wide_pats_data, "pm25_concAmbient", "PATS_Ambient")
-  rm(pats_data_timeseries_ambient,pats_data_timeseries_hap)
+  # rm(pats_data_timeseries_ambient,pats_data_timeseries_hap)
   
   
   
@@ -141,6 +143,9 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                                    HHIDnumeric == 157 ~ "KE157-KE06",
                                    HHIDnumeric == 85 ~ "KE085-KE03",
                                    TRUE ~ HHID)) %>%
+    dplyr::mutate(stovetype = case_when(HHID %like% "KE157-KE06" ~ "Chipkube",
+                                        HHID %like% "KE238-KE06" ~ "Chipkube",
+                                        TRUE ~ stovetype)) %>%
     dplyr::select(-HHID.y) %>%
     as.data.table()
   
@@ -220,7 +225,11 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   all_merged = all_merged[!is.na(all_merged$PM25Cook),]
   all_merged = all_merged[!is.nan(all_merged$PM25Cook),]  
   
-  all_merged_summary <- dplyr::group_by(all_merged,HHID,Date) %>%
+  
+  all_merged_summary <- all_merged %>% 
+    dplyr::mutate(timeofday = format(as.POSIXct(datetime,tz="Africa/Nairobi"), format="%H:%M:%S"),
+                  timeofday = as.POSIXct(timeofday, format="%H:%M")) %>% 
+    dplyr::group_by(HHID,Date) %>%
     dplyr::summarise(Start_datetime = min(datetime,na.rm = TRUE),
                      End_datetime = max(datetime,na.rm = TRUE),
                      meanPM25Cook = mean(PM25Cook,na.rm = TRUE),
@@ -253,7 +262,12 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                      countPATS_LivingRoom = sum(!is.na(PATS_LivingRoom)),
                      countPM25Cook = sum(!is.na(PM25Cook)),
                      countlocation_nearest = sum(!is.na(location_nearest)),
-                     countlocation_nearestthreshold = sum(!is.na(location_kitchen_threshold))) %>%
+                     countlocation_nearestthreshold = sum(!is.na(location_kitchen_threshold)),
+                     # compliant = sum(pm_compliant),
+                     count_compliant_daytime = sum(timeofday %between% daytime & pm_compliant == 1),
+                     # samples_in_day = sum(timeofday %between% daytime),
+                     # samples = n(),
+                     fraction_compliant_daytime = count_compliant_daytime/sum(timeofday %between% daytime)) %>%
     dplyr::mutate(sum_TraditionalManufactured_minutes = case_when(na_TraditionalManufactured_minutes<0.8*1440 ~ sum_TraditionalManufactured_minutes,
                                                                   T ~ as.integer(NA)),
                   sum_charcoal_jiko_minutes = case_when(na_charcoal_jiko_minutes<0.8*1440 ~ sum_charcoal_jiko_minutes,
@@ -262,44 +276,44 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                                                                        T ~ as.integer(NA)),
                   sum_lpg_minutes = case_when(na_lpg<0.8*1440 ~ sum_lpg_minutes,
                                               T ~ as.integer(NA)))     %>%
-    dplyr::left_join( all_merged %>%
-                        dplyr::group_by(HHID,Date,emission_startstop) %>%
-                        dplyr::summarise(CookingmeanPM25Cook = mean(PM25Cook,na.rm = TRUE),
-                                         CookingmeanPM25Kitchen = mean(PM25Kitchen,na.rm = TRUE),
-                                         CookingmeanPM25Kitchen1m = mean(PATS_1m,na.rm = TRUE),
-                                         CookingmeanPM25Kitchen2m = mean(PATS_2m,na.rm = TRUE),
-                                         CookingmeanPM25LivingRoom = mean(PATS_LivingRoom,na.rm = TRUE),
-                                         CookingmeanPM25Ambient =  mean(PATS_Ambient,na.rm = TRUE),
-                                         CookingmeanCO_ppmCook = mean(CO_ppmCook,na.rm = TRUE),
-                                         CookingmeanCO_ppmKitchen = mean(CO_ppmKitchen,na.rm = TRUE),
-                                         CookingmeanCO_ppmKitchen1m = mean(CO_ppm1m,na.rm = TRUE),
-                                         CookingmeanCO_ppmKitchen2m = mean(CO_ppm2m,na.rm = TRUE),
-                                         CookingmeanCO_ppmLivingRoom = mean(CO_ppmLivingRoom,na.rm = TRUE),
-                                         CookingmeanCO_ppmAmbient = mean(CO_ppmAmbient,na.rm = TRUE),
-                                         Cookingsum_TraditionalManufactured_minutes = sum(sumstraditional_manufactured,na.rm = TRUE),
-                                         Cookingsum_charcoal_jiko_minutes = sum(`sumscharcoal jiko`,na.rm = TRUE),
-                                         Cookingsum_traditional_non_manufactured = sum(sumstraditional_non_manufactured,na.rm = TRUE),
-                                         Cookingsum_lpg = sum(sumslpg,na.rm = TRUE),
-                                         Cookingmeanpm25_indirect_nearest = mean(pm25_conc_beacon_nearest_ecm,na.rm = TRUE),
-                                         Cookingmeanpm25_indirect_nearest_threshold = mean(pm25_conc_beacon_nearestthreshold_ecm,na.rm = TRUE),
-                                         CookingmeanCO_indirect_nearest = mean(co_estimate_beacon_nearest,na.rm = TRUE),
-                                         CookingmeanCO_indirect_nearest_threshold = mean(co_estimate_beacon_nearest_threshold,na.rm = TRUE),
-                                         Cookingna_TraditionalManufactured_minutes = sum(is.na(sumstraditional_manufactured)),
-                                         Cookingna_charcoal_jiko_minutes = sum(is.na(`sumscharcoal jiko`)),
-                                         Cookingna_traditional_non_manufactured = sum(is.na(sumstraditional_non_manufactured)),
-                                         Cookingna_lpg = sum(is.na(sumslpg))) %>%
-                        dplyr::mutate(Cookingsum_TraditionalManufactured_minutes = case_when(Cookingna_TraditionalManufactured_minutes<1 ~ Cookingsum_TraditionalManufactured_minutes,
-                                                                                      T ~ as.integer(NA)),
-                                      Cookingsum_charcoal_jiko_minutes = case_when(Cookingna_charcoal_jiko_minutes<1 ~ Cookingsum_charcoal_jiko_minutes,
-                                                                            T ~ as.integer(NA)),
-                                      Cookingsum_traditional_non_manufactured = case_when(Cookingna_traditional_non_manufactured<1 ~ Cookingsum_traditional_non_manufactured,
-                                                                                           T ~ as.integer(NA)),
-                                      Cookingsum_lpg = case_when(Cookingna_lpg<1 ~ Cookingsum_lpg,
-                                                                  T ~ as.integer(NA))) %>%
-                        dplyr::filter(emission_startstop == 'cooking') %>%
-                        dplyr::select(-Cookingna_TraditionalManufactured_minutes,-Cookingna_charcoal_jiko_minutes,-Cookingna_traditional_non_manufactured,Cookingna_lpg)
-                        ,
-                      by = c('HHID','Date'))   %>%
+    dplyr::left_join(all_merged %>%
+                       dplyr::group_by(HHID,Date,emission_startstop) %>%
+                       dplyr::summarise(CookingmeanPM25Cook = mean(PM25Cook,na.rm = TRUE),
+                                        CookingmeanPM25Kitchen = mean(PM25Kitchen,na.rm = TRUE),
+                                        CookingmeanPM25Kitchen1m = mean(PATS_1m,na.rm = TRUE),
+                                        CookingmeanPM25Kitchen2m = mean(PATS_2m,na.rm = TRUE),
+                                        CookingmeanPM25LivingRoom = mean(PATS_LivingRoom,na.rm = TRUE),
+                                        CookingmeanPM25Ambient =  mean(PATS_Ambient,na.rm = TRUE),
+                                        CookingmeanCO_ppmCook = mean(CO_ppmCook,na.rm = TRUE),
+                                        CookingmeanCO_ppmKitchen = mean(CO_ppmKitchen,na.rm = TRUE),
+                                        CookingmeanCO_ppmKitchen1m = mean(CO_ppm1m,na.rm = TRUE),
+                                        CookingmeanCO_ppmKitchen2m = mean(CO_ppm2m,na.rm = TRUE),
+                                        CookingmeanCO_ppmLivingRoom = mean(CO_ppmLivingRoom,na.rm = TRUE),
+                                        CookingmeanCO_ppmAmbient = mean(CO_ppmAmbient,na.rm = TRUE),
+                                        Cookingsum_TraditionalManufactured_minutes = sum(sumstraditional_manufactured,na.rm = TRUE),
+                                        Cookingsum_charcoal_jiko_minutes = sum(`sumscharcoal jiko`,na.rm = TRUE),
+                                        Cookingsum_traditional_non_manufactured = sum(sumstraditional_non_manufactured,na.rm = TRUE),
+                                        Cookingsum_lpg = sum(sumslpg,na.rm = TRUE),
+                                        Cookingmeanpm25_indirect_nearest = mean(pm25_conc_beacon_nearest_ecm,na.rm = TRUE),
+                                        Cookingmeanpm25_indirect_nearest_threshold = mean(pm25_conc_beacon_nearestthreshold_ecm,na.rm = TRUE),
+                                        CookingmeanCO_indirect_nearest = mean(co_estimate_beacon_nearest,na.rm = TRUE),
+                                        CookingmeanCO_indirect_nearest_threshold = mean(co_estimate_beacon_nearest_threshold,na.rm = TRUE),
+                                        Cookingna_TraditionalManufactured_minutes = sum(is.na(sumstraditional_manufactured)),
+                                        Cookingna_charcoal_jiko_minutes = sum(is.na(`sumscharcoal jiko`)),
+                                        Cookingna_traditional_non_manufactured = sum(is.na(sumstraditional_non_manufactured)),
+                                        Cookingna_lpg = sum(is.na(sumslpg))) %>%
+                       dplyr::mutate(Cookingsum_TraditionalManufactured_minutes = case_when(Cookingna_TraditionalManufactured_minutes<1 ~ Cookingsum_TraditionalManufactured_minutes,
+                                                                                            T ~ as.integer(NA)),
+                                     Cookingsum_charcoal_jiko_minutes = case_when(Cookingna_charcoal_jiko_minutes<1 ~ Cookingsum_charcoal_jiko_minutes,
+                                                                                  T ~ as.integer(NA)),
+                                     Cookingsum_traditional_non_manufactured = case_when(Cookingna_traditional_non_manufactured<1 ~ Cookingsum_traditional_non_manufactured,
+                                                                                         T ~ as.integer(NA)),
+                                     Cookingsum_lpg = case_when(Cookingna_lpg<1 ~ Cookingsum_lpg,
+                                                                T ~ as.integer(NA))) %>%
+                       dplyr::filter(emission_startstop == 'cooking') %>%
+                       dplyr::select(-Cookingna_TraditionalManufactured_minutes,-Cookingna_charcoal_jiko_minutes,-Cookingna_traditional_non_manufactured,Cookingna_lpg)
+                     ,
+                     by = c('HHID','Date'))   %>%
     dplyr::left_join(all_merged_intensive %>%
                        dplyr::group_by(HHID) %>%
                        dplyr::summarise(Intensive_meanPM25Kitchen = mean(PATS_Kitchen,na.rm = TRUE),
@@ -337,9 +351,84 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                        dplyr::select(stovetype,HHID_full,`Start time (Mobenzi Pre-placement)-- 1`) %>%
                        dplyr::mutate(HHID = HHID_full,
                                      Date = as.Date(`Start time (Mobenzi Pre-placement)-- 1`)),
-                     by = c('HHID','Date'))
+                     by = c('HHID','Date')) %>%
+    dplyr::mutate(stovetype = case_when(HHID %like% "KE157-KE06" ~ "Chipkube",
+                                        HHID %like% "KE238-KE06" ~ "Chipkube",
+                                        TRUE ~ stovetype))
   
-  write.xlsx(all_merged_summary,'Processed Data/all_merged_summary_mj.xlsx')
+  
+  
+  # Summary stats on Personal exposure PM2.5, kitchen PM2.5 from ECM, kitchen PM2.5 from PATs, LR PM2.5 PATS, ambient grav and ambient pats, sums usage, all the same for CO, all the same for intensive
+  #Use the instrument-wise data, making sure to keep only qc = good.
+  
+  #Ugliest code I've ever written.
+  summaryfun_ugly = function(summario){
+    summary_means =  summario %>% summarise(across(where(is.numeric), ~ round(mean(.x,na.rm = TRUE),2)))
+    summary_sd =  summario %>% summarise(across(where(is.numeric), ~ round(sd(.x,na.rm = TRUE),2)))
+    summary_min =  summario %>% summarise(across(where(is.numeric), ~ round(min(.x,na.rm = TRUE),2)))
+    summary_q25 =  summario %>% summarise(across(where(is.numeric), ~ round(quantile(.x,.25,na.rm = TRUE),2)))
+    summary_med =  summario %>% summarise(across(where(is.numeric), ~ round(quantile(.x,.5,na.rm = TRUE),2)))
+    summary_q75 =  summario %>% summarise(across(where(is.numeric), ~ round(quantile(.x,.75,na.rm = TRUE),2)))
+    summary_max =  summario %>% summarise(across(where(is.numeric), ~ round(max(.x,na.rm = TRUE),2)))
+    summary_n =  summario %>% summarise(across(where(is.numeric), ~ round(length(.[!is.na(.)]),2)))
+    alltogethernow = rbind(summary_means,summary_sd,summary_min,summary_q25,summary_med,summary_q75,summary_max,summary_n) %>%
+      dplyr::mutate(rownames = c(rep('means',dim(summary_means)[1]),rep('sd',dim(summary_means)[1]),rep('min',dim(summary_means)[1]),rep('q25',dim(summary_means)[1]),
+                                 rep('med',dim(summary_means)[1]),rep('q75',dim(summary_means)[1]),rep('max',dim(summary_means)[1]),rep('n',dim(summary_means)[1])))
+  }
+  
+  by_instrument_summary_24hr = summaryfun_ugly(dplyr::group_by(all_merged_summary,stovetype) %>%
+                                                 dplyr::select(HHID:tsiCO2ppm,meanPM25Kitchen:meanCO_indirect_nearest_threshold,mean_compliance,fraction_compliant_daytime)) %>% 
+    dplyr::arrange(stovetype)
+  
+  by_instrument_summary_intensive = summaryfun_ugly(dplyr::group_by(all_merged_summary,stovetype) %>%
+                                                      dplyr::select(Intensive_meanPM25Kitchen:HHID_full) %>%
+                                                      dplyr::filter(Intensive_N_PM25Kitchen > 2000)) %>%
+    dplyr::arrange(stovetype)
+  
+  emissions_summary = summaryfun_ugly(dplyr::mutate(tsi_timeseries,emission_startstop = as.character(emission_startstop)) %>%
+                                        dplyr::filter(emission_startstop %like% "cooking") %>%
+                                        dplyr::group_by(stovetype)) %>%
+    dplyr::arrange(stovetype)
+  
+  pm_ambient_summary = summaryfun_ugly(pats_data_timeseries_ambient)
+  co_ambient_summary = summaryfun_ugly(CO_calibrated_timeseries_ambient)
+  
+  
+  #### Get stratified CO and PM summary data
+  stratified = all_merged_summary %>% 
+    dplyr::filter(!is.na(CookingmeanPM25Kitchen1m)) %>%  #Keep only complete samples?
+    dplyr::rename(CookingmeanCO_ppmKitchen1.5m = CookingmeanCO_ppmKitchen,
+                  CookingmeanPM25Kitchen1.5m=CookingmeanPM25Kitchen) %>% 
+    tidyr::pivot_longer(cols = c("CookingmeanPM25Kitchen1m","CookingmeanPM25Kitchen1.5m",
+                                 "CookingmeanPM25Kitchen2m","CookingmeanCO_ppmKitchen1m",
+                                 "CookingmeanCO_ppmKitchen1.5m","CookingmeanCO_ppmKitchen2m"),
+                        names_to = "sampletype",
+                        values_to = "longconc",
+                        values_drop_na = TRUE) %>% 
+    dplyr::mutate(stovecats = case_when(stovetype %like% "LPG" ~ "LPG",
+                                        TRUE ~ "Traditional"),
+                  as.factor(sampletype),
+                  sampletype = factor(sampletype, levels = c("CookingmeanPM25Kitchen1m","CookingmeanPM25Kitchen1.5m",
+                                                             "CookingmeanPM25Kitchen2m","CookingmeanCO_ppmKitchen1m",
+                                                             "CookingmeanCO_ppmKitchen1.5m","CookingmeanCO_ppmKitchen2m"))) %>% 
+    dplyr::group_by(sampletype,stovecats) %>% 
+    dplyr::summarize(mean = mean(longconc,na.rm=T),
+                     median = median(longconc,na.rm=T),
+                     sd = sd(longconc,na.rm=T),
+                     n = n()) %>% 
+    dplyr::arrange(stovecats)
+  
+  all_merged_summary %>% 
+    dplyr::group_by(HHID)
+  
+  write.xlsx(list(all_merged_summary=all_merged_summary,
+                  by_instrument_summary_24hr=by_instrument_summary_24hr,
+                  by_instrument_summary_intensive=by_instrument_summary_intensive,
+                  emissions_summary=emissions_summary,
+                  co_ambient_summary=co_ambient_summary,
+                  pm_ambient_summary=pm_ambient_summary,
+                  stratified = stratified),paste0('Results/all_merged_summary_mj_',Sys.Date() ,'.xlsx'))
+  
   
   return(list(all_merged,all_merged_summary))
 }

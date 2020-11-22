@@ -1,7 +1,10 @@
 #Function for generating summary statistics and plots separate from walkthrough results and indirect exposure modeling results.
 
 
-summary_results_function = function(meta_emissions,all_merged,preplacement,tsi_meta_qaqc){
+summary_results_function = function(meta_emissions,all_merged,all_merged_summary,preplacement,tsi_meta_qaqc){
+  
+  
+  
   
   give.n <- function(x){return(c(y = 0, label = length(x)))}
   give.median <- function(x){return(c(y =median(x)+3, label = round(median(x),digits=2)))}
@@ -80,13 +83,49 @@ summary_results_function = function(meta_emissions,all_merged,preplacement,tsi_m
   plot_name = paste0("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/ACH_duration_volume_dist.jpeg")
   
   jpeg(plot_name,width = 1000, height = 800, units = "px",quality=100)
-
+  
   egg::ggarrange(aer_plot,volume_plot,event_duration, heights = c(0.3, 0.3,.3))
   
   dev.off()
   
+  ##### Plot boxmodel output histograms
+  lbl1 = "paste(\"WHO Interim \n Target-1 for Annual \", PM[2.5], \" (35 \",mu,\"g \", m ^-3, \")\")"
   
-  #Plot exposures
+  boxmodelhist = read.xlsx("Results/model hist data v1.xlsx") %>%
+    gather(key = "key",value = "value") %>%
+    separate(key, c("Fuel","Method"), fill = "right") %>%
+    mutate(key = paste0(Fuel," ",Method))
+  
+  gglinear <-  boxmodelhist %>% ggplot(aes(x=value,color = key)) + 
+    geom_density(adjust=4) +
+    labs(y="Probability Density",
+         x=expression(paste(PM[2.5], " Concentration (", mu, "g ", m^-3,")"))) +
+    theme_minimal(base_size = 16)+
+    theme(legend.title = element_blank()) +
+    annotate("text",x=100,y=.015,label=lbl1, parse=TRUE,size=5.5) +
+    facet_wrap(~Fuel, ncol = 1) +
+    geom_vline(xintercept=35,linetype="dotted") + 
+    scale_color_manual(values=c("black","gray","blue","light blue","#FC4E07","light pink")) +
+    coord_cartesian(xlim=c(0,750),ylim=c(0,0.02))
+  ggsave("Results/boxmodel_pm_linscale.png",plot=last_plot(),width = 13, height = 6,dpi=300,device=NULL)
+  
+  gg <-  boxmodelhist %>% ggplot(aes(x=value,color = key)) + 
+    geom_density(adjust=4) +
+    labs(y="Probability Density",
+         x=expression(paste(PM[2.5], " Concentration (", mu, "g ", m^-3,")"))) +
+    theme_minimal(base_size = 16)+
+    theme(legend.title = element_blank()) +
+    annotate("text",x=200,y=.95,label=lbl1, parse=TRUE,size=5.5) +
+    facet_wrap(~Fuel, ncol = 1) +
+    geom_vline(xintercept=35,linetype="dotted") + 
+    scale_color_manual(values=c("black","gray","blue","light blue","#FC4E07","light pink"))+
+    coord_cartesian(xlim=c(1,5000)) +
+    scale_x_continuous(trans="log10")
+  
+  ggsave("Results/boxmodel_pm.png",plot=last_plot(),width = 13, height = 6,dpi=300,device=NULL)
+  
+  
+  ####Plot exposures
   scatter_ecm_lpgpercent <- timeseries_plot(ecm_meta_data %>% filter(qc == 'good') 
                                             ,y_var = "`PM µgm-3`", facet_var = "pm_location", x_var = 'lpg_percent',size_var = 'non_lpg_cooking') 
   ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/scatter_ecm_lpgpercent.png",plot=last_plot(),dpi=200,device=NULL)
@@ -110,17 +149,6 @@ summary_results_function = function(meta_emissions,all_merged,preplacement,tsi_m
                                                      y_var = "`Cook's PM µgm-3`", x_var = "`Kitchen PM µgm-3`")
   ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/scatter_ecm_kitchen_cook.png",plot=last_plot(),dpi=200,device=NULL)
   
-  ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/scatter_ecm_lpgpercent.png",plot=last_plot(),dpi=200,device=NULL)
-  
-  
-  #Plot kitchen concentration distributions
-  HAP_CO_plot <- box_plot(lascar_meta  %>% as.data.frame() %>% left_join(meta_emissions,by="HHID")
-                          , y_var = "eventduration", fill_var = "stovetype", x_var = "sampletype", y_units = "ppm",title = "CO concentration" )
-  ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/HAP_CO_plot.png",plot=last_plot(),dpi=200,device=NULL)
-  
-  HAP_PM_plot <- box_plot(pats_meta_qaqc %>% sampletype_fix_function() %>% as.data.frame() %>% left_join(meta_emissions,by="HHID")
-                          , y_var = "eventduration", fill_var = "stovetype", x_var = "sampletype", y_units = "µgm-3",title = "PATS+ PM concentration" )
-  ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/HAP_PM_plot.png",plot=last_plot(),dpi=200,device=NULL)
   
   
 }

@@ -17,7 +17,7 @@ mobenzi_import_fun()
 equipment_IDs_fun()
 lascar_cali_import()
 local_tz = "Africa/Nairobi"
-
+daytime = as.POSIXct(c("5:00","21:00"), format="%H:%M")
 
 #Load paths
 path_other <- "../Data/Data from the team/Excel databases/Other databases.xlsx"
@@ -71,6 +71,7 @@ saveRDS(preplacement,"Processed Data/ses_preplacement.rds")
 
 # beacon_logger_raw <- readRDS("Processed Data/Beacon_RawData.rds")
 all_merged <- readRDS("Processed Data/all_merged.rds")
+all_merged_summary <- readRDS("Processed Data/all_merged_summary.rds")
 
 # Excel metadata import
 gravimetric_path <- "../Data/Data from the team/Gravimetric/UNOPS E2E_v2.xlsx"

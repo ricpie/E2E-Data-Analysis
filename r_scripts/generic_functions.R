@@ -608,13 +608,15 @@ ambient_analysis <- function(CO_calibrated_timeseries,pats_data_timeseries,upasm
   ambient_data <- rbind(ambient_data,meltedpats_tempRH)
   
   ggplot(ambient_data %>% filter(qc=='good'), aes_string(y = 'value', x = 'datetime', color = 'variable')) +
-    geom_point(alpha = 0.4) +
+    geom_point(alpha = 0.1) +
+    geom_smooth(alpha = 0.4) +
     facet_wrap('instrument', ncol = 1, scales = "free") +
     theme_minimal() +
     theme(legend.position = "top") +
     ggtitle('Eldoret Kenya Background Ambient Data') +
     labs(y='',x='') +
-    # scale_x_datetime(date_breaks = "2 day",date_labels = "%e-%b") +
+    scale_y_continuous(trans = log10_trans()) +
+    scale_x_datetime(date_breaks = "7 day",date_labels = "%e-%b") +
     theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))
   
   ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/ambient_data.png",plot=last_plot(),dpi=200,device=NULL)
@@ -892,7 +894,7 @@ plot_deployment_merged <- function(all_merged_temp){
       theme(legend.title=element_blank(),axis.title.x = element_blank()) +
       scale_y_continuous(limits = c(0,1000))   +
       # theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))+
-      ggtitle(all_merged_temp$HHID[1]) + 
+      # ggtitle(all_merged_temp$HHID[1]) + 
       ylab("ECM ugm-3") 
     
     p2pm <- pivot_longer(all_merged_temp,
@@ -917,7 +919,7 @@ plot_deployment_merged <- function(all_merged_temp){
       theme(legend.title=element_blank(),axis.title.x = element_blank()) +
       scale_y_continuous(limits = c(0,1000))   +
       # theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))+
-      ggtitle(all_merged_temp$HHID[1]) + 
+      # ggtitle(all_merged_temp$HHID[1]) + 
       ylab("Indirect ugm-3") 
     
     all_merged_temp_beacon <- pivot_longer(all_merged_temp,

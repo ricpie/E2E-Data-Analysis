@@ -303,22 +303,20 @@ beacon_walkthrough_function = function(beacon_logger_data,preplacement){
       dplyr::distinct() %>%
       dplyr::select(-location_kitchen,-location_livingroom)
    
-   contable_nearest <- prop.table(table(beacon_walkthrough$location_nearest,beacon_walkthrough$location_correct ), margin=2)*100
+   contable_nearest_perc <- prop.table(table(beacon_walkthrough$location_nearest,beacon_walkthrough$location_correct ), margin=2)*100
    contable_nearest <- table(beacon_walkthrough$location_nearest,beacon_walkthrough$location_correct )
-   length(unique(beacon_walkthrough$HHID.y))
+   contable_nearest = cbind(contable_nearest_perc,contable_nearest)
+
    
-   contable_threshold <- prop.table(table(beacon_walkthrough$location_kitchen_threshold,beacon_walkthrough$location_correct ), margin=2)*100 
-   contable_threshold <- prop.table(table(beacon_walkthrough$location_kitchen_threshold,beacon_walkthrough$location_correct ), margin=2)*100 
-   contable_80 <- prop.table(table(beacon_walkthrough$location_kitchen_threshold80,beacon_walkthrough$location_correct ), margin=2)*100
-   cbind(contable_80,contable_threshold)
+   contable_threshold_perc <- prop.table(table(beacon_walkthrough$location_kitchen_threshold,beacon_walkthrough$location_correct ), margin=2)*100 
+   contable_threshold <- table(beacon_walkthrough$location_kitchen_threshold,beacon_walkthrough$location_correct )
+   contable_80_threshold_perc <- prop.table(table(beacon_walkthrough$location_kitchen_threshold,beacon_walkthrough$location_correct ), margin=2)*100 
+   contable_80 <- table(beacon_walkthrough$location_kitchen_threshold80,beacon_walkthrough$location_correct)
+   treshcont = cbind(contable_threshold_perc,contable_threshold,contable_80_threshold_perc,contable_80)
    contable_nearest_byHH <- prop.table(table(beacon_walkthrough$location_nearest,beacon_walkthrough$location_correct,beacon_walkthrough$HHIDstr ), margin=2)*100
-   # Switched: KE510-KE05 , ,  = KE231-KE005, ,    = KE190-KE004, ,  = KE186-KE004
-   # 
-   # Even: , ,  = KE507-KE005 , ,  = KE504-KE001, = KE229-KE011, ,, ,  = KE158-KE011, ,  = KE155-KE011, ,  = KE120-KE004, ,  = KE040-KE004, ,  = KE036-KE005, ,  = KE028-KE011, ,  = KE015-KE005
-   # 
-   # All kitchen: , ,  = KE502-KE004 , ,  = KE199-KE011
-   # 
-   # Bad/little data: , ,  = KE238-KE004
+   
+   list_of_datasets <- list("Nearest algo" = contable_nearest, "Threshold algos" = treshcont)
+   write.xlsx(list_of_datasets,'Results/walkthrough_overall.xlsx')
    
    
    
