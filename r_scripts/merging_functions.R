@@ -10,7 +10,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   #####ECM data prep
   # ecm_dot_data needs to go wide on dupes and sums
   ecm_dot_data[,(c('other_people_use_n','pm_accel','file','mission_name',
-                   'indoors','shared_cooking_area','pm_rh','pm_temp','dot_temperature','qc','samplestart','sampleend')) := NULL]  
+                   'indoors','shared_cooking_area','pm_rh','pm_temp','qc','samplestart','sampleend')) := NULL]  
   
   #This chunk aggregates data from multiple stoves of the same type into a single stove (e.g. two lpg stoves becomes one, TRUE cooking state is kept if either one is true)
   #Uses the max compliance (will be of the cook), available.
@@ -40,7 +40,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   # remove a few cols
   CO_calibrated_timeseries <- readRDS("Processed Data/CO_calibrated_timeseries.rds")[qc == 'good']
   
-  CO_calibrated_timeseries[,(c('qc','ecm_tags','fullname','basename','datetime_start','qa_date','sampleID','loggerID',
+  CO_calibrated_timeseries[,(c('ecm_tags','fullname','basename','datetime_start','qa_date','sampleID','loggerID',
                                'filterID','fieldworkerID','fieldworkernum','samplerate_minutes','sampling_duration_hrs','file','flags','emission_startstop')) := NULL]
   CO_calibrated_timeseries[, sampletype := dt_case_when(sampletype == 'Cook Dup' ~ 'Cook',
                                                         sampletype =='1m Dup' ~ '1m',
@@ -62,6 +62,13 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   CO_calibrated_timeseries_ambient <- CO_calibrated_timeseries[HHID=='777'
                                                                ][,CO_ppmAmbient:=CO_ppm
                                                                  ][,c('HHID','CO_ppm','sampletype','emission_tags','HHID_full'):=NULL]
+  CO_calibrated_timeseries_ambient <- as.data.frame(CO_calibrated_timeseries_ambient) %>% 
+    dplyr::mutate(qc = case_when((datetime %between% as.POSIXct(c("2019-10-01","2019-10-20")) | #These sections are strange, may be a bad PATS.
+                                    datetime %between%  as.POSIXct(c("2019-12-16","2019-12-22"))) ~ "bad",
+                                 TRUE ~ qc)) %>% 
+    dplyr::filter(qc == 'good') %>% 
+    dplyr::select(-qc) %>% 
+    as.data.table() 
   
   wide_co_data <- dcast.data.table(CO_calibrated_timeseries_hap,datetime + HHID + HHID_full~ sampletype, value.var = c("CO_ppm"))
   
@@ -393,7 +400,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   pm_ambient_summary = summaryfun_ugly(pats_data_timeseries_ambient)
   co_ambient_summary = summaryfun_ugly(CO_calibrated_timeseries_ambient)
   
-
+  
   #### Get stratified CO and PM summary data
   stratified = all_merged_summary %>% 
     dplyr::filter(!is.na(CookingmeanPM25Kitchen1m)) %>%  #Keep only complete samples?
@@ -421,7 +428,7 @@ all_merge_fun = function(preplacement,beacon_logger_data,
   all_merged_summary %>% 
     dplyr::group_by(HHID)
   
-
+  
   write.xlsx(list(all_merged_summary=all_merged_summary,
                   by_instrument_summary_24hr=by_instrument_summary_24hr,
                   by_instrument_summary_intensive=by_instrument_summary_intensive,
@@ -429,9 +436,9 @@ all_merge_fun = function(preplacement,beacon_logger_data,
                   co_ambient_summary=co_ambient_summary,
                   pm_ambient_summary=pm_ambient_summary,
                   stratified = stratified),paste0('Results/all_merged_summary_mj_',Sys.Date() ,'.xlsx'))
-
-
-return(list(all_merged,all_merged_summary))
+  
+  
+  return(list(all_merged,all_merged_summary))
 }
 
 

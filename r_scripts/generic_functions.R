@@ -581,7 +581,8 @@ ambient_analysis <- function(CO_calibrated_timeseries,pats_data_timeseries,upasm
   
   ambient_pats_data_timeseries$instrument <- 'PATS'
   ambient_data_realtime <- CO_calibrated_timeseries["A"==substr(sampletype,1,1),]
-  ambient_data_realtime$instrument <- 'Lascar'
+  ambient_data_realtime$instrument <- 'CO Logger'
+  
   # beacon_logger_COmerged = merge(beacon_logger_data,lascar_calibrated_subset, by.x = c("datetime","HHID","sampletype"),by.y = c("datetime","HHID","sampletype"), all.x = T, all.y = F)
   
   # ambient_data_realtime <- merge(ambient_data_realtime,ambient_pats_data_timeseries,by=c("datetime"),all.x = T, all.y = F)
@@ -601,15 +602,21 @@ ambient_analysis <- function(CO_calibrated_timeseries,pats_data_timeseries,upasm
   ambient_grav$`PM µgm-3` <-  as.numeric(ambient_grav$PM_dep_ug)*1000000 / ambient_grav$flow_m3
   ambient_grav$`BC µgm-3` <-  as.numeric(ambient_grav$BC_dep_ug)*1000000 / ambient_grav$flow_m3
   ambient_grav$datetime <-  ambient_grav$datetime_start + ambient_grav$RunTimeHrs*60*60/2 #posixct is in seconds, so multiply hours by 3600 to get correct end date.
-  meltedgrav <- melt(ambient_grav, id.vars = c('datetime','instrument', 'sampletype','qc'), measure.vars = c('PM µgm-3','BC_ugm3'))
+  meltedgrav <- melt(ambient_grav, id.vars = c('datetime','instrument', 'sampletype','qc'), measure.vars = c('PM µgm-3','BC µgm-3'))
   
   ambient_data <- rbind(ambient_data_realtime,meltedgrav) %>%
     dplyr::mutate(class = 'ambient')
-  ambient_data <- rbind(ambient_data,meltedpats_tempRH)
+  ambient_data <- rbind(ambient_data,meltedpats_tempRH)  %>% 
+    as.data.frame() %>% 
+    dplyr::mutate(qc = case_when(instrument %like% "CO Logger" & 
+                                   (datetime %between% as.POSIXct(c("2019-10-01","2019-10-20")) | #These sections are strange, may be a bad PATS.
+                                      datetime %between%  as.POSIXct(c("2019-12-16","2019-12-22"))) ~ "bad",
+                                 TRUE ~ qc))
   
-  ggplot(ambient_data %>% filter(qc=='good'), aes_string(y = 'value', x = 'datetime', color = 'variable')) +
-    geom_point(alpha = 0.1) +
-    geom_smooth(alpha = 0.4) +
+  ambient_data %>% 
+    filter(qc=='good') %>% 
+    ggplot(aes_string(y = 'value', x = 'datetime', color = 'variable')) +
+    geom_point(alpha = 0.6,size = 1) +
     facet_wrap('instrument', ncol = 1, scales = "free") +
     theme_minimal() +
     theme(legend.position = "top") +
@@ -617,9 +624,9 @@ ambient_analysis <- function(CO_calibrated_timeseries,pats_data_timeseries,upasm
     labs(y='',x='') +
     scale_y_continuous(trans = log10_trans()) +
     scale_x_datetime(date_breaks = "7 day",date_labels = "%e-%b") +
-    theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))
+    theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10)) +
+    ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/ambient_data.png",dpi=200,device=NULL)
   
-  ggsave("~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Results/ambient_data.png",plot=last_plot(),dpi=200,device=NULL)
   saveRDS(ambient_data,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/ambient_data.rds")
   saveRDS(ambient_grav,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/ambient_grav.rds")
   writexl::write_xlsx(ambient_grav,"~/Dropbox/UNOPS emissions exposure/E2E Data Analysis/Processed Data/ambient_grav.xlsx")
@@ -932,12 +939,16 @@ plot_deployment_merged <- function(all_merged_temp){
              locationvalues = location)
     levels(all_merged_temp_beacon$locationvalues) = 1:length(unique(all_merged_temp_beacon$locationvalues))
     
-    p4 <- ggplot(aes(y = locationvalues, x = datetime), data = all_merged_temp_beacon) +
+    p4 <- all_merged_temp_beacon %>% 
+      dplyr::filter(locationvalues %like% 'nearest') %>% 
+      ggplot(aes(y = locationvalues, x = datetime)) +
       geom_tile(aes(colour = values,fill=values ), alpha=0.25) +
       theme_bw(10) +
-      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
+      theme(legend.title=element_blank()
+            ,axis.title.x = element_blank(),
+            axis.title.y = element_blank()) +
       # theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))+
-      ylab("localization by approach")
+      ylab("Location assignment")
     
     
     all_merged_temp_sums <- pivot_longer(all_merged_temp,
@@ -946,19 +957,21 @@ plot_deployment_merged <- function(all_merged_temp){
                                          names_prefix = "sums",
                                          values_to = "values",
                                          values_drop_na = TRUE) %>%
-      mutate(sums = gsub('_',' ',sums),
-             sumsvalues = sums)
-    levels(all_merged_temp_sums$sumsvalues) = 1:length(unique(all_merged_temp_sums$sumsvalues))
+      mutate(stove_type = sums,
+             sums = gsub('_',' ',sums)) %>% 
+      left_join(ecm_dot_data %>% dplyr::select(c("HHID","datetime","stove_type","dot_temperature")),
+                by = c("HHID","datetime","stove_type"))
     
-    p5 <- ggplot(aes(y = as.factor(sums), x = datetime), data = all_merged_temp_sums) +
-      geom_tile(aes(colour = values,fill=values), alpha=0.25) +
-      theme_set(theme_bw(10) + theme(legend.background=element_blank())) +
-      theme(legend.background=element_blank()) +
-      
-      theme(legend.title=element_blank(),axis.title.x = element_blank()) +
-      # scale_y_continuous(limits = c(20,100)) +
-      # theme(axis.text.x = element_text(angle = 30, hjust = 1,size=10))+
-      ylab("Cooking indicator")
+    levels(all_merged_temp_sums$sums) = 1:length(unique(all_merged_temp_sums$sums))
+    
+    p5 <- all_merged_temp_sums %>% 
+      ggplot(aes(y = dot_temperature, x = datetime,colour = values,shape = sums)) +
+      geom_point(alpha=0.25) +
+      theme_set(theme_bw(10)) + 
+      theme(legend.background=element_blank(),
+            legend.title=element_blank(),
+            axis.title.x = element_blank()) +
+      ylab("Temp (C)")
     
     
     
